@@ -1,0 +1,7 @@
+[
+    {"name": "Dr. Ramesh", "specialization": "Endocrinologist", "location": "Gajuwaka"},
+    {"name": "Dr. Priya", "specialization": "General Physician", "location": "Visakhapatnam"},
+    {"name": "Dr. Anil", "specialization": "Pulmonologist", "location": "NAD Junction"},
+    {"name": "Dr. Sneha", "specialization": "Dermatologist", "location": "Gajuwaka"},
+    {"name": "Dr. Kiran", "specialization": "Dentist", "location": "Visakhapatnam"}
+]
