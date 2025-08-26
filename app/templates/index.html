@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Doctor Finder</title>
+</head>
+<body>
+    <h1>Find Nearby Doctors 🏥</h1>
+    <form method="POST">
+        <label>Location:</label>
+        <input type="text" name="location" required><br><br>
+        <label>Disease/Symptoms:</label>
+        <input type="text" name="disease" required><br><br>
+        <button type="submit">Search</button>
+    </form>
+
+    {% if doctors %}
+        <h2>Results:</h2>
+        <ul>
+        {% for doc in doctors %}
+            <li>{{ doc.name }} ({{ doc.specialization }}) — {{ doc.location }}</li>
+            <li>
+  <strong>{{ doc.name }}</strong> ({{ doc.specialization }}) — {{ doc.location }}<br>
+  ⭐ Rating: {{ doc.rating }}<br>
+  📝 Reviews:
+  <ul>
+    {% for review in doc.reviews %}
+      <li>{{ review }}</li>
+    {% endfor %}
+  </ul>
+</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+</body>
+</html>
