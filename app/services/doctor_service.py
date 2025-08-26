@@ -7,21 +7,32 @@ def find_doctors(locations, specialization):
     file_path = os.path.normpath(file_path)
 
     with open(file_path, "r") as f:
-        doctors = json.load(f)
+        doctors_data = json.load(f)
 
-    ddetails = [doc for doc in doctors if doc["location"] in locations and doc["specialization"] == specialization]
-    return ddetails
+    results = []
+    for entry in doctors_data:
+        if entry["location"] in locations and entry["specialization"] == specialization:
+            results.append({
+                "doctor_name": entry["doctor_name"],
+                "specialization": entry["specialization"],
+                "experience": entry["experience"],
+                "rating": entry["rating"],
+                "reviews": entry["reviews"],
+                "hospital_name": entry["hospital"]["name"],
+                "hospital_address": entry["hospital"]["address"],
+                "hospital_contact": entry["hospital"]["contact"],
+                "map_link": f"https://www.google.com/maps/search/{entry['hospital']['address'].replace(' ', '+')}"
+            })
+    return results
+
+
 
 def get_nearby_locations(location):
-    # Simulated nearby locations
     nearby = {
         "Gajuwaka": ["Gajuwaka", "Visakhapatnam", "NAD Junction"],
         "Hyderabad": ["Hyderabad", "Secunderabad", "Gachibowli"]
     }
     return nearby.get(location, [location])
-
-print(get_nearby_locations("Gajuwaka"))
-
 
 doctors = [{"name": "Dr. Ramesh", "specialization": "Endocrinologist", "location": "Gajuwaka"},
  {"name": "Dr. Priya", "specialization": "General Physician", "location": "Visakhapatnam"},
@@ -46,7 +57,7 @@ def map_disease_to_specialist(disease):
         "skin rash": "Dermatologist",
         "tooth pain": "Dentist"
     }
-    return mapping.get(disease)
+    return mapping.get(disease.lower())
 
 print(map_disease_to_specialist("skin rash"))
 

@@ -1,16 +1,35 @@
-// [
-//     {"name": "Dr. Ramesh", "specialization": "Endocrinologist", "location": "Gajuwaka"},
-//     {"name": "Dr. Priya", "specialization": "General Physician", "location": "Visakhapatnam"},
-//     {"name": "Dr. Anil", "specialization": "Pulmonologist", "location": "NAD Junction"},
-//     {"name": "Dr. Sneha", "specialization": "Dermatologist", "location": "Gajuwaka"},
-//     {"name": "Dr. Kiran", "specialization": "Dentist", "location": "Visakhapatnam"}
-// ]
-
-[{"name": "Dr. Ramesh",
-  "specialization": "Endocrinologist",
-  "location": "Gajuwaka",
-  "rating": 4.7,
-  "reviews": [
-    "Very knowledgeable and kind.",
-    "Helped me manage my diabetes effectively."]}]
+[
+    {
+        "doctor_name": "Dr. Suresh",
+        "specialization": "Endocrinologist",
+        "location": "Tirupati",
+        "experience": 12,
+        "rating": 4.6,
+        "reviews": [
+            "Expert in diabetes care.",
+            "Very patient and thorough."
+        ],
+        "hospital": {
+            "name": "Apollo Clinic",
+            "address": "AIR Bypass Road, Tirupati",
+            "contact": "0877-2233445"
+        }
+    },
+    {
+        "doctor_name": "Dr. Meena",
+        "specialization": "General Physician",
+        "location": "Renigunta",
+        "experience": 8,
+        "rating": 4.4,
+        "reviews": [
+            "Quick diagnosis.",
+            "Friendly and professional."
+        ],
+        "hospital": {
+            "name": "Renigunta Medical Center",
+            "address": "Main Road, Renigunta",
+            "contact": "0877-1122334"
+        }
+    }
+]
 

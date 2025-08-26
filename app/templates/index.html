@@ -1,33 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Doctor Finder</title>
+    <title>Doctor & Hospital Finder</title>
 </head>
 <body>
-    <h1>Find Nearby Doctors 🏥</h1>
+    <h1>Find Doctors & Hospitals</h1>
     <form method="POST">
         <label>Location:</label>
         <input type="text" name="location" required><br><br>
-        <label>Disease/Symptoms:</label>
+
+        <label>Disease/Symptom:</label>
         <input type="text" name="disease" required><br><br>
+
         <button type="submit">Search</button>
     </form>
 
-    {% if doctors %}
+    {% if results %}
         <h2>Results:</h2>
         <ul>
-        {% for doc in doctors %}
-            <li>{{ doc.name }} ({{ doc.specialization }}) — {{ doc.location }}</li>
+        {% for r in results %}
             <li>
-  <strong>{{ doc.name }}</strong> ({{ doc.specialization }}) — {{ doc.location }}<br>
-  ⭐ Rating: {{ doc.rating }}<br>
-  📝 Reviews:
-  <ul>
-    {% for review in doc.reviews %}
-      <li>{{ review }}</li>
-    {% endfor %}
-  </ul>
-</li>
+                <strong>{{ r.doctor_name }}</strong> ({{ r.specialization }})<br>
+                ⭐ Experience: {{ r.experience }} years | Rating: {{ r.rating }}<br>
+                📝 Reviews:
+                <ul>
+                    {% for review in r.reviews %}
+                        <li>{{ review }}</li>
+                    {% endfor %}
+                </ul>
+                🏥 Hospital: {{ r.hospital_name }}<br>
+                📍 Address: {{ r.hospital_address }}<br>
+                ☎️ Contact: {{ r.hospital_contact }}<br>
+                🔗 <a href="{{ r.map_link }}" target="_blank">View on Map</a>
+            </li>
         {% endfor %}
         </ul>
     {% endif %}
