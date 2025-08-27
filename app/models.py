@@ -21,4 +21,15 @@ class User(db.Model):
     status = db.Column(db.String(10), default="logout")
 
     def __repr__(self):
-        return f"<User {self.username} - {self.status}>"
+        return f"<User {self.username}>"
+    
+class SearchHistory(db.Model):
+    __tablename__ = 'search_history'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    location = db.Column(db.String(120), nullable=False)
+    disease = db.Column(db.String(120), nullable=False)
+
+    def __repr__(self):
+        return f"<User {self.username}>"
+

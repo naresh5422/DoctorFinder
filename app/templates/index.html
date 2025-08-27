@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>DoctorFinder</title>
+    <title>Welcome to Doctor Finder 🏥</title>
 </head>
 <body>
     <h1>Find Doctors</h1>
@@ -37,10 +37,10 @@
         </ul>
     {% endif %}
     {% if session.user_id %}
-        <p>Status: Logged in</p>
+        <p>Status: Logged_in</p>
         <a href="/logout">Logout</a>
     {% else %}
-        <p>Status: Logged out</p>
+        <p>Status: Logged_out</p>
         <a href="/login">Login</a>
     {% endif %}
 </body>

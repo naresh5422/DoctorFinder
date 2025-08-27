@@ -59,5 +59,3 @@ def map_disease_to_specialist(disease):
     }
     return mapping.get(disease.lower())
 
-print(map_disease_to_specialist("skin rash"))
-
