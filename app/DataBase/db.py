@@ -20,7 +20,10 @@ except mysql.connector.Error as err:
 ## Create a Cursor Object and Execute Queries:
 if 'mydb' in locals() and mydb.is_connected():
     mycursor = mydb.cursor()
-    mycursor.execute("SELECT * FROM users")
+    # mycursor.execute("SELECT * FROM users")
+    mycursor.execute("SELECT * FROM search_history")
+    # mycursor.execute("SELECT * FROM users")
+
 
 ## Fetch data
 if 'mycursor' in locals():
