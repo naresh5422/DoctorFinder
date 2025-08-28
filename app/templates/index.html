@@ -36,6 +36,21 @@
         {% endfor %}
         </ul>
     {% endif %}
+
+    
+    <h3>Your Recent Searches</h3>
+    <ul>
+        {% for search in recent_searches %}
+            <li>
+            📍 Location: {{ search.location }}<br>
+            🩺 Disease: {{ search.disease }}
+            🕒 {{ search.timestamp.strftime('%d %b %Y, %I:%M %p') }}<br>
+            🔁 <a href="{{ url_for('repeat_search', search_id=search.id) }}">Repeat this search</a>
+            </form>
+            </li>
+        {% endfor %}
+    </ul>
+
     {% if session.user_id %}
         <p>Status: Logged_in</p>
         <a href="/logout">Logout</a>

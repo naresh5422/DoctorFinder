@@ -1,4 +1,5 @@
 from extension import db
+from datetime import datetime
 
 class Doctor:
     def __init__(self, name, specialization, location):
@@ -29,7 +30,8 @@ class SearchHistory(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     location = db.Column(db.String(120), nullable=False)
     disease = db.Column(db.String(120), nullable=False)
+    timestamp = db.Column(db.DateTime, default = datetime.utcnow)
 
     def __repr__(self):
-        return f"<User {self.username}>"
+        return f"<User {self.user_id}>"
 
