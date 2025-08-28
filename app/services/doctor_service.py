@@ -51,7 +51,7 @@ def get_nearby_locations(location):
 
 def map_disease_to_specialist(disease):
     mapping = {
-    "diabetes": "Endocrinologist",
+    "diabetes": "Endocrinologist", 
     "thyroid disorder": "Endocrinologist",
     "high blood pressure": "Cardiologist",
     "chest pain": "Cardiologist",

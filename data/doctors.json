@@ -1501,11 +1501,7 @@
         "location": "Kurnool",
         "experience": 34,
         "rating": 4.7,
-        "reviews": [
-            "Highly recommended for treatment.",
-            "Takes time to explain everything.",
-            "Waiting area could be better."
-        ],
+        "reviews": ["Highly recommended for treatment.","Takes time to explain everything.","Waiting area could be better."        ],
         "hospital": {
             "name": "Nellore Care Hospital",
             "address": "Trunk Road, Nellore",

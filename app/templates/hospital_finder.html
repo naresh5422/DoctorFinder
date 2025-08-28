@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Hospital Finding</h2>
+<form method="POST">
+    <input type="text" name="location" placeholder="Location">
+    <button type="submit">Find Hospitals</button>
+</form>
+
+{% if hospitals %}
+<h3>Hospitals:</h3>
+<ul>
+    {% for hospital in hospitals %}
+        <li>{{ hospital.name }} — {{ hospital.address }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

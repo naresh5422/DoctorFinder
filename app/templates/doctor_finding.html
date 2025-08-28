@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Doctor Finding</h2>
+<form method="POST">
+    <input type="text" name="location" placeholder="Location">
+    <input type="text" name="disease" placeholder="Disease">
+    <button type="submit">Find Doctors</button>
+</form>
+
+{% if results %}
+<h3>Results:</h3>
+<ul>
+    {% for doc in results %}
+        <li>{{ doc.name }} — {{ doc.specialization }} at {{ doc.hospital }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}
