@@ -1,24 +1,6 @@
-# from routers import setup_routes
-# from flask import Flask
-
-
-# # def run_app():
-# #     print("Welcome to Doctor Finder 🏥")
-# #     location = input("Enter your city or location: ")
-# #     disease = input("Enter your disease or symptoms: ")
-# #     result = handle_request(location, disease)
-# #     print("\nNearby Doctors:")
-# #     for doc in result:
-# #         print(f"- {doc['name']} ({doc['specialization']}) — {doc['location']}")
-
-
-
-
-
 from flask import Flask
 from extension import db, SQLALCHEMY_DATABASE_URI
 from routers import setup_routes
-from auth import setup_auth
 from models import User
 
 
@@ -31,15 +13,14 @@ def create_app():
 
     db.init_app(app)
     setup_routes(app)
-    setup_auth(app)
 
     with app.app_context():
         db.create_all()
 
     return app
 
-app = create_app()  
+capp = create_app()  
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    capp.run(debug=True)

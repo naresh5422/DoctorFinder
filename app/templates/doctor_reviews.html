@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Doctor Reviews</h2>
+
+  {% for review in reviews %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <h5 class="card-title">{{ review.reviewer_name }}</h5>
+      <p class="card-text">{{ review.comment }}</p>
+      <p><strong>Rating:</strong> {{ review.rating }}/5</p>
+      <p><small class="text-muted">Reviewed on {{ review.date }}</small></p>
+    </div>
+  </div>
+  {% else %}
+  <p>No reviews available for this doctor yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}

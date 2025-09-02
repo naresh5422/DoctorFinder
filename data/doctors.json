@@ -70,7 +70,7 @@
     {
         "doctor_name": "Dr. Ravi Menon",
         "specialization": "General Physician",
-        "location": "Rajahmundry",
+        "location": "Kurnool",
         "experience": 29,
         "rating": 3.2,
         "reviews": [
@@ -172,7 +172,7 @@
     {
         "doctor_name": "Dr. Neha Chowdary",
         "specialization": "General Physician",
-        "location": "Guntur",
+        "location": "Kurnool",
         "experience": 7,
         "rating": 4.8,
         "reviews": [
@@ -1192,7 +1192,7 @@
     {
         "doctor_name": "Dr. Anil Menon",
         "specialization": "General Physician",
-        "location": "Renigunta",
+        "location": "Kurnool",
         "experience": 9,
         "rating": 4.7,
         "reviews": [
