@@ -19,9 +19,10 @@
           <p><strong>Specialization:</strong> {{ doc.specialization }}</p>
           <p><strong>Experience:</strong> {{ doc.experience }} years</p>
           <p><strong>Rating:</strong> {{ doc.rating }}/5</p>
-          <p><strong>Hospital:</strong> {{ doc.hospital_name }}</p>
-          <p><strong>Address:</strong> {{ doc.hospital_address }}</p>
-          <p><strong>Contact:</strong> {{ doc.hospital_contact }}</p>
+          <p><strong> Reviews:</strong> {{ doc. reviews | join(' ') }}</p>
+          <p><strong>Hospital Name:</strong> {{ doc.hospital.name }}</p>
+          <p><strong>Address:</strong> {{ doc.hospital.address }}</p>
+          <p><strong>Contact:</strong> {{ doc.hospital.contact }}</p>
           <a href="{{ doc.map_link }}" target="_blank" class="btn btn-outline-secondary">📍 View on Map</a>
         </div>
       </div>

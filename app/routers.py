@@ -132,19 +132,22 @@ def setup_routes(app):
     # Doctor Services
     @app.route('/doctor_profile', methods = ['GET','POST'])
     def doctor_profile():
-        doctor_name = request.form.get('doctor_name', '').strip()
         current_dir = os.path.dirname(os.path.abspath(__file__))
         project_root = os.path.dirname(current_dir)
         file_path = os.path.join(project_root, "data", "doctors.json")
         file_path = os.path.normpath(file_path)
         with open(file_path, 'r') as f:
             doctors_data = json.load(f)
-        if doctor_name:
-            filtered_doctors = [doc for doc in doctors_data if doctor_name.lower() in doc['doctor_name'].lower()]
-        else:
-            filtered_doctors = []
-        return render_template('doctor_profile.html', doctors=filtered_doctors, doctor_name=doctor_name)
-    
+        # if doctor_name:
+        #     filtered_doctors = [doc for doc in doctors_data if doctor_name.lower() in doc['doctor_name'].lower()]
+        # else:
+        #     filtered_doctors = []
+        if request.method == 'POST':
+            doctor_name = request.form.get('doctor_name', '').strip().lower()
+            doctors = [doc for doc in doctors_data if doctor_name in doc['doctor_name'].lower()]
+        # return render_template("doctor_profile.html", doctors=doctors)
+        return render_template('doctor_profile.html', doctors=doctors, doctor_name=doctor_name)
+
 
     @app.route('/doctor_reviews')
     def doctor_reviews():
