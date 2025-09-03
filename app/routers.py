@@ -179,18 +179,6 @@ def setup_routes(app):
                 return redirect(url_for("doctor_profile", doctor_name=request.args.get("doctor_name", "")))
             doctor_name = request.form.get('doctor_name', '').strip().lower()
             doctors = [doc for doc in doctors_data if doctor_name in doc['doctor_name'].lower()]
-        # elif "review_text" in request.form and "doctor_id" in request.form:
-        #     doctor_id = int(request.form["doctor_id"])
-        #     review_text = request.form["review_text"].strip()
-        #     for doc in doctors_data:
-        #         if doc["id"] == doctor_id:
-        #             if "reviews" not in doc:
-        #                 doc["reviews"] = []
-        #             doc["reviews"].append(review_text)
-        #     # Save updated reviews back to JSON
-        #     with open(file_path, 'w') as f:
-        #         json.dump(doctors_data, f, indent=4)
-        #     return redirect(url_for("doctor_profile", doctor_name=doctor_name))
         return render_template('doctor_profile.html', doctors=doctors, doctor_name=doctor_name)
 
 
