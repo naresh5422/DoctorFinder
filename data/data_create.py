@@ -51,6 +51,7 @@ negative_reviews = [
 # Generate 100 doctors
 doctors = []
 for i in range(100):
+    id = i+1
     doctor_name = f"Dr. {random.choice(doctor_first_names)} {random.choice(doctor_last_names)}"
     specialization = random.choice(specializations)
     location = random.choice(locations)
@@ -60,6 +61,7 @@ for i in range(100):
     hospital = random.choice(hospitals)
 
     doctor = {
+        "id": id,
         "doctor_name": doctor_name,
         "specialization": specialization,
         "location": location,

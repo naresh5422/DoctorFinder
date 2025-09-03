@@ -1,6 +1,6 @@
 import os
 import json
-from flask import render_template, request, session, redirect, url_for, Blueprint
+from flask import render_template, request, session, redirect, url_for
 from services.doctor_service import find_doctors, get_nearby_locations, map_disease_to_specialist
 from models import SearchHistory, User
 from extension import db
@@ -21,7 +21,7 @@ def setup_routes(app):
             user.status = "login"
             db.session.commit()
             next_url = session.pop("next_url", None)
-            return redirect(next_url or url_for("main_routes.index"))  # Adjust if using blueprint
+            return redirect(next_url or url_for("index"))  # Adjust if using blueprint
         else:
             return render_template("login.html")
 
@@ -62,13 +62,17 @@ def setup_routes(app):
         if request.method == "POST":
             location = request.form.get("location")
             disease = request.form.get("disease")
+            # 🔹 Map layman term OR specialist to professional mapping
+            specialist_mapping = map_disease_to_specialist(disease)
+            # Extract only specialist (right side of mapping)
+            specialist = specialist_mapping.split(" - ")[1]
             # Save search to database
             search = SearchHistory(user_id=session["user_id"],location=location,disease=disease)
             db.session.add(search)
             db.session.commit()
             ## Doctor search logic
             nearby_locations = get_nearby_locations(location)
-            specialist = map_disease_to_specialist(disease)
+            # specialist = map_disease_to_specialist(disease)
             results = find_doctors(nearby_locations, specialist)
         recent_searchs = SearchHistory.query.filter_by(user_id=session["user_id"]).order_by(SearchHistory.id.desc()).limit(5).all()
         return render_template("index.html", results=results, recent_searches=recent_searchs)
@@ -95,27 +99,45 @@ def setup_routes(app):
         file_path = os.path.normpath(file_path)
         with open(file_path, 'r') as f:
             doctors_data = json.load(f)
-        filtered_doctors = []
-        if request.method == 'POST':
-            location_input = request.form.get('location', '').strip().lower()
-            disease_input = request.form.get('disease', '').strip().lower()
-            for entry in doctors_data:
-                # location_match = location_input in entry['hospital']['address'].lower()
-                location_match = location_input in entry['location'].lower()
-                specialization_match = disease_input in entry['specialization'].lower()
-                if location_match and specialization_match:
-                    filtered_doctors.append({
-                    "doctor_name": entry["doctor_name"],
-                    "specialization": entry["specialization"],
-                    "experience": entry["experience"],
-                    "rating": entry["rating"],
-                    "reviews": entry["reviews"],
-                    "map_link": f"https://www.google.com/maps/search/{entry['hospital']['address'].replace(' ', '+')}",
-                    "hospital_name": entry["hospital"]["name"],
-                    "hospital_address": entry["hospital"]["address"],
-                    "hospital_contact": entry["hospital"]["contact"]
-                })
-        return render_template('doctor_finding.html', doctors=filtered_doctors)
+        # filtered_doctors = []
+        # if request.method == 'POST':
+        #     location_input = request.form.get('location', '').strip().lower()
+        #     disease_input = request.form.get('disease', '').strip().lower()
+        results = []
+        recent_searchs = []
+        if request.method == "POST":
+            location = request.form.get("location").strip().lower()
+            disease = request.form.get("disease").strip().lower()
+            # 🔹 Map layman term OR specialist to professional mapping
+            specialist_mapping = map_disease_to_specialist(disease)
+            # Extract only specialist (right side of mapping)
+            specialist = specialist_mapping.split(" - ")[1]
+            # Save search to database
+            search = SearchHistory(user_id=session["user_id"],location=location,disease=disease)
+            db.session.add(search)
+            db.session.commit()
+            ## Doctor search logic
+            nearby_locations = get_nearby_locations(location)
+            # specialist = map_disease_to_specialist(disease)
+            results = find_doctors(nearby_locations, specialist)
+            recent_searchs = SearchHistory.query.filter_by(user_id=session["user_id"]).order_by(SearchHistory.id.desc()).limit(5).all()
+            # for entry in doctors_data:
+            #     location_match = location_input in entry['hospital']['address'].lower()
+            #     # location_match = location_input in entry['location'].lower()
+            #     specialization_match = disease_input in entry['specialization'].lower()
+            #     if location_match and specialization_match:
+            #         filtered_doctors.append({
+            #         "doctor_name": entry["doctor_name"],
+            #         "specialization": entry["specialization"],
+            #         "experience": entry["experience"],
+            #         "rating": entry["rating"],
+            #         "reviews": entry["reviews"],
+            #         "map_link": f"https://www.google.com/maps/search/{entry['hospital']['address'].replace(' ', '+')}",
+            #         "hospital_name": entry["hospital"]["name"],
+            #         "hospital_address": entry["hospital"]["address"],
+            #         "hospital_contact": entry["hospital"]["contact"]
+            #     })
+        return render_template('doctor_finding.html', doctors=results, recent_searches=recent_searchs)
     
     @app.route("/about")
     def about():
@@ -132,26 +154,45 @@ def setup_routes(app):
     # Doctor Services
     @app.route('/doctor_profile', methods = ['GET','POST'])
     def doctor_profile():
+        doctors = []   # ✅ Always initialize
+        doctor_name = ""  # ✅ Default empty (to avoid undefined in template)
         current_dir = os.path.dirname(os.path.abspath(__file__))
         project_root = os.path.dirname(current_dir)
         file_path = os.path.join(project_root, "data", "doctors.json")
         file_path = os.path.normpath(file_path)
         with open(file_path, 'r') as f:
             doctors_data = json.load(f)
-        # if doctor_name:
-        #     filtered_doctors = [doc for doc in doctors_data if doctor_name.lower() in doc['doctor_name'].lower()]
-        # else:
-        #     filtered_doctors = []
         if request.method == 'POST':
+                    # Case 1: Adding a review
+            if "review_text" in request.form and "doctor_id" in request.form:
+                doctor_id = int(request.form["doctor_id"])
+                review_text = request.form["review_text"].strip()
+                for doc in doctors_data:
+                    if doc["id"] == doctor_id:
+                        if "reviews" not in doc:
+                            doc["reviews"] = []
+                        doc["reviews"].append(review_text)
+                # Save updated JSON
+                with open(file_path, 'w') as f:
+                    json.dump(doctors_data, f, indent=4)
+                # Redirect back to doctor search result
+                return redirect(url_for("doctor_profile", doctor_name=request.args.get("doctor_name", "")))
             doctor_name = request.form.get('doctor_name', '').strip().lower()
             doctors = [doc for doc in doctors_data if doctor_name in doc['doctor_name'].lower()]
-        # return render_template("doctor_profile.html", doctors=doctors)
+        # elif "review_text" in request.form and "doctor_id" in request.form:
+        #     doctor_id = int(request.form["doctor_id"])
+        #     review_text = request.form["review_text"].strip()
+        #     for doc in doctors_data:
+        #         if doc["id"] == doctor_id:
+        #             if "reviews" not in doc:
+        #                 doc["reviews"] = []
+        #             doc["reviews"].append(review_text)
+        #     # Save updated reviews back to JSON
+        #     with open(file_path, 'w') as f:
+        #         json.dump(doctors_data, f, indent=4)
+        #     return redirect(url_for("doctor_profile", doctor_name=doctor_name))
         return render_template('doctor_profile.html', doctors=doctors, doctor_name=doctor_name)
 
-
-    @app.route('/doctor_reviews')
-    def doctor_reviews():
-        return render_template('doctor_reviews.html')
 
     # Hospital Services
     @app.route('/hospital_finding')

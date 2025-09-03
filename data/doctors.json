@@ -1,1391 +1,15 @@
 [
     {
-        "doctor_name": "Dr. Meena Varma",
-        "specialization": "Ophthalmologist",
-        "location": "Nellore",
-        "experience": 34,
-        "rating": 3.0,
-        "reviews": [
-            "Great experience, felt comfortable.",
-            "Accurate diagnosis and treatment.",
-            "Staff was not very helpful."
-        ],
-        "hospital": {
-            "name": "Yashoda Hospital",
-            "address": "Somajiguda, Hyderabad",
-            "contact": "040-12345678"
-        }
-    },
-    {
-        "doctor_name": "Dr. Deepak Naidu",
-        "specialization": "Gynecologist",
-        "location": "Kurnool",
-        "experience": 10,
-        "rating": 3.7,
-        "reviews": [
-            "Highly recommended for treatment.",
-            "Accurate diagnosis and treatment.",
-            "Charges are a bit high."
-        ],
-        "hospital": {
-            "name": "Sunshine Hospital",
-            "address": "KPHB, Hyderabad",
-            "contact": "040-87654321"
-        }
-    },
-    {
-        "doctor_name": "Dr. Meena Iyer",
-        "specialization": "Dermatologist",
-        "location": "Chittoor",
-        "experience": 9,
-        "rating": 4.1,
-        "reviews": [
-            "Takes time to explain everything.",
-            "Really listens to patient concerns.",
-            "Appointment process needs improvement."
-        ],
-        "hospital": {
-            "name": "Renigunta Medical Center",
-            "address": "Main Road, Renigunta",
-            "contact": "0877-1122334"
-        }
-    },
-    {
-        "doctor_name": "Dr. Suresh Gupta",
-        "specialization": "Oncologist",
-        "location": "Chittoor",
-        "experience": 33,
-        "rating": 4.2,
-        "reviews": [
-            "Friendly and professional.",
-            "Great experience, felt comfortable.",
-            "Charges are a bit high."
-        ],
-        "hospital": {
-            "name": "Nellore Care Hospital",
-            "address": "Trunk Road, Nellore",
-            "contact": "0861-332211"
-        }
-    },
-    {
-        "doctor_name": "Dr. Ravi Menon",
-        "specialization": "General Physician",
-        "location": "Kurnool",
-        "experience": 29,
-        "rating": 3.2,
-        "reviews": [
-            "Really listens to patient concerns.",
-            "Excellent service and staff.",
-            "Consultation was too short."
-        ],
-        "hospital": {
-            "name": "CMC Hospital",
-            "address": "City Center, Chittoor",
-            "contact": "08572-224466"
-        }
-    },
-    {
-        "doctor_name": "Dr. Neha Varma",
-        "specialization": "Psychiatrist",
-        "location": "Kurnool",
-        "experience": 22,
-        "rating": 3.2,
-        "reviews": [
-            "Highly recommended for treatment.",
-            "Takes time to explain everything.",
-            "Staff was not very helpful."
-        ],
-        "hospital": {
-            "name": "Sunshine Hospital",
-            "address": "KPHB, Hyderabad",
-            "contact": "040-87654321"
-        }
-    },
-    {
-        "doctor_name": "Dr. Meena Kumar",
-        "specialization": "Ophthalmologist",
-        "location": "Chittoor",
-        "experience": 23,
-        "rating": 3.6,
-        "reviews": [
-            "Great experience, felt comfortable.",
-            "Excellent service and staff.",
-            "Waiting area could be better."
-        ],
-        "hospital": {
-            "name": "Ramesh Hospitals",
-            "address": "MG Road, Vijayawada",
-            "contact": "0866-998877"
-        }
-    },
-    {
-        "doctor_name": "Dr. Ravi Sharma",
-        "specialization": "Cardiologist",
-        "location": "Rajahmundry",
-        "experience": 18,
-        "rating": 3.3,
-        "reviews": [
-            "Great experience, felt comfortable.",
-            "Accurate diagnosis and treatment.",
-            "Staff was not very helpful."
-        ],
-        "hospital": {
-            "name": "Ramesh Hospitals",
-            "address": "MG Road, Vijayawada",
-            "contact": "0866-998877"
-        }
-    },
-    {
-        "doctor_name": "Dr. Suresh Chowdary",
-        "specialization": "Endocrinologist",
-        "location": "Rajahmundry",
-        "experience": 33,
-        "rating": 4.4,
-        "reviews": [
-            "Excellent service and staff.",
-            "Accurate diagnosis and treatment.",
-            "Felt rushed during consultation."
-        ],
-        "hospital": {
-            "name": "Ramesh Hospitals",
-            "address": "MG Road, Vijayawada",
-            "contact": "0866-998877"
-        }
-    },
-    {
-        "doctor_name": "Dr. Kavya Iyer",
-        "specialization": "Nephrologist",
-        "location": "Hyderabad",
-        "experience": 27,
-        "rating": 4.3,
-        "reviews": [
-            "Great experience, felt comfortable.",
-            "Highly recommended for treatment.",
-            "Did not get enough explanation."
-        ],
-        "hospital": {
-            "name": "Ramesh Hospitals",
-            "address": "MG Road, Vijayawada",
-            "contact": "0866-998877"
-        }
-    },
-    {
-        "doctor_name": "Dr. Neha Chowdary",
-        "specialization": "General Physician",
-        "location": "Kurnool",
-        "experience": 7,
-        "rating": 4.8,
-        "reviews": [
-            "Highly recommended for treatment.",
-            "Very knowledgeable and caring.",
-            "Staff was not very helpful."
-        ],
-        "hospital": {
-            "name": "Sunshine Hospital",
-            "address": "KPHB, Hyderabad",
-            "contact": "040-87654321"
-        }
-    },
-    {
-        "doctor_name": "Dr. Ravi Sharma",
-        "specialization": "Orthopedic",
-        "location": "Guntur",
-        "experience": 20,
-        "rating": 3.9,
-        "reviews": [
-            "Very knowledgeable and caring.",
-            "Friendly and professional.",
-            "Staff was not very helpful."
-        ],
-        "hospital": {
-            "name": "CMC Hospital",
-            "address": "City Center, Chittoor",
-            "contact": "08572-224466"
-        }
-    },
-    {
-        "doctor_name": "Dr. Sindhu Varma",
-        "specialization": "Orthopedic",
-        "location": "Nellore",
-        "experience": 9,
-        "rating": 3.4,
-        "reviews": [
-            "Accurate diagnosis and treatment.",
-            "Highly recommended for treatment.",
-            "Staff was not very helpful."
-        ],
-        "hospital": {
-            "name": "Sunshine Hospital",
-            "address": "KPHB, Hyderabad",
-            "contact": "040-87654321"
-        }
-    },
-    {
-        "doctor_name": "Dr. Neha Gupta",
-        "specialization": "Dermatologist",
-        "location": "Vijayawada",
-        "experience": 21,
-        "rating": 3.8,
-        "reviews": [
-            "Highly recommended for treatment.",
-            "Accurate diagnosis and treatment.",
-            "Waiting area could be better."
-        ],
-        "hospital": {
-            "name": "CMC Hospital",
-            "address": "City Center, Chittoor",
-            "contact": "08572-224466"
-        }
-    },
-    {
-        "doctor_name": "Dr. Arjun Patel",
-        "specialization": "Dermatologist",
-        "location": "Vijayawada",
-        "experience": 34,
-        "rating": 4.9,
-        "reviews": [
-            "Really listens to patient concerns.",
-            "Excellent service and staff.",
-            "Staff was not very helpful."
-        ],
-        "hospital": {
-            "name": "Government Hospital",
-            "address": "Main Road, Anantapur",
-            "contact": "08554-778899"
-        }
-    },
-    {
-        "doctor_name": "Dr. Divya Naidu",
-        "specialization": "Endocrinologist",
-        "location": "Renigunta",
-        "experience": 17,
-        "rating": 3.3,
-        "reviews": [
-            "Accurate diagnosis and treatment.",
-            "Excellent service and staff.",
-            "Appointment process needs improvement."
-        ],
-        "hospital": {
-            "name": "Sunshine Hospital",
-            "address": "KPHB, Hyderabad",
-            "contact": "040-87654321"
-        }
-    },
-    {
-        "doctor_name": "Dr. Divya Kumar",
-        "specialization": "Gynecologist",
-        "location": "Anantapur",
-        "experience": 3,
-        "rating": 4.5,
-        "reviews": [
-            "Really listens to patient concerns.",
-            "Excellent service and staff.",
-            "Consultation was too short."
-        ],
-        "hospital": {
-            "name": "Renigunta Medical Center",
-            "address": "Main Road, Renigunta",
-            "contact": "0877-1122334"
-        }
-    },
-    {
-        "doctor_name": "Dr. Kiran Varma",
-        "specialization": "ENT Specialist",
-        "location": "Tirupati",
-        "experience": 7,
-        "rating": 3.5,
-        "reviews": [
-            "Great experience, felt comfortable.",
-            "Accurate diagnosis and treatment.",
-            "Waiting area could be better."
-        ],
-        "hospital": {
-            "name": "Government Hospital",
-            "address": "Main Road, Anantapur",
-            "contact": "08554-778899"
-        }
-    },
-    {
-        "doctor_name": "Dr. Arjun Reddy",
-        "specialization": "Gynecologist",
-        "location": "Kurnool",
-        "experience": 21,
-        "rating": 4.1,
-        "reviews": [
-            "Friendly and professional.",
-            "Really listens to patient concerns.",
-            "Staff was not very helpful."
-        ],
-        "hospital": {
-            "name": "Yashoda Hospital",
-            "address": "Somajiguda, Hyderabad",
-            "contact": "040-12345678"
-        }
-    },
-    {
-        "doctor_name": "Dr. Kiran Menon",
-        "specialization": "Psychiatrist",
-        "location": "Hyderabad",
-        "experience": 11,
-        "rating": 3.9,
-        "reviews": [
-            "Really listens to patient concerns.",
-            "Very knowledgeable and caring.",
-            "Appointment process needs improvement."
-        ],
-        "hospital": {
-            "name": "LV Prasad Eye Institute",
-            "address": "Banjara Hills, Hyderabad",
-            "contact": "040-66554433"
-        }
-    },
-    {
-        "doctor_name": "Dr. Deepak Kumar",
-        "specialization": "Endocrinologist",
-        "location": "Rajahmundry",
-        "experience": 9,
-        "rating": 4.6,
-        "reviews": [
-            "Really listens to patient concerns.",
-            "Great experience, felt comfortable.",
-            "Appointment process needs improvement."
-        ],
-        "hospital": {
-            "name": "Renigunta Medical Center",
-            "address": "Main Road, Renigunta",
-            "contact": "0877-1122334"
-        }
-    },
-    {
-        "doctor_name": "Dr. Sindhu Naidu",
-        "specialization": "Gynecologist",
-        "location": "Kurnool",
-        "experience": 11,
-        "rating": 3.0,
-        "reviews": [
-            "Friendly and professional.",
-            "Great experience, felt comfortable.",
-            "Waiting area could be better."
-        ],
-        "hospital": {
-            "name": "Ramesh Hospitals",
-            "address": "MG Road, Vijayawada",
-            "contact": "0866-998877"
-        }
-    },
-    {
-        "doctor_name": "Dr. Rajesh Chowdary",
-        "specialization": "Ophthalmologist",
-        "location": "Hyderabad",
-        "experience": 15,
-        "rating": 4.4,
-        "reviews": [
-            "Excellent service and staff.",
-            "Really listens to patient concerns.",
-            "Staff was not very helpful."
-        ],
-        "hospital": {
-            "name": "LV Prasad Eye Institute",
-            "address": "Banjara Hills, Hyderabad",
-            "contact": "040-66554433"
-        }
-    },
-    {
-        "doctor_name": "Dr. Sindhu Kumar",
-        "specialization": "Dentist",
-        "location": "Rajahmundry",
-        "experience": 15,
-        "rating": 4.8,
-        "reviews": [
-            "Highly recommended for treatment.",
-            "Friendly and professional.",
-            "Appointment process needs improvement."
-        ],
-        "hospital": {
-            "name": "Government Hospital",
-            "address": "Main Road, Anantapur",
-            "contact": "08554-778899"
-        }
-    },
-    {
-        "doctor_name": "Dr. Pooja Patel",
-        "specialization": "Orthopedic",
-        "location": "Nellore",
-        "experience": 26,
-        "rating": 3.8,
-        "reviews": [
-            "Really listens to patient concerns.",
-            "Excellent service and staff.",
-            "Long waiting time."
-        ],
-        "hospital": {
-            "name": "LV Prasad Eye Institute",
-            "address": "Banjara Hills, Hyderabad",
-            "contact": "040-66554433"
-        }
-    },
-    {
-        "doctor_name": "Dr. Meena Sharma",
-        "specialization": "Pediatrician",
-        "location": "Anantapur",
-        "experience": 30,
-        "rating": 3.1,
-        "reviews": [
-            "Really listens to patient concerns.",
-            "Takes time to explain everything.",
-            "Staff was not very helpful."
-        ],
-        "hospital": {
-            "name": "Apollo Clinic",
-            "address": "AIR Bypass Road, Tirupati",
-            "contact": "0877-2233445"
-        }
-    },
-    {
-        "doctor_name": "Dr. Kiran Chowdary",
-        "specialization": "Oncologist",
-        "location": "Nellore",
-        "experience": 14,
-        "rating": 4.9,
-        "reviews": [
-            "Excellent service and staff.",
-            "Friendly and professional.",
-            "Felt rushed during consultation."
-        ],
-        "hospital": {
-            "name": "Renigunta Medical Center",
-            "address": "Main Road, Renigunta",
-            "contact": "0877-1122334"
-        }
-    },
-    {
-        "doctor_name": "Dr. Kavya Naidu",
-        "specialization": "Neurologist",
-        "location": "Renigunta",
-        "experience": 10,
-        "rating": 4.6,
-        "reviews": [
-            "Accurate diagnosis and treatment.",
-            "Takes time to explain everything.",
-            "Appointment process needs improvement."
-        ],
-        "hospital": {
-            "name": "Government Hospital",
-            "address": "Main Road, Anantapur",
-            "contact": "08554-778899"
-        }
-    },
-    {
-        "doctor_name": "Dr. Ravi Menon",
-        "specialization": "Psychiatrist",
-        "location": "Nellore",
-        "experience": 30,
-        "rating": 4.5,
-        "reviews": [
-            "Accurate diagnosis and treatment.",
-            "Great experience, felt comfortable.",
-            "Did not get enough explanation."
-        ],
-        "hospital": {
-            "name": "CMC Hospital",
-            "address": "City Center, Chittoor",
-            "contact": "08572-224466"
-        }
-    },
-    {
-        "doctor_name": "Dr. Anil Sharma",
-        "specialization": "ENT Specialist",
-        "location": "Renigunta",
-        "experience": 30,
-        "rating": 4.5,
-        "reviews": [
-            "Excellent service and staff.",
-            "Friendly and professional.",
-            "Felt rushed during consultation."
-        ],
-        "hospital": {
-            "name": "LV Prasad Eye Institute",
-            "address": "Banjara Hills, Hyderabad",
-            "contact": "040-66554433"
-        }
-    },
-    {
-        "doctor_name": "Dr. Neha Varma",
-        "specialization": "Pulmonologist",
-        "location": "Tirupati",
-        "experience": 14,
-        "rating": 3.5,
-        "reviews": [
-            "Highly recommended for treatment.",
-            "Accurate diagnosis and treatment.",
-            "Charges are a bit high."
-        ],
-        "hospital": {
-            "name": "Sunshine Hospital",
-            "address": "KPHB, Hyderabad",
-            "contact": "040-87654321"
-        }
-    },
-    {
-        "doctor_name": "Dr. Vikram Varma",
-        "specialization": "Nephrologist",
-        "location": "Renigunta",
-        "experience": 21,
-        "rating": 3.5,
-        "reviews": [
-            "Takes time to explain everything.",
-            "Highly recommended for treatment.",
-            "Consultation was too short."
-        ],
-        "hospital": {
-            "name": "CMC Hospital",
-            "address": "City Center, Chittoor",
-            "contact": "08572-224466"
-        }
-    },
-    {
-        "doctor_name": "Dr. Pooja Kumar",
-        "specialization": "Pediatrician",
-        "location": "Rajahmundry",
-        "experience": 15,
-        "rating": 4.9,
-        "reviews": [
-            "Takes time to explain everything.",
-            "Accurate diagnosis and treatment.",
-            "Charges are a bit high."
-        ],
-        "hospital": {
-            "name": "Ramesh Hospitals",
-            "address": "MG Road, Vijayawada",
-            "contact": "0866-998877"
-        }
-    },
-    {
-        "doctor_name": "Dr. Arjun Naidu",
-        "specialization": "Pediatrician",
-        "location": "Nellore",
-        "experience": 15,
-        "rating": 4.1,
-        "reviews": [
-            "Great experience, felt comfortable.",
-            "Highly recommended for treatment.",
-            "Staff was not very helpful."
-        ],
-        "hospital": {
-            "name": "Government Hospital",
-            "address": "Main Road, Anantapur",
-            "contact": "08554-778899"
-        }
-    },
-    {
-        "doctor_name": "Dr. Ravi Patel",
-        "specialization": "Nephrologist",
-        "location": "Chittoor",
-        "experience": 28,
-        "rating": 4.0,
-        "reviews": [
-            "Friendly and professional.",
-            "Great experience, felt comfortable.",
-            "Staff was not very helpful."
-        ],
-        "hospital": {
-            "name": "Yashoda Hospital",
-            "address": "Somajiguda, Hyderabad",
-            "contact": "040-12345678"
-        }
-    },
-    {
-        "doctor_name": "Dr. Rajesh Naidu",
-        "specialization": "Dentist",
-        "location": "Hyderabad",
-        "experience": 7,
-        "rating": 3.5,
-        "reviews": [
-            "Friendly and professional.",
-            "Great experience, felt comfortable.",
-            "Did not get enough explanation."
-        ],
-        "hospital": {
-            "name": "Ramesh Hospitals",
-            "address": "MG Road, Vijayawada",
-            "contact": "0866-998877"
-        }
-    },
-    {
-        "doctor_name": "Dr. Sindhu Reddy",
-        "specialization": "Nephrologist",
-        "location": "Tirupati",
-        "experience": 5,
-        "rating": 5.0,
-        "reviews": [
-            "Really listens to patient concerns.",
-            "Very knowledgeable and caring.",
-            "Consultation was too short."
-        ],
-        "hospital": {
-            "name": "Nellore Care Hospital",
-            "address": "Trunk Road, Nellore",
-            "contact": "0861-332211"
-        }
-    },
-    {
-        "doctor_name": "Dr. Harish Reddy",
-        "specialization": "Dermatologist",
-        "location": "Chittoor",
-        "experience": 24,
-        "rating": 3.6,
-        "reviews": [
-            "Takes time to explain everything.",
-            "Really listens to patient concerns.",
-            "Appointment process needs improvement."
-        ],
-        "hospital": {
-            "name": "Renigunta Medical Center",
-            "address": "Main Road, Renigunta",
-            "contact": "0877-1122334"
-        }
-    },
-    {
-        "doctor_name": "Dr. Arjun Kumar",
-        "specialization": "Gynecologist",
-        "location": "Chittoor",
-        "experience": 30,
-        "rating": 4.0,
-        "reviews": [
-            "Great experience, felt comfortable.",
-            "Friendly and professional.",
-            "Consultation was too short."
-        ],
-        "hospital": {
-            "name": "Renigunta Medical Center",
-            "address": "Main Road, Renigunta",
-            "contact": "0877-1122334"
-        }
-    },
-    {
-        "doctor_name": "Dr. Deepak Kumar",
-        "specialization": "Ophthalmologist",
-        "location": "Chittoor",
-        "experience": 16,
-        "rating": 3.2,
-        "reviews": [
-            "Takes time to explain everything.",
-            "Excellent service and staff.",
-            "Long waiting time."
-        ],
-        "hospital": {
-            "name": "Apollo Clinic",
-            "address": "AIR Bypass Road, Tirupati",
-            "contact": "0877-2233445"
-        }
-    },
-    {
-        "doctor_name": "Dr. Deepak Iyer",
-        "specialization": "Orthopedic",
-        "location": "Nellore",
-        "experience": 35,
-        "rating": 3.3,
-        "reviews": [
-            "Highly recommended for treatment.",
-            "Great experience, felt comfortable.",
-            "Did not get enough explanation."
-        ],
-        "hospital": {
-            "name": "KIMS Hospital",
-            "address": "Guntur Road, Guntur",
-            "contact": "0863-445566"
-        }
-    },
-    {
-        "doctor_name": "Dr. Vikram Patel",
-        "specialization": "Dentist",
-        "location": "Guntur",
-        "experience": 18,
-        "rating": 4.6,
-        "reviews": [
-            "Takes time to explain everything.",
-            "Very knowledgeable and caring.",
-            "Staff was not very helpful."
-        ],
-        "hospital": {
-            "name": "LV Prasad Eye Institute",
-            "address": "Banjara Hills, Hyderabad",
-            "contact": "040-66554433"
-        }
-    },
-    {
-        "doctor_name": "Dr. Ganesh Iyer",
-        "specialization": "Neurologist",
-        "location": "Vijayawada",
-        "experience": 30,
-        "rating": 4.7,
-        "reviews": [
-            "Takes time to explain everything.",
-            "Highly recommended for treatment.",
-            "Staff was not very helpful."
-        ],
-        "hospital": {
-            "name": "Nellore Care Hospital",
-            "address": "Trunk Road, Nellore",
-            "contact": "0861-332211"
-        }
-    },
-    {
-        "doctor_name": "Dr. Ravi Kumar",
-        "specialization": "Neurologist",
-        "location": "Hyderabad",
-        "experience": 13,
-        "rating": 4.3,
-        "reviews": [
-            "Takes time to explain everything.",
-            "Excellent service and staff.",
-            "Felt rushed during consultation."
-        ],
-        "hospital": {
-            "name": "LV Prasad Eye Institute",
-            "address": "Banjara Hills, Hyderabad",
-            "contact": "040-66554433"
-        }
-    },
-    {
-        "doctor_name": "Dr. Rajesh Sharma",
-        "specialization": "Pulmonologist",
-        "location": "Kurnool",
-        "experience": 5,
-        "rating": 4.2,
-        "reviews": [
-            "Accurate diagnosis and treatment.",
-            "Takes time to explain everything.",
-            "Did not get enough explanation."
-        ],
-        "hospital": {
-            "name": "Government Hospital",
-            "address": "Main Road, Anantapur",
-            "contact": "08554-778899"
-        }
-    },
-    {
-        "doctor_name": "Dr. Lakshmi Patel",
-        "specialization": "Ophthalmologist",
-        "location": "Hyderabad",
-        "experience": 16,
-        "rating": 3.9,
-        "reviews": [
-            "Accurate diagnosis and treatment.",
-            "Takes time to explain everything.",
-            "Did not get enough explanation."
-        ],
-        "hospital": {
-            "name": "LV Prasad Eye Institute",
-            "address": "Banjara Hills, Hyderabad",
-            "contact": "040-66554433"
-        }
-    },
-    {
-        "doctor_name": "Dr. Rajesh Naidu",
-        "specialization": "Endocrinologist",
-        "location": "Tirupati",
-        "experience": 15,
-        "rating": 3.7,
-        "reviews": [
-            "Great experience, felt comfortable.",
-            "Accurate diagnosis and treatment.",
-            "Long waiting time."
-        ],
-        "hospital": {
-            "name": "Nellore Care Hospital",
-            "address": "Trunk Road, Nellore",
-            "contact": "0861-332211"
-        }
-    },
-    {
-        "doctor_name": "Dr. Deepak Patel",
-        "specialization": "Dermatologist",
-        "location": "Rajahmundry",
-        "experience": 20,
-        "rating": 3.2,
-        "reviews": [
-            "Accurate diagnosis and treatment.",
-            "Friendly and professional.",
-            "Long waiting time."
-        ],
-        "hospital": {
-            "name": "Apollo Clinic",
-            "address": "AIR Bypass Road, Tirupati",
-            "contact": "0877-2233445"
-        }
-    },
-    {
-        "doctor_name": "Dr. Swathi Sharma",
-        "specialization": "Endocrinologist",
-        "location": "Kurnool",
-        "experience": 33,
-        "rating": 4.1,
-        "reviews": [
-            "Really listens to patient concerns.",
-            "Excellent service and staff.",
-            "Charges are a bit high."
-        ],
-        "hospital": {
-            "name": "Sunshine Hospital",
-            "address": "KPHB, Hyderabad",
-            "contact": "040-87654321"
-        }
-    },
-    {
-        "doctor_name": "Dr. Vikram Reddy",
-        "specialization": "Psychiatrist",
-        "location": "Kurnool",
-        "experience": 13,
-        "rating": 4.8,
-        "reviews": [
-            "Highly recommended for treatment.",
-            "Excellent service and staff.",
-            "Consultation was too short."
-        ],
-        "hospital": {
-            "name": "Renigunta Medical Center",
-            "address": "Main Road, Renigunta",
-            "contact": "0877-1122334"
-        }
-    },
-    {
-        "doctor_name": "Dr. Suresh Varma",
-        "specialization": "Dentist",
-        "location": "Vijayawada",
-        "experience": 34,
-        "rating": 3.7,
-        "reviews": [
-            "Really listens to patient concerns.",
-            "Accurate diagnosis and treatment.",
-            "Long waiting time."
-        ],
-        "hospital": {
-            "name": "LV Prasad Eye Institute",
-            "address": "Banjara Hills, Hyderabad",
-            "contact": "040-66554433"
-        }
-    },
-    {
-        "doctor_name": "Dr. Harish Patel",
-        "specialization": "Oncologist",
-        "location": "Hyderabad",
-        "experience": 9,
-        "rating": 4.8,
-        "reviews": [
-            "Friendly and professional.",
-            "Very knowledgeable and caring.",
-            "Appointment process needs improvement."
-        ],
-        "hospital": {
-            "name": "Renigunta Medical Center",
-            "address": "Main Road, Renigunta",
-            "contact": "0877-1122334"
-        }
-    },
-    {
-        "doctor_name": "Dr. Priya Menon",
-        "specialization": "Gynecologist",
-        "location": "Hyderabad",
-        "experience": 19,
-        "rating": 3.9,
-        "reviews": [
-            "Excellent service and staff.",
-            "Very knowledgeable and caring.",
-            "Waiting area could be better."
-        ],
-        "hospital": {
-            "name": "Sunshine Hospital",
-            "address": "KPHB, Hyderabad",
-            "contact": "040-87654321"
-        }
-    },
-    {
-        "doctor_name": "Dr. Sindhu Chowdary",
-        "specialization": "ENT Specialist",
-        "location": "Vijayawada",
-        "experience": 32,
-        "rating": 4.3,
-        "reviews": [
-            "Excellent service and staff.",
-            "Highly recommended for treatment.",
-            "Felt rushed during consultation."
-        ],
-        "hospital": {
-            "name": "CMC Hospital",
-            "address": "City Center, Chittoor",
-            "contact": "08572-224466"
-        }
-    },
-    {
-        "doctor_name": "Dr. Ganesh Iyer",
-        "specialization": "Orthopedic",
-        "location": "Chittoor",
-        "experience": 22,
-        "rating": 4.7,
-        "reviews": [
-            "Great experience, felt comfortable.",
-            "Really listens to patient concerns.",
-            "Felt rushed during consultation."
-        ],
-        "hospital": {
-            "name": "LV Prasad Eye Institute",
-            "address": "Banjara Hills, Hyderabad",
-            "contact": "040-66554433"
-        }
-    },
-    {
-        "doctor_name": "Dr. Neha Reddy",
-        "specialization": "ENT Specialist",
-        "location": "Nellore",
-        "experience": 25,
-        "rating": 4.9,
-        "reviews": [
-            "Takes time to explain everything.",
-            "Friendly and professional.",
-            "Appointment process needs improvement."
-        ],
-        "hospital": {
-            "name": "CMC Hospital",
-            "address": "City Center, Chittoor",
-            "contact": "08572-224466"
-        }
-    },
-    {
-        "doctor_name": "Dr. Ravi Naidu",
-        "specialization": "Orthopedic",
-        "location": "Chittoor",
-        "experience": 15,
-        "rating": 4.8,
-        "reviews": [
-            "Really listens to patient concerns.",
-            "Friendly and professional.",
-            "Waiting area could be better."
-        ],
-        "hospital": {
-            "name": "Sunshine Hospital",
-            "address": "KPHB, Hyderabad",
-            "contact": "040-87654321"
-        }
-    },
-    {
-        "doctor_name": "Dr. Arjun Chowdary",
-        "specialization": "Pediatrician",
-        "location": "Nellore",
-        "experience": 8,
-        "rating": 3.8,
-        "reviews": [
-            "Really listens to patient concerns.",
-            "Takes time to explain everything.",
-            "Long waiting time."
-        ],
-        "hospital": {
-            "name": "Sunshine Hospital",
-            "address": "KPHB, Hyderabad",
-            "contact": "040-87654321"
-        }
-    },
-    {
-        "doctor_name": "Dr. Ganesh Reddy",
-        "specialization": "Oncologist",
-        "location": "Vijayawada",
-        "experience": 26,
-        "rating": 4.8,
-        "reviews": [
-            "Very knowledgeable and caring.",
-            "Really listens to patient concerns.",
-            "Did not get enough explanation."
-        ],
-        "hospital": {
-            "name": "Nellore Care Hospital",
-            "address": "Trunk Road, Nellore",
-            "contact": "0861-332211"
-        }
-    },
-    {
-        "doctor_name": "Dr. Anil Gupta",
-        "specialization": "Pulmonologist",
-        "location": "Hyderabad",
-        "experience": 33,
-        "rating": 4.6,
-        "reviews": [
-            "Takes time to explain everything.",
-            "Excellent service and staff.",
-            "Staff was not very helpful."
-        ],
-        "hospital": {
-            "name": "Yashoda Hospital",
-            "address": "Somajiguda, Hyderabad",
-            "contact": "040-12345678"
-        }
-    },
-    {
-        "doctor_name": "Dr. Deepak Varma",
-        "specialization": "Neurologist",
-        "location": "Hyderabad",
-        "experience": 13,
-        "rating": 3.6,
-        "reviews": [
-            "Friendly and professional.",
-            "Highly recommended for treatment.",
-            "Waiting area could be better."
-        ],
-        "hospital": {
-            "name": "Yashoda Hospital",
-            "address": "Somajiguda, Hyderabad",
-            "contact": "040-12345678"
-        }
-    },
-    {
-        "doctor_name": "Dr. Deepak Patel",
-        "specialization": "Pediatrician",
-        "location": "Tirupati",
-        "experience": 22,
-        "rating": 4.3,
-        "reviews": [
-            "Excellent service and staff.",
-            "Highly recommended for treatment.",
-            "Felt rushed during consultation."
-        ],
-        "hospital": {
-            "name": "CMC Hospital",
-            "address": "City Center, Chittoor",
-            "contact": "08572-224466"
-        }
-    },
-    {
-        "doctor_name": "Dr. Vikram Chowdary",
-        "specialization": "Endocrinologist",
-        "location": "Guntur",
-        "experience": 8,
-        "rating": 3.8,
-        "reviews": [
-            "Very knowledgeable and caring.",
-            "Takes time to explain everything.",
-            "Felt rushed during consultation."
-        ],
-        "hospital": {
-            "name": "Nellore Care Hospital",
-            "address": "Trunk Road, Nellore",
-            "contact": "0861-332211"
-        }
-    },
-    {
-        "doctor_name": "Dr. Ganesh Reddy",
-        "specialization": "Neurologist",
-        "location": "Nellore",
-        "experience": 10,
-        "rating": 3.9,
-        "reviews": [
-            "Great experience, felt comfortable.",
-            "Takes time to explain everything.",
-            "Appointment process needs improvement."
-        ],
-        "hospital": {
-            "name": "Government Hospital",
-            "address": "Main Road, Anantapur",
-            "contact": "08554-778899"
-        }
-    },
-    {
-        "doctor_name": "Dr. Ravi Iyer",
-        "specialization": "Gynecologist",
-        "location": "Nellore",
-        "experience": 12,
-        "rating": 4.1,
-        "reviews": [
-            "Very knowledgeable and caring.",
-            "Highly recommended for treatment.",
-            "Felt rushed during consultation."
-        ],
-        "hospital": {
-            "name": "Ramesh Hospitals",
-            "address": "MG Road, Vijayawada",
-            "contact": "0866-998877"
-        }
-    },
-    {
-        "doctor_name": "Dr. Divya Chowdary",
-        "specialization": "Dentist",
-        "location": "Kurnool",
-        "experience": 7,
-        "rating": 4.6,
-        "reviews": [
-            "Very knowledgeable and caring.",
-            "Really listens to patient concerns.",
-            "Waiting area could be better."
-        ],
-        "hospital": {
-            "name": "Yashoda Hospital",
-            "address": "Somajiguda, Hyderabad",
-            "contact": "040-12345678"
-        }
-    },
-    {
-        "doctor_name": "Dr. Vikram Gupta",
-        "specialization": "Psychiatrist",
-        "location": "Chittoor",
-        "experience": 12,
-        "rating": 3.6,
-        "reviews": [
-            "Really listens to patient concerns.",
-            "Takes time to explain everything.",
-            "Waiting area could be better."
-        ],
-        "hospital": {
-            "name": "KIMS Hospital",
-            "address": "Guntur Road, Guntur",
-            "contact": "0863-445566"
-        }
-    },
-    {
+        "id": 1,
         "doctor_name": "Dr. Pooja Reddy",
-        "specialization": "Ophthalmologist",
-        "location": "Kurnool",
-        "experience": 15,
-        "rating": 5.0,
-        "reviews": [
-            "Takes time to explain everything.",
-            "Accurate diagnosis and treatment.",
-            "Did not get enough explanation."
-        ],
-        "hospital": {
-            "name": "Nellore Care Hospital",
-            "address": "Trunk Road, Nellore",
-            "contact": "0861-332211"
-        }
-    },
-    {
-        "doctor_name": "Dr. Kiran Reddy",
-        "specialization": "Pediatrician",
-        "location": "Hyderabad",
-        "experience": 30,
-        "rating": 4.2,
-        "reviews": [
-            "Great experience, felt comfortable.",
-            "Accurate diagnosis and treatment.",
-            "Appointment process needs improvement."
-        ],
-        "hospital": {
-            "name": "Yashoda Hospital",
-            "address": "Somajiguda, Hyderabad",
-            "contact": "040-12345678"
-        }
-    },
-    {
-        "doctor_name": "Dr. Ganesh Iyer",
-        "specialization": "Orthopedic",
-        "location": "Chittoor",
-        "experience": 32,
-        "rating": 3.6,
-        "reviews": [
-            "Really listens to patient concerns.",
-            "Friendly and professional.",
-            "Appointment process needs improvement."
-        ],
-        "hospital": {
-            "name": "Ramesh Hospitals",
-            "address": "MG Road, Vijayawada",
-            "contact": "0866-998877"
-        }
-    },
-    {
-        "doctor_name": "Dr. Anil Menon",
-        "specialization": "General Physician",
-        "location": "Kurnool",
-        "experience": 9,
-        "rating": 4.7,
-        "reviews": [
-            "Friendly and professional.",
-            "Really listens to patient concerns.",
-            "Charges are a bit high."
-        ],
-        "hospital": {
-            "name": "Nellore Care Hospital",
-            "address": "Trunk Road, Nellore",
-            "contact": "0861-332211"
-        }
-    },
-    {
-        "doctor_name": "Dr. Anil Chowdary",
-        "specialization": "Dermatologist",
-        "location": "Nellore",
-        "experience": 18,
-        "rating": 3.7,
-        "reviews": [
-            "Great experience, felt comfortable.",
-            "Takes time to explain everything.",
-            "Long waiting time."
-        ],
-        "hospital": {
-            "name": "Apollo Clinic",
-            "address": "AIR Bypass Road, Tirupati",
-            "contact": "0877-2233445"
-        }
-    },
-    {
-        "doctor_name": "Dr. Meena Chowdary",
         "specialization": "Nephrologist",
-        "location": "Tirupati",
-        "experience": 34,
-        "rating": 3.7,
-        "reviews": [
-            "Really listens to patient concerns.",
-            "Accurate diagnosis and treatment.",
-            "Waiting area could be better."
-        ],
-        "hospital": {
-            "name": "LV Prasad Eye Institute",
-            "address": "Banjara Hills, Hyderabad",
-            "contact": "040-66554433"
-        }
-    },
-    {
-        "doctor_name": "Dr. Rajesh Sharma",
-        "specialization": "Cardiologist",
-        "location": "Chittoor",
-        "experience": 8,
+        "location": "Nellore",
+        "experience": 6,
         "rating": 3.6,
         "reviews": [
-            "Accurate diagnosis and treatment.",
-            "Takes time to explain everything.",
-            "Staff was not very helpful."
-        ],
-        "hospital": {
-            "name": "Government Hospital",
-            "address": "Main Road, Anantapur",
-            "contact": "08554-778899"
-        }
-    },
-    {
-        "doctor_name": "Dr. Suresh Sharma",
-        "specialization": "Orthopedic",
-        "location": "Kurnool",
-        "experience": 29,
-        "rating": 4.2,
-        "reviews": [
-            "Very knowledgeable and caring.",
-            "Excellent service and staff.",
-            "Felt rushed during consultation."
-        ],
-        "hospital": {
-            "name": "Apollo Clinic",
-            "address": "AIR Bypass Road, Tirupati",
-            "contact": "0877-2233445"
-        }
-    },
-    {
-        "doctor_name": "Dr. Neha Varma",
-        "specialization": "Oncologist",
-        "location": "Hyderabad",
-        "experience": 23,
-        "rating": 3.3,
-        "reviews": [
-            "Friendly and professional.",
-            "Accurate diagnosis and treatment.",
-            "Appointment process needs improvement."
-        ],
-        "hospital": {
-            "name": "Renigunta Medical Center",
-            "address": "Main Road, Renigunta",
-            "contact": "0877-1122334"
-        }
-    },
-    {
-        "doctor_name": "Dr. Ganesh Menon",
-        "specialization": "Pulmonologist",
-        "location": "Guntur",
-        "experience": 24,
-        "rating": 3.8,
-        "reviews": [
-            "Excellent service and staff.",
-            "Takes time to explain everything.",
-            "Staff was not very helpful."
-        ],
-        "hospital": {
-            "name": "LV Prasad Eye Institute",
-            "address": "Banjara Hills, Hyderabad",
-            "contact": "040-66554433"
-        }
-    },
-    {
-        "doctor_name": "Dr. Sindhu Gupta",
-        "specialization": "Psychiatrist",
-        "location": "Guntur",
-        "experience": 15,
-        "rating": 3.5,
-        "reviews": [
             "Really listens to patient concerns.",
             "Very knowledgeable and caring.",
-            "Charges are a bit high."
-        ],
-        "hospital": {
-            "name": "Yashoda Hospital",
-            "address": "Somajiguda, Hyderabad",
-            "contact": "040-12345678"
-        }
-    },
-    {
-        "doctor_name": "Dr. Neha Sharma",
-        "specialization": "Pediatrician",
-        "location": "Nellore",
-        "experience": 3,
-        "rating": 3.5,
-        "reviews": [
-            "Highly recommended for treatment.",
-            "Accurate diagnosis and treatment.",
-            "Felt rushed during consultation."
-        ],
-        "hospital": {
-            "name": "Apollo Clinic",
-            "address": "AIR Bypass Road, Tirupati",
-            "contact": "0877-2233445"
-        }
-    },
-    {
-        "doctor_name": "Dr. Divya Kumar",
-        "specialization": "ENT Specialist",
-        "location": "Renigunta",
-        "experience": 8,
-        "rating": 4.7,
-        "reviews": [
-            "Accurate diagnosis and treatment.",
-            "Friendly and professional.",
-            "Staff was not very helpful."
-        ],
-        "hospital": {
-            "name": "KIMS Hospital",
-            "address": "Guntur Road, Guntur",
-            "contact": "0863-445566"
-        }
-    },
-    {
-        "doctor_name": "Dr. Kiran Iyer",
-        "specialization": "ENT Specialist",
-        "location": "Chittoor",
-        "experience": 30,
-        "rating": 3.7,
-        "reviews": [
-            "Excellent service and staff.",
-            "Very knowledgeable and caring.",
-            "Felt rushed during consultation."
-        ],
-        "hospital": {
-            "name": "KIMS Hospital",
-            "address": "Guntur Road, Guntur",
-            "contact": "0863-445566"
-        }
-    },
-    {
-        "doctor_name": "Dr. Swathi Varma",
-        "specialization": "Orthopedic",
-        "location": "Nellore",
-        "experience": 23,
-        "rating": 3.1,
-        "reviews": [
-            "Very knowledgeable and caring.",
-            "Really listens to patient concerns.",
-            "Appointment process needs improvement."
+            "Waiting area could be better."
         ],
         "hospital": {
             "name": "Ramesh Hospitals",
@@ -1394,198 +18,106 @@
         }
     },
     {
-        "doctor_name": "Dr. Manoj Gupta",
-        "specialization": "Ophthalmologist",
-        "location": "Rajahmundry",
-        "experience": 10,
-        "rating": 3.9,
-        "reviews": [
-            "Friendly and professional.",
-            "Really listens to patient concerns.",
-            "Waiting area could be better."
-        ],
-        "hospital": {
-            "name": "Yashoda Hospital",
-            "address": "Somajiguda, Hyderabad",
-            "contact": "040-12345678"
-        }
-    },
-    {
-        "doctor_name": "Dr. Deepak Kumar",
-        "specialization": "ENT Specialist",
-        "location": "Rajahmundry",
-        "experience": 35,
-        "rating": 3.9,
-        "reviews": [
-            "Very knowledgeable and caring.",
-            "Excellent service and staff.",
-            "Appointment process needs improvement."
-        ],
-        "hospital": {
-            "name": "KIMS Hospital",
-            "address": "Guntur Road, Guntur",
-            "contact": "0863-445566"
-        }
-    },
-    {
-        "doctor_name": "Dr. Meena Patel",
-        "specialization": "Ophthalmologist",
-        "location": "Rajahmundry",
-        "experience": 27,
-        "rating": 5.0,
-        "reviews": [
-            "Takes time to explain everything.",
-            "Very knowledgeable and caring.",
-            "Long waiting time."
-        ],
-        "hospital": {
-            "name": "Renigunta Medical Center",
-            "address": "Main Road, Renigunta",
-            "contact": "0877-1122334"
-        }
-    },
-    {
-        "doctor_name": "Dr. Vikram Reddy",
-        "specialization": "Dermatologist",
-        "location": "Anantapur",
-        "experience": 15,
-        "rating": 4.8,
-        "reviews": [
-            "Friendly and professional.",
-            "Very knowledgeable and caring.",
-            "Did not get enough explanation."
-        ],
-        "hospital": {
-            "name": "CMC Hospital",
-            "address": "City Center, Chittoor",
-            "contact": "08572-224466"
-        }
-    },
-    {
-        "doctor_name": "Dr. Swathi Reddy",
-        "specialization": "Cardiologist",
-        "location": "Kurnool",
-        "experience": 33,
-        "rating": 4.0,
-        "reviews": [
-            "Friendly and professional.",
-            "Takes time to explain everything.",
-            "Staff was not very helpful."
-        ],
-        "hospital": {
-            "name": "Renigunta Medical Center",
-            "address": "Main Road, Renigunta",
-            "contact": "0877-1122334"
-        }
-    },
-    {
-        "doctor_name": "Dr. Vikram Iyer",
-        "specialization": "Dentist",
-        "location": "Nellore",
-        "experience": 15,
+        "id": 2,
+        "doctor_name": "Dr. Neha Chowdary",
+        "specialization": "Oncologist",
+        "location": "Vijayawada",
+        "experience": 17,
         "rating": 3.2,
         "reviews": [
-            "Highly recommended for treatment.",
-            "Very knowledgeable and caring.",
-            "Appointment process needs improvement."
+            "Friendly and professional.",
+            "Excellent service and staff.",
+            "Staff was not very helpful."
         ],
         "hospital": {
-            "name": "Nellore Care Hospital",
-            "address": "Trunk Road, Nellore",
-            "contact": "0861-332211"
+            "name": "KIMS Hospital",
+            "address": "Guntur Road, Guntur",
+            "contact": "0863-445566"
         }
     },
     {
-        "doctor_name": "Dr. Harish Kumar",
-        "specialization": "Dentist",
-        "location": "Kurnool",
-        "experience": 34,
-        "rating": 4.7,
-        "reviews": ["Highly recommended for treatment.","Takes time to explain everything.","Waiting area could be better."        ],
+        "id": 3,
+        "doctor_name": "Dr. Swathi Iyer",
+        "specialization": "Pulmonologist",
+        "location": "Rajahmundry",
+        "experience": 18,
+        "rating": 4.8,
+        "reviews": [
+            "Great experience, felt comfortable.",
+            "Accurate diagnosis and treatment.",
+            "Did not get enough explanation."
+        ],
         "hospital": {
-            "name": "Nellore Care Hospital",
-            "address": "Trunk Road, Nellore",
-            "contact": "0861-332211"
+            "name": "Sunshine Hospital",
+            "address": "KPHB, Hyderabad",
+            "contact": "040-87654321"
         }
     },
     {
+        "id": 4,
+        "doctor_name": "Dr. Divya Iyer",
+        "specialization": "Oncologist",
+        "location": "Renigunta",
+        "experience": 15,
+        "rating": 4.0,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Accurate diagnosis and treatment.",
+            "Charges are a bit high."
+        ],
+        "hospital": {
+            "name": "Yashoda Hospital",
+            "address": "Somajiguda, Hyderabad",
+            "contact": "040-12345678"
+        }
+    },
+    {
+        "id": 5,
+        "doctor_name": "Dr. Kiran Varma",
+        "specialization": "General Physician",
+        "location": "Hyderabad",
+        "experience": 22,
+        "rating": 3.1,
+        "reviews": [
+            "Highly recommended for treatment.",
+            "Excellent service and staff.",
+            "Did not get enough explanation."
+        ],
+        "hospital": {
+            "name": "Sunshine Hospital",
+            "address": "KPHB, Hyderabad",
+            "contact": "040-87654321"
+        }
+    },
+    {
+        "id": 6,
+        "doctor_name": "Dr. Rajesh Chowdary",
+        "specialization": "Neurologist",
+        "location": "Renigunta",
+        "experience": 9,
+        "rating": 4.5,
+        "reviews": [
+            "Friendly and professional.",
+            "Takes time to explain everything.",
+            "Charges are a bit high."
+        ],
+        "hospital": {
+            "name": "Yashoda Hospital",
+            "address": "Somajiguda, Hyderabad",
+            "contact": "040-12345678"
+        }
+    },
+    {
+        "id": 7,
         "doctor_name": "Dr. Manoj Reddy",
         "specialization": "General Physician",
         "location": "Kurnool",
-        "experience": 33,
-        "rating": 3.1,
+        "experience": 13,
+        "rating": 4.3,
         "reviews": [
-            "Friendly and professional.",
-            "Very knowledgeable and caring.",
-            "Long waiting time."
-        ],
-        "hospital": {
-            "name": "KIMS Hospital",
-            "address": "Guntur Road, Guntur",
-            "contact": "0863-445566"
-        }
-    },
-    {
-        "doctor_name": "Dr. Anil Kumar",
-        "specialization": "Dermatologist",
-        "location": "Vijayawada",
-        "experience": 15,
-        "rating": 3.5,
-        "reviews": [
-            "Great experience, felt comfortable.",
-            "Very knowledgeable and caring.",
-            "Waiting area could be better."
-        ],
-        "hospital": {
-            "name": "Ramesh Hospitals",
-            "address": "MG Road, Vijayawada",
-            "contact": "0866-998877"
-        }
-    },
-    {
-        "doctor_name": "Dr. Ganesh Kumar",
-        "specialization": "Pulmonologist",
-        "location": "Chittoor",
-        "experience": 34,
-        "rating": 3.3,
-        "reviews": [
-            "Friendly and professional.",
             "Really listens to patient concerns.",
-            "Felt rushed during consultation."
-        ],
-        "hospital": {
-            "name": "KIMS Hospital",
-            "address": "Guntur Road, Guntur",
-            "contact": "0863-445566"
-        }
-    },
-    {
-        "doctor_name": "Dr. Pooja Chowdary",
-        "specialization": "Pulmonologist",
-        "location": "Chittoor",
-        "experience": 11,
-        "rating": 3.9,
-        "reviews": [
-            "Great experience, felt comfortable.",
-            "Highly recommended for treatment.",
-            "Consultation was too short."
-        ],
-        "hospital": {
-            "name": "CMC Hospital",
-            "address": "City Center, Chittoor",
-            "contact": "08572-224466"
-        }
-    },
-    {
-        "doctor_name": "Dr. Ganesh Varma",
-        "specialization": "Cardiologist",
-        "location": "Nellore",
-        "experience": 24,
-        "rating": 4.8,
-        "reviews": [
-            "Highly recommended for treatment.",
-            "Friendly and professional.",
-            "Consultation was too short."
+            "Accurate diagnosis and treatment.",
+            "Appointment process needs improvement."
         ],
         "hospital": {
             "name": "Renigunta Medical Center",
@@ -1594,13 +126,159 @@
         }
     },
     {
-        "doctor_name": "Dr. Priya Iyer",
-        "specialization": "Nephrologist",
-        "location": "Vijayawada",
-        "experience": 8,
-        "rating": 3.8,
+        "id": 8,
+        "doctor_name": "Dr. Kiran Iyer",
+        "specialization": "Psychiatrist",
+        "location": "Hyderabad",
+        "experience": 30,
+        "rating": 4.7,
         "reviews": [
+            "Highly recommended for treatment.",
+            "Friendly and professional.",
+            "Consultation was too short."
+        ],
+        "hospital": {
+            "name": "Sunshine Hospital",
+            "address": "KPHB, Hyderabad",
+            "contact": "040-87654321"
+        }
+    },
+    {
+        "id": 9,
+        "doctor_name": "Dr. Pooja Reddy",
+        "specialization": "Orthopedic",
+        "location": "Vijayawada",
+        "experience": 31,
+        "rating": 4.1,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Friendly and professional.",
+            "Felt rushed during consultation."
+        ],
+        "hospital": {
+            "name": "Nellore Care Hospital",
+            "address": "Trunk Road, Nellore",
+            "contact": "0861-332211"
+        }
+    },
+    {
+        "id": 10,
+        "doctor_name": "Dr. Ravi Kumar",
+        "specialization": "Nephrologist",
+        "location": "Kurnool",
+        "experience": 30,
+        "rating": 4.0,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Friendly and professional.",
+            "Appointment process needs improvement.",
+            "Goot at patient"
+        ],
+        "hospital": {
+            "name": "Apollo Clinic",
+            "address": "AIR Bypass Road, Tirupati",
+            "contact": "0877-2233445"
+        }
+    },
+    {
+        "id": 11,
+        "doctor_name": "Dr. Swathi Varma",
+        "specialization": "Endocrinologist",
+        "location": "Guntur",
+        "experience": 34,
+        "rating": 3.3,
+        "reviews": [
+            "Highly recommended for treatment.",
+            "Friendly and professional.",
+            "Consultation was too short."
+        ],
+        "hospital": {
+            "name": "Government Hospital",
+            "address": "Main Road, Anantapur",
+            "contact": "08554-778899"
+        }
+    },
+    {
+        "id": 12,
+        "doctor_name": "Dr. Swathi Naidu",
+        "specialization": "Pediatrician",
+        "location": "Chittoor",
+        "experience": 20,
+        "rating": 4.7,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Accurate diagnosis and treatment.",
+            "Charges are a bit high."
+        ],
+        "hospital": {
+            "name": "Nellore Care Hospital",
+            "address": "Trunk Road, Nellore",
+            "contact": "0861-332211"
+        }
+    },
+    {
+        "id": 13,
+        "doctor_name": "Dr. Priya Iyer",
+        "specialization": "Ophthalmologist",
+        "location": "Anantapur",
+        "experience": 27,
+        "rating": 4.3,
+        "reviews": [
+            "Highly recommended for treatment.",
             "Takes time to explain everything.",
+            "Felt rushed during consultation."
+        ],
+        "hospital": {
+            "name": "Renigunta Medical Center",
+            "address": "Main Road, Renigunta",
+            "contact": "0877-1122334"
+        }
+    },
+    {
+        "id": 14,
+        "doctor_name": "Dr. Ganesh Menon",
+        "specialization": "Oncologist",
+        "location": "Chittoor",
+        "experience": 34,
+        "rating": 3.1,
+        "reviews": [
+            "Great experience, felt comfortable.",
+            "Accurate diagnosis and treatment.",
+            "Appointment process needs improvement."
+        ],
+        "hospital": {
+            "name": "Nellore Care Hospital",
+            "address": "Trunk Road, Nellore",
+            "contact": "0861-332211"
+        }
+    },
+    {
+        "id": 15,
+        "doctor_name": "Dr. Harish Menon",
+        "specialization": "Gynecologist",
+        "location": "Nellore",
+        "experience": 4,
+        "rating": 3.6,
+        "reviews": [
+            "Highly recommended for treatment.",
+            "Great experience, felt comfortable.",
+            "Charges are a bit high."
+        ],
+        "hospital": {
+            "name": "Sunshine Hospital",
+            "address": "KPHB, Hyderabad",
+            "contact": "040-87654321"
+        }
+    },
+    {
+        "id": 16,
+        "doctor_name": "Dr. Divya Varma",
+        "specialization": "Nephrologist",
+        "location": "Chittoor",
+        "experience": 26,
+        "rating": 4.6,
+        "reviews": [
+            "Excellent service and staff.",
             "Great experience, felt comfortable.",
             "Long waiting time."
         ],
@@ -1611,15 +289,16 @@
         }
     },
     {
-        "doctor_name": "Dr. Manoj Patel",
-        "specialization": "Pediatrician",
-        "location": "Vijayawada",
-        "experience": 20,
-        "rating": 3.9,
+        "id": 17,
+        "doctor_name": "Dr. Arjun Chowdary",
+        "specialization": "Cardiologist",
+        "location": "Chittoor",
+        "experience": 32,
+        "rating": 3.1,
         "reviews": [
-            "Really listens to patient concerns.",
             "Friendly and professional.",
-            "Felt rushed during consultation."
+            "Great experience, felt comfortable.",
+            "Consultation was too short."
         ],
         "hospital": {
             "name": "Sunshine Hospital",
@@ -1628,14 +307,178 @@
         }
     },
     {
-        "doctor_name": "Dr. Neha Menon",
-        "specialization": "Dentist",
-        "location": "Kurnool",
-        "experience": 30,
-        "rating": 4.2,
+        "id": 18,
+        "doctor_name": "Dr. Harish Kumar",
+        "specialization": "Psychiatrist",
+        "location": "Tirupati",
+        "experience": 13,
+        "rating": 4.7,
         "reviews": [
             "Great experience, felt comfortable.",
+            "Friendly and professional.",
+            "Did not get enough explanation.",
+            "He is cleared all of my queries"
+        ],
+        "hospital": {
+            "name": "CMC Hospital",
+            "address": "City Center, Chittoor",
+            "contact": "08572-224466"
+        }
+    },
+    {
+        "id": 19,
+        "doctor_name": "Dr. Kiran Naidu",
+        "specialization": "Neurologist",
+        "location": "Rajahmundry",
+        "experience": 6,
+        "rating": 3.4,
+        "reviews": [
+            "Highly recommended for treatment.",
+            "Excellent service and staff.",
+            "Charges are a bit high."
+        ],
+        "hospital": {
+            "name": "Government Hospital",
+            "address": "Main Road, Anantapur",
+            "contact": "08554-778899"
+        }
+    },
+    {
+        "id": 20,
+        "doctor_name": "Dr. Priya Reddy",
+        "specialization": "Gynecologist",
+        "location": "Renigunta",
+        "experience": 19,
+        "rating": 4.9,
+        "reviews": [
+            "Friendly and professional.",
+            "Accurate diagnosis and treatment.",
+            "Long waiting time."
+        ],
+        "hospital": {
+            "name": "KIMS Hospital",
+            "address": "Guntur Road, Guntur",
+            "contact": "0863-445566"
+        }
+    },
+    {
+        "id": 21,
+        "doctor_name": "Dr. Anil Reddy",
+        "specialization": "Orthopedic",
+        "location": "Nellore",
+        "experience": 11,
+        "rating": 3.9,
+        "reviews": [
+            "Great experience, felt comfortable.",
+            "Takes time to explain everything.",
+            "Consultation was too short."
+        ],
+        "hospital": {
+            "name": "Nellore Care Hospital",
+            "address": "Trunk Road, Nellore",
+            "contact": "0861-332211"
+        }
+    },
+    {
+        "id": 22,
+        "doctor_name": "Dr. Lakshmi Chowdary",
+        "specialization": "Nephrologist",
+        "location": "Rajahmundry",
+        "experience": 26,
+        "rating": 3.1,
+        "reviews": [
+            "Friendly and professional.",
+            "Highly recommended for treatment.",
+            "Consultation was too short."
+        ],
+        "hospital": {
+            "name": "Apollo Clinic",
+            "address": "AIR Bypass Road, Tirupati",
+            "contact": "0877-2233445"
+        }
+    },
+    {
+        "id": 23,
+        "doctor_name": "Dr. Arjun Naidu",
+        "specialization": "Ophthalmologist",
+        "location": "Kurnool",
+        "experience": 7,
+        "rating": 4.5,
+        "reviews": [
             "Really listens to patient concerns.",
+            "Takes time to explain everything.",
+            "Staff was not very helpful."
+        ],
+        "hospital": {
+            "name": "Renigunta Medical Center",
+            "address": "Main Road, Renigunta",
+            "contact": "0877-1122334"
+        }
+    },
+    {
+        "id": 24,
+        "doctor_name": "Dr. Kiran Sharma",
+        "specialization": "Oncologist",
+        "location": "Kurnool",
+        "experience": 28,
+        "rating": 4.7,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Takes time to explain everything.",
+            "Long waiting time."
+        ],
+        "hospital": {
+            "name": "Nellore Care Hospital",
+            "address": "Trunk Road, Nellore",
+            "contact": "0861-332211"
+        }
+    },
+    {
+        "id": 25,
+        "doctor_name": "Dr. Divya Chowdary",
+        "specialization": "Cardiologist",
+        "location": "Kurnool",
+        "experience": 33,
+        "rating": 3.9,
+        "reviews": [
+            "Very knowledgeable and caring.",
+            "Accurate diagnosis and treatment.",
+            "Appointment process needs improvement."
+        ],
+        "hospital": {
+            "name": "Apollo Clinic",
+            "address": "AIR Bypass Road, Tirupati",
+            "contact": "0877-2233445"
+        }
+    },
+    {
+        "id": 26,
+        "doctor_name": "Dr. Ganesh Chowdary",
+        "specialization": "Pediatrician",
+        "location": "Kurnool",
+        "experience": 8,
+        "rating": 3.1,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Highly recommended for treatment.",
+            "Charges are a bit high."
+        ],
+        "hospital": {
+            "name": "LV Prasad Eye Institute",
+            "address": "Banjara Hills, Hyderabad",
+            "contact": "040-66554433"
+        }
+    },
+    {
+        "id": 27,
+        "doctor_name": "Dr. Arjun Varma",
+        "specialization": "Neurologist",
+        "location": "Tirupati",
+        "experience": 30,
+        "rating": 3.2,
+        "reviews": [
+            "Takes time to explain everything.",
+            "Accurate diagnosis and treatment.",
             "Did not get enough explanation."
         ],
         "hospital": {
@@ -1645,15 +488,178 @@
         }
     },
     {
-        "doctor_name": "Dr. Rajesh Iyer",
+        "id": 28,
+        "doctor_name": "Dr. Priya Iyer",
         "specialization": "Nephrologist",
+        "location": "Renigunta",
+        "experience": 35,
+        "rating": 4.5,
+        "reviews": [
+            "Accurate diagnosis and treatment.",
+            "Takes time to explain everything.",
+            "Consultation was too short."
+        ],
+        "hospital": {
+            "name": "KIMS Hospital",
+            "address": "Guntur Road, Guntur",
+            "contact": "0863-445566"
+        }
+    },
+    {
+        "id": 29,
+        "doctor_name": "Dr. Pooja Iyer",
+        "specialization": "Pediatrician",
+        "location": "Hyderabad",
+        "experience": 9,
+        "rating": 4.2,
+        "reviews": [
+            "Great experience, felt comfortable.",
+            "Accurate diagnosis and treatment.",
+            "Did not get enough explanation."
+        ],
+        "hospital": {
+            "name": "Nellore Care Hospital",
+            "address": "Trunk Road, Nellore",
+            "contact": "0861-332211"
+        }
+    },
+    {
+        "id": 30,
+        "doctor_name": "Dr. Lakshmi Iyer",
+        "specialization": "Gynecologist",
         "location": "Chittoor",
-        "experience": 16,
-        "rating": 4.9,
+        "experience": 9,
+        "rating": 4.7,
         "reviews": [
             "Friendly and professional.",
+            "Very knowledgeable and caring.",
+            "Felt rushed during consultation."
+        ],
+        "hospital": {
+            "name": "LV Prasad Eye Institute",
+            "address": "Banjara Hills, Hyderabad",
+            "contact": "040-66554433"
+        }
+    },
+    {
+        "id": 31,
+        "doctor_name": "Dr. Ganesh Chowdary",
+        "specialization": "Nephrologist",
+        "location": "Anantapur",
+        "experience": 22,
+        "rating": 3.9,
+        "reviews": [
+            "Friendly and professional.",
+            "Takes time to explain everything.",
+            "Consultation was too short."
+        ],
+        "hospital": {
+            "name": "Government Hospital",
+            "address": "Main Road, Anantapur",
+            "contact": "08554-778899"
+        }
+    },
+    {
+        "id": 32,
+        "doctor_name": "Dr. Meena Chowdary",
+        "specialization": "Dentist",
+        "location": "Vijayawada",
+        "experience": 21,
+        "rating": 4.0,
+        "reviews": [
             "Highly recommended for treatment.",
+            "Really listens to patient concerns.",
+            "Did not get enough explanation."
+        ],
+        "hospital": {
+            "name": "KIMS Hospital",
+            "address": "Guntur Road, Guntur",
+            "contact": "0863-445566"
+        }
+    },
+    {
+        "id": 33,
+        "doctor_name": "Dr. Ravi Kumar",
+        "specialization": "Gynecologist",
+        "location": "Kurnool",
+        "experience": 32,
+        "rating": 3.9,
+        "reviews": [
+            "Very knowledgeable and caring.",
+            "Great experience, felt comfortable.",
+            "Felt rushed during consultation."
+        ],
+        "hospital": {
+            "name": "LV Prasad Eye Institute",
+            "address": "Banjara Hills, Hyderabad",
+            "contact": "040-66554433"
+        }
+    },
+    {
+        "id": 34,
+        "doctor_name": "Dr. Neha Kumar",
+        "specialization": "Ophthalmologist",
+        "location": "Chittoor",
+        "experience": 4,
+        "rating": 4.0,
+        "reviews": [
+            "Friendly and professional.",
+            "Great experience, felt comfortable.",
             "Waiting area could be better."
+        ],
+        "hospital": {
+            "name": "LV Prasad Eye Institute",
+            "address": "Banjara Hills, Hyderabad",
+            "contact": "040-66554433"
+        }
+    },
+    {
+        "id": 35,
+        "doctor_name": "Dr. Lakshmi Sharma",
+        "specialization": "Dentist",
+        "location": "Hyderabad",
+        "experience": 28,
+        "rating": 4.1,
+        "reviews": [
+            "Excellent service and staff.",
+            "Friendly and professional.",
+            "Consultation was too short."
+        ],
+        "hospital": {
+            "name": "Yashoda Hospital",
+            "address": "Somajiguda, Hyderabad",
+            "contact": "040-12345678"
+        }
+    },
+    {
+        "id": 36,
+        "doctor_name": "Dr. Manoj Gupta",
+        "specialization": "Endocrinologist",
+        "location": "Guntur",
+        "experience": 18,
+        "rating": 4.1,
+        "reviews": [
+            "Highly recommended for treatment.",
+            "Accurate diagnosis and treatment.",
+            "Long waiting time."
+        ],
+        "hospital": {
+            "name": "CMC Hospital",
+            "address": "City Center, Chittoor",
+            "contact": "08572-224466"
+        }
+    },
+    {
+        "id": 37,
+        "doctor_name": "Dr. Kavya Menon",
+        "specialization": "Pediatrician",
+        "location": "Kurnool",
+        "experience": 17,
+        "rating": 3.4,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Takes time to explain everything.",
+            "Long waiting time."
         ],
         "hospital": {
             "name": "Ramesh Hospitals",
@@ -1662,14 +668,321 @@
         }
     },
     {
-        "doctor_name": "Dr. Divya Kumar",
+        "id": 38,
+        "doctor_name": "Dr. Harish Kumar",
+        "specialization": "Dentist",
+        "location": "Renigunta",
+        "experience": 4,
+        "rating": 3.9,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Takes time to explain everything.",
+            "Appointment process needs improvement."
+        ],
+        "hospital": {
+            "name": "Renigunta Medical Center",
+            "address": "Main Road, Renigunta",
+            "contact": "0877-1122334"
+        }
+    },
+    {
+        "id": 39,
+        "doctor_name": "Dr. Divya Menon",
+        "specialization": "Dermatologist",
+        "location": "Hyderabad",
+        "experience": 33,
+        "rating": 4.1,
+        "reviews": [
+            "Excellent service and staff.",
+            "Really listens to patient concerns.",
+            "Did not get enough explanation."
+        ],
+        "hospital": {
+            "name": "Government Hospital",
+            "address": "Main Road, Anantapur",
+            "contact": "08554-778899"
+        }
+    },
+    {
+        "id": 40,
+        "doctor_name": "Dr. Lakshmi Gupta",
+        "specialization": "Pediatrician",
+        "location": "Guntur",
+        "experience": 7,
+        "rating": 4.6,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Accurate diagnosis and treatment.",
+            "Waiting area could be better."
+        ],
+        "hospital": {
+            "name": "Nellore Care Hospital",
+            "address": "Trunk Road, Nellore",
+            "contact": "0861-332211"
+        }
+    },
+    {
+        "id": 41,
+        "doctor_name": "Dr. Suresh Gupta",
+        "specialization": "Oncologist",
+        "location": "Kurnool",
+        "experience": 30,
+        "rating": 3.4,
+        "reviews": [
+            "Accurate diagnosis and treatment.",
+            "Takes time to explain everything.",
+            "Waiting area could be better."
+        ],
+        "hospital": {
+            "name": "Nellore Care Hospital",
+            "address": "Trunk Road, Nellore",
+            "contact": "0861-332211"
+        }
+    },
+    {
+        "id": 42,
+        "doctor_name": "Dr. Harish Menon",
+        "specialization": "Dermatologist",
+        "location": "Tirupati",
+        "experience": 24,
+        "rating": 4.1,
+        "reviews": [
+            "Very knowledgeable and caring.",
+            "Takes time to explain everything.",
+            "Consultation was too short."
+        ],
+        "hospital": {
+            "name": "Nellore Care Hospital",
+            "address": "Trunk Road, Nellore",
+            "contact": "0861-332211"
+        }
+    },
+    {
+        "id": 43,
+        "doctor_name": "Dr. Divya Menon",
+        "specialization": "Orthopedic",
+        "location": "Vijayawada",
+        "experience": 18,
+        "rating": 4.5,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Takes time to explain everything.",
+            "Did not get enough explanation."
+        ],
+        "hospital": {
+            "name": "Apollo Clinic",
+            "address": "AIR Bypass Road, Tirupati",
+            "contact": "0877-2233445"
+        }
+    },
+    {
+        "id": 44,
+        "doctor_name": "Dr. Kiran Iyer",
+        "specialization": "Ophthalmologist",
+        "location": "Renigunta",
+        "experience": 7,
+        "rating": 3.5,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Highly recommended for treatment.",
+            "Did not get enough explanation."
+        ],
+        "hospital": {
+            "name": "Renigunta Medical Center",
+            "address": "Main Road, Renigunta",
+            "contact": "0877-1122334"
+        }
+    },
+    {
+        "id": 45,
+        "doctor_name": "Dr. Vikram Gupta",
         "specialization": "Endocrinologist",
+        "location": "Rajahmundry",
+        "experience": 18,
+        "rating": 3.8,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Excellent service and staff.",
+            "Charges are a bit high."
+        ],
+        "hospital": {
+            "name": "Renigunta Medical Center",
+            "address": "Main Road, Renigunta",
+            "contact": "0877-1122334"
+        }
+    },
+    {
+        "id": 46,
+        "doctor_name": "Dr. Manoj Sharma",
+        "specialization": "Dentist",
         "location": "Anantapur",
-        "experience": 25,
+        "experience": 18,
+        "rating": 5.0,
+        "reviews": [
+            "Very knowledgeable and caring.",
+            "Friendly and professional.",
+            "Staff was not very helpful."
+        ],
+        "hospital": {
+            "name": "Government Hospital",
+            "address": "Main Road, Anantapur",
+            "contact": "08554-778899"
+        }
+    },
+    {
+        "id": 47,
+        "doctor_name": "Dr. Ravi Naidu",
+        "specialization": "Ophthalmologist",
+        "location": "Guntur",
+        "experience": 33,
+        "rating": 3.8,
+        "reviews": [
+            "Highly recommended for treatment.",
+            "Very knowledgeable and caring.",
+            "Did not get enough explanation."
+        ],
+        "hospital": {
+            "name": "Apollo Clinic",
+            "address": "AIR Bypass Road, Tirupati",
+            "contact": "0877-2233445"
+        }
+    },
+    {
+        "id": 48,
+        "doctor_name": "Dr. Arjun Sharma",
+        "specialization": "Pulmonologist",
+        "location": "Anantapur",
+        "experience": 33,
+        "rating": 3.5,
+        "reviews": [
+            "Takes time to explain everything.",
+            "Accurate diagnosis and treatment.",
+            "Appointment process needs improvement."
+        ],
+        "hospital": {
+            "name": "CMC Hospital",
+            "address": "City Center, Chittoor",
+            "contact": "08572-224466"
+        }
+    },
+    {
+        "id": 49,
+        "doctor_name": "Dr. Neha Menon",
+        "specialization": "Gynecologist",
+        "location": "Hyderabad",
+        "experience": 23,
         "rating": 4.4,
         "reviews": [
+            "Very knowledgeable and caring.",
+            "Excellent service and staff.",
+            "Long waiting time."
+        ],
+        "hospital": {
+            "name": "Sunshine Hospital",
+            "address": "KPHB, Hyderabad",
+            "contact": "040-87654321"
+        }
+    },
+    {
+        "id": 50,
+        "doctor_name": "Dr. Rajesh Patel",
+        "specialization": "Endocrinologist",
+        "location": "Nellore",
+        "experience": 29,
+        "rating": 4.0,
+        "reviews": [
+            "Excellent service and staff.",
+            "Accurate diagnosis and treatment.",
+            "Charges are a bit high."
+        ],
+        "hospital": {
+            "name": "Renigunta Medical Center",
+            "address": "Main Road, Renigunta",
+            "contact": "0877-1122334"
+        }
+    },
+    {
+        "id": 51,
+        "doctor_name": "Dr. Suresh Iyer",
+        "specialization": "Nephrologist",
+        "location": "Rajahmundry",
+        "experience": 5,
+        "rating": 4.0,
+        "reviews": [
             "Great experience, felt comfortable.",
-            "Highly recommended for treatment.",
+            "Accurate diagnosis and treatment.",
+            "Waiting area could be better."
+        ],
+        "hospital": {
+            "name": "LV Prasad Eye Institute",
+            "address": "Banjara Hills, Hyderabad",
+            "contact": "040-66554433"
+        }
+    },
+    {
+        "id": 52,
+        "doctor_name": "Dr. Swathi Sharma",
+        "specialization": "Dermatologist",
+        "location": "Anantapur",
+        "experience": 19,
+        "rating": 4.8,
+        "reviews": [
+            "Takes time to explain everything.",
+            "Really listens to patient concerns.",
+            "Consultation was too short."
+        ],
+        "hospital": {
+            "name": "Sunshine Hospital",
+            "address": "KPHB, Hyderabad",
+            "contact": "040-87654321"
+        }
+    },
+    {
+        "id": 53,
+        "doctor_name": "Dr. Sindhu Patel",
+        "specialization": "Pulmonologist",
+        "location": "Vijayawada",
+        "experience": 24,
+        "rating": 4.5,
+        "reviews": [
+            "Takes time to explain everything.",
+            "Great experience, felt comfortable.",
+            "Appointment process needs improvement."
+        ],
+        "hospital": {
+            "name": "Renigunta Medical Center",
+            "address": "Main Road, Renigunta",
+            "contact": "0877-1122334"
+        }
+    },
+    {
+        "id": 54,
+        "doctor_name": "Dr. Priya Sharma",
+        "specialization": "Psychiatrist",
+        "location": "Vijayawada",
+        "experience": 16,
+        "rating": 4.9,
+        "reviews": [
+            "Takes time to explain everything.",
+            "Accurate diagnosis and treatment.",
+            "Waiting area could be better."
+        ],
+        "hospital": {
+            "name": "Renigunta Medical Center",
+            "address": "Main Road, Renigunta",
+            "contact": "0877-1122334"
+        }
+    },
+    {
+        "id": 55,
+        "doctor_name": "Dr. Neha Chowdary",
+        "specialization": "Cardiologist",
+        "location": "Chittoor",
+        "experience": 12,
+        "rating": 3.9,
+        "reviews": [
+            "Takes time to explain everything.",
+            "Excellent service and staff.",
             "Staff was not very helpful."
         ],
         "hospital": {
@@ -1679,20 +992,813 @@
         }
     },
     {
-        "doctor_name": "Dr. Ganesh Naidu",
+        "id": 56,
+        "doctor_name": "Dr. Suresh Sharma",
         "specialization": "Neurologist",
-        "location": "Guntur",
-        "experience": 18,
-        "rating": 4.1,
+        "location": "Vijayawada",
+        "experience": 31,
+        "rating": 4.9,
+        "reviews": [
+            "Highly recommended for treatment.",
+            "Accurate diagnosis and treatment.",
+            "Waiting area could be better."
+        ],
+        "hospital": {
+            "name": "CMC Hospital",
+            "address": "City Center, Chittoor",
+            "contact": "08572-224466"
+        }
+    },
+    {
+        "id": 57,
+        "doctor_name": "Dr. Pooja Naidu",
+        "specialization": "Pulmonologist",
+        "location": "Kurnool",
+        "experience": 24,
+        "rating": 3.1,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Takes time to explain everything.",
+            "Waiting area could be better."
+        ],
+        "hospital": {
+            "name": "LV Prasad Eye Institute",
+            "address": "Banjara Hills, Hyderabad",
+            "contact": "040-66554433"
+        }
+    },
+    {
+        "id": 58,
+        "doctor_name": "Dr. Meena Gupta",
+        "specialization": "Endocrinologist",
+        "location": "Anantapur",
+        "experience": 35,
+        "rating": 3.5,
         "reviews": [
             "Very knowledgeable and caring.",
+            "Highly recommended for treatment.",
+            "Charges are a bit high."
+        ],
+        "hospital": {
+            "name": "Sunshine Hospital",
+            "address": "KPHB, Hyderabad",
+            "contact": "040-87654321"
+        }
+    },
+    {
+        "id": 59,
+        "doctor_name": "Dr. Deepak Gupta",
+        "specialization": "Pediatrician",
+        "location": "Rajahmundry",
+        "experience": 20,
+        "rating": 3.4,
+        "reviews": [
             "Friendly and professional.",
-            "Waiting area could be better."
+            "Highly recommended for treatment.",
+            "Consultation was too short."
+        ],
+        "hospital": {
+            "name": "Ramesh Hospitals",
+            "address": "MG Road, Vijayawada",
+            "contact": "0866-998877"
+        }
+    },
+    {
+        "id": 60,
+        "doctor_name": "Dr. Neha Sharma",
+        "specialization": "Dentist",
+        "location": "Nellore",
+        "experience": 23,
+        "rating": 3.7,
+        "reviews": [
+            "Takes time to explain everything.",
+            "Highly recommended for treatment.",
+            "Consultation was too short."
+        ],
+        "hospital": {
+            "name": "Ramesh Hospitals",
+            "address": "MG Road, Vijayawada",
+            "contact": "0866-998877"
+        }
+    },
+    {
+        "id": 61,
+        "doctor_name": "Dr. Pooja Reddy",
+        "specialization": "Gynecologist",
+        "location": "Vijayawada",
+        "experience": 11,
+        "rating": 3.2,
+        "reviews": [
+            "Highly recommended for treatment.",
+            "Great experience, felt comfortable.",
+            "Charges are a bit high."
+        ],
+        "hospital": {
+            "name": "Sunshine Hospital",
+            "address": "KPHB, Hyderabad",
+            "contact": "040-87654321"
+        }
+    },
+    {
+        "id": 62,
+        "doctor_name": "Dr. Neha Iyer",
+        "specialization": "ENT Specialist",
+        "location": "Renigunta",
+        "experience": 33,
+        "rating": 3.1,
+        "reviews": [
+            "Friendly and professional.",
+            "Really listens to patient concerns.",
+            "Consultation was too short."
+        ],
+        "hospital": {
+            "name": "KIMS Hospital",
+            "address": "Guntur Road, Guntur",
+            "contact": "0863-445566"
+        }
+    },
+    {
+        "id": 63,
+        "doctor_name": "Dr. Vikram Varma",
+        "specialization": "Nephrologist",
+        "location": "Kurnool",
+        "experience": 12,
+        "rating": 4.5,
+        "reviews": [
+            "Friendly and professional.",
+            "Accurate diagnosis and treatment.",
+            "Long waiting time."
+        ],
+        "hospital": {
+            "name": "Yashoda Hospital",
+            "address": "Somajiguda, Hyderabad",
+            "contact": "040-12345678"
+        }
+    },
+    {
+        "id": 64,
+        "doctor_name": "Dr. Rajesh Gupta",
+        "specialization": "Gynecologist",
+        "location": "Rajahmundry",
+        "experience": 3,
+        "rating": 4.5,
+        "reviews": [
+            "Great experience, felt comfortable.",
+            "Friendly and professional.",
+            "Felt rushed during consultation."
+        ],
+        "hospital": {
+            "name": "Renigunta Medical Center",
+            "address": "Main Road, Renigunta",
+            "contact": "0877-1122334"
+        }
+    },
+    {
+        "id": 65,
+        "doctor_name": "Dr. Kavya Sharma",
+        "specialization": "Cardiologist",
+        "location": "Vijayawada",
+        "experience": 25,
+        "rating": 3.6,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Friendly and professional.",
+            "Charges are a bit high."
+        ],
+        "hospital": {
+            "name": "Sunshine Hospital",
+            "address": "KPHB, Hyderabad",
+            "contact": "040-87654321"
+        }
+    },
+    {
+        "id": 66,
+        "doctor_name": "Dr. Vikram Patel",
+        "specialization": "Nephrologist",
+        "location": "Renigunta",
+        "experience": 5,
+        "rating": 4.2,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Friendly and professional.",
+            "Did not get enough explanation."
+        ],
+        "hospital": {
+            "name": "Yashoda Hospital",
+            "address": "Somajiguda, Hyderabad",
+            "contact": "040-12345678"
+        }
+    },
+    {
+        "id": 67,
+        "doctor_name": "Dr. Meena Varma",
+        "specialization": "Pediatrician",
+        "location": "Kurnool",
+        "experience": 34,
+        "rating": 4.8,
+        "reviews": [
+            "Highly recommended for treatment.",
+            "Friendly and professional.",
+            "Long waiting time."
         ],
         "hospital": {
             "name": "Nellore Care Hospital",
             "address": "Trunk Road, Nellore",
             "contact": "0861-332211"
+        }
+    },
+    {
+        "id": 68,
+        "doctor_name": "Dr. Manoj Reddy",
+        "specialization": "Pediatrician",
+        "location": "Nellore",
+        "experience": 19,
+        "rating": 3.8,
+        "reviews": [
+            "Takes time to explain everything.",
+            "Highly recommended for treatment.",
+            "Staff was not very helpful."
+        ],
+        "hospital": {
+            "name": "Yashoda Hospital",
+            "address": "Somajiguda, Hyderabad",
+            "contact": "040-12345678"
+        }
+    },
+    {
+        "id": 69,
+        "doctor_name": "Dr. Priya Varma",
+        "specialization": "Pediatrician",
+        "location": "Guntur",
+        "experience": 35,
+        "rating": 3.4,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Excellent service and staff.",
+            "Consultation was too short."
+        ],
+        "hospital": {
+            "name": "CMC Hospital",
+            "address": "City Center, Chittoor",
+            "contact": "08572-224466"
+        }
+    },
+    {
+        "id": 70,
+        "doctor_name": "Dr. Manoj Patel",
+        "specialization": "Neurologist",
+        "location": "Tirupati",
+        "experience": 5,
+        "rating": 3.1,
+        "reviews": [
+            "Very knowledgeable and caring.",
+            "Friendly and professional.",
+            "Long waiting time."
+        ],
+        "hospital": {
+            "name": "Government Hospital",
+            "address": "Main Road, Anantapur",
+            "contact": "08554-778899"
+        }
+    },
+    {
+        "id": 71,
+        "doctor_name": "Dr. Swathi Patel",
+        "specialization": "Dermatologist",
+        "location": "Nellore",
+        "experience": 19,
+        "rating": 3.3,
+        "reviews": [
+            "Very knowledgeable and caring.",
+            "Friendly and professional.",
+            "Did not get enough explanation."
+        ],
+        "hospital": {
+            "name": "LV Prasad Eye Institute",
+            "address": "Banjara Hills, Hyderabad",
+            "contact": "040-66554433"
+        }
+    },
+    {
+        "id": 72,
+        "doctor_name": "Dr. Pooja Menon",
+        "specialization": "Cardiologist",
+        "location": "Vijayawada",
+        "experience": 20,
+        "rating": 5.0,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Very knowledgeable and caring.",
+            "Consultation was too short."
+        ],
+        "hospital": {
+            "name": "LV Prasad Eye Institute",
+            "address": "Banjara Hills, Hyderabad",
+            "contact": "040-66554433"
+        }
+    },
+    {
+        "id": 73,
+        "doctor_name": "Dr. Kavya Patel",
+        "specialization": "Dermatologist",
+        "location": "Nellore",
+        "experience": 32,
+        "rating": 3.5,
+        "reviews": [
+            "Accurate diagnosis and treatment.",
+            "Excellent service and staff.",
+            "Consultation was too short."
+        ],
+        "hospital": {
+            "name": "LV Prasad Eye Institute",
+            "address": "Banjara Hills, Hyderabad",
+            "contact": "040-66554433"
+        }
+    },
+    {
+        "id": 74,
+        "doctor_name": "Dr. Ganesh Iyer",
+        "specialization": "General Physician",
+        "location": "Tirupati",
+        "experience": 28,
+        "rating": 3.8,
+        "reviews": [
+            "Takes time to explain everything.",
+            "Highly recommended for treatment.",
+            "Felt rushed during consultation."
+        ],
+        "hospital": {
+            "name": "Sunshine Hospital",
+            "address": "KPHB, Hyderabad",
+            "contact": "040-87654321"
+        }
+    },
+    {
+        "id": 75,
+        "doctor_name": "Dr. Meena Reddy",
+        "specialization": "Cardiologist",
+        "location": "Rajahmundry",
+        "experience": 32,
+        "rating": 3.1,
+        "reviews": [
+            "Great experience, felt comfortable.",
+            "Highly recommended for treatment.",
+            "Did not get enough explanation."
+        ],
+        "hospital": {
+            "name": "Renigunta Medical Center",
+            "address": "Main Road, Renigunta",
+            "contact": "0877-1122334"
+        }
+    },
+    {
+        "id": 76,
+        "doctor_name": "Dr. Arjun Iyer",
+        "specialization": "General Physician",
+        "location": "Chittoor",
+        "experience": 12,
+        "rating": 3.4,
+        "reviews": [
+            "Excellent service and staff.",
+            "Accurate diagnosis and treatment.",
+            "Felt rushed during consultation."
+        ],
+        "hospital": {
+            "name": "Ramesh Hospitals",
+            "address": "MG Road, Vijayawada",
+            "contact": "0866-998877"
+        }
+    },
+    {
+        "id": 77,
+        "doctor_name": "Dr. Divya Varma",
+        "specialization": "Endocrinologist",
+        "location": "Tirupati",
+        "experience": 18,
+        "rating": 3.1,
+        "reviews": [
+            "Great experience, felt comfortable.",
+            "Friendly and professional.",
+            "Staff was not very helpful."
+        ],
+        "hospital": {
+            "name": "Government Hospital",
+            "address": "Main Road, Anantapur",
+            "contact": "08554-778899"
+        }
+    },
+    {
+        "id": 78,
+        "doctor_name": "Dr. Manoj Iyer",
+        "specialization": "Ophthalmologist",
+        "location": "Chittoor",
+        "experience": 16,
+        "rating": 4.2,
+        "reviews": [
+            "Very knowledgeable and caring.",
+            "Highly recommended for treatment.",
+            "Appointment process needs improvement."
+        ],
+        "hospital": {
+            "name": "Apollo Clinic",
+            "address": "AIR Bypass Road, Tirupati",
+            "contact": "0877-2233445"
+        }
+    },
+    {
+        "id": 79,
+        "doctor_name": "Dr. Divya Menon",
+        "specialization": "Psychiatrist",
+        "location": "Kurnool",
+        "experience": 14,
+        "rating": 4.5,
+        "reviews": [
+            "Excellent service and staff.",
+            "Highly recommended for treatment.",
+            "Staff was not very helpful."
+        ],
+        "hospital": {
+            "name": "Apollo Clinic",
+            "address": "AIR Bypass Road, Tirupati",
+            "contact": "0877-2233445"
+        }
+    },
+    {
+        "id": 80,
+        "doctor_name": "Dr. Sindhu Patel",
+        "specialization": "Oncologist",
+        "location": "Renigunta",
+        "experience": 23,
+        "rating": 4.6,
+        "reviews": [
+            "Excellent service and staff.",
+            "Highly recommended for treatment.",
+            "Felt rushed during consultation."
+        ],
+        "hospital": {
+            "name": "Yashoda Hospital",
+            "address": "Somajiguda, Hyderabad",
+            "contact": "040-12345678"
+        }
+    },
+    {
+        "id": 81,
+        "doctor_name": "Dr. Priya Varma",
+        "specialization": "Cardiologist",
+        "location": "Nellore",
+        "experience": 35,
+        "rating": 5.0,
+        "reviews": [
+            "Friendly and professional.",
+            "Highly recommended for treatment.",
+            "Consultation was too short."
+        ],
+        "hospital": {
+            "name": "Apollo Clinic",
+            "address": "AIR Bypass Road, Tirupati",
+            "contact": "0877-2233445"
+        }
+    },
+    {
+        "id": 82,
+        "doctor_name": "Dr. Arjun Patel",
+        "specialization": "Dermatologist",
+        "location": "Kurnool",
+        "experience": 13,
+        "rating": 3.7,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Excellent service and staff.",
+            "Staff was not very helpful."
+        ],
+        "hospital": {
+            "name": "Apollo Clinic",
+            "address": "AIR Bypass Road, Tirupati",
+            "contact": "0877-2233445"
+        }
+    },
+    {
+        "id": 83,
+        "doctor_name": "Dr. Manoj Varma",
+        "specialization": "Cardiologist",
+        "location": "Chittoor",
+        "experience": 28,
+        "rating": 3.7,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Very knowledgeable and caring.",
+            "Felt rushed during consultation."
+        ],
+        "hospital": {
+            "name": "Apollo Clinic",
+            "address": "AIR Bypass Road, Tirupati",
+            "contact": "0877-2233445"
+        }
+    },
+    {
+        "id": 84,
+        "doctor_name": "Dr. Kiran Menon",
+        "specialization": "ENT Specialist",
+        "location": "Hyderabad",
+        "experience": 25,
+        "rating": 3.7,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Very knowledgeable and caring.",
+            "Long waiting time."
+        ],
+        "hospital": {
+            "name": "Ramesh Hospitals",
+            "address": "MG Road, Vijayawada",
+            "contact": "0866-998877"
+        }
+    },
+    {
+        "id": 85,
+        "doctor_name": "Dr. Neha Sharma",
+        "specialization": "ENT Specialist",
+        "location": "Renigunta",
+        "experience": 32,
+        "rating": 3.2,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Great experience, felt comfortable.",
+            "Charges are a bit high."
+        ],
+        "hospital": {
+            "name": "CMC Hospital",
+            "address": "City Center, Chittoor",
+            "contact": "08572-224466"
+        }
+    },
+    {
+        "id": 86,
+        "doctor_name": "Dr. Kavya Gupta",
+        "specialization": "Oncologist",
+        "location": "Guntur",
+        "experience": 19,
+        "rating": 4.2,
+        "reviews": [
+            "Very knowledgeable and caring.",
+            "Really listens to patient concerns.",
+            "Did not get enough explanation."
+        ],
+        "hospital": {
+            "name": "Renigunta Medical Center",
+            "address": "Main Road, Renigunta",
+            "contact": "0877-1122334"
+        }
+    },
+    {
+        "id": 87,
+        "doctor_name": "Dr. Kiran Iyer",
+        "specialization": "Cardiologist",
+        "location": "Hyderabad",
+        "experience": 34,
+        "rating": 3.2,
+        "reviews": [
+            "Excellent service and staff.",
+            "Takes time to explain everything.",
+            "Charges are a bit high."
+        ],
+        "hospital": {
+            "name": "LV Prasad Eye Institute",
+            "address": "Banjara Hills, Hyderabad",
+            "contact": "040-66554433"
+        }
+    },
+    {
+        "id": 88,
+        "doctor_name": "Dr. Kavya Gupta",
+        "specialization": "Neurologist",
+        "location": "Guntur",
+        "experience": 25,
+        "rating": 4.4,
+        "reviews": [
+            "Really listens to patient concerns.",
+            "Great experience, felt comfortable.",
+            "Charges are a bit high."
+        ],
+        "hospital": {
+            "name": "Renigunta Medical Center",
+            "address": "Main Road, Renigunta",
+            "contact": "0877-1122334"
+        }
+    },
+    {
+        "id": 89,
+        "doctor_name": "Dr. Suresh Sharma",
+        "specialization": "Ophthalmologist",
+        "location": "Vijayawada",
+        "experience": 20,
+        "rating": 3.4,
+        "reviews": [
+            "Friendly and professional.",
+            "Very knowledgeable and caring.",
+            "Consultation was too short."
+        ],
+        "hospital": {
+            "name": "LV Prasad Eye Institute",
+            "address": "Banjara Hills, Hyderabad",
+            "contact": "040-66554433"
+        }
+    },
+    {
+        "id": 90,
+        "doctor_name": "Dr. Vikram Naidu",
+        "specialization": "Psychiatrist",
+        "location": "Kurnool",
+        "experience": 19,
+        "rating": 3.2,
+        "reviews": [
+            "Friendly and professional.",
+            "Really listens to patient concerns.",
+            "Did not get enough explanation."
+        ],
+        "hospital": {
+            "name": "Apollo Clinic",
+            "address": "AIR Bypass Road, Tirupati",
+            "contact": "0877-2233445"
+        }
+    },
+    {
+        "id": 91,
+        "doctor_name": "Dr. Manoj Sharma",
+        "specialization": "Oncologist",
+        "location": "Vijayawada",
+        "experience": 20,
+        "rating": 3.1,
+        "reviews": [
+            "Great experience, felt comfortable.",
+            "Excellent service and staff.",
+            "Long waiting time."
+        ],
+        "hospital": {
+            "name": "Sunshine Hospital",
+            "address": "KPHB, Hyderabad",
+            "contact": "040-87654321"
+        }
+    },
+    {
+        "id": 92,
+        "doctor_name": "Dr. Ganesh Gupta",
+        "specialization": "Pulmonologist",
+        "location": "Guntur",
+        "experience": 21,
+        "rating": 4.9,
+        "reviews": [
+            "Very knowledgeable and caring.",
+            "Highly recommended for treatment.",
+            "Charges are a bit high."
+        ],
+        "hospital": {
+            "name": "Apollo Clinic",
+            "address": "AIR Bypass Road, Tirupati",
+            "contact": "0877-2233445"
+        }
+    },
+    {
+        "id": 93,
+        "doctor_name": "Dr. Divya Chowdary",
+        "specialization": "General Physician",
+        "location": "Renigunta",
+        "experience": 23,
+        "rating": 4.9,
+        "reviews": [
+            "Excellent service and staff.",
+            "Accurate diagnosis and treatment.",
+            "Charges are a bit high."
+        ],
+        "hospital": {
+            "name": "Ramesh Hospitals",
+            "address": "MG Road, Vijayawada",
+            "contact": "0866-998877"
+        }
+    },
+    {
+        "id": 94,
+        "doctor_name": "Dr. Rajesh Kumar",
+        "specialization": "General Physician",
+        "location": "Hyderabad",
+        "experience": 20,
+        "rating": 4.3,
+        "reviews": [
+            "Accurate diagnosis and treatment.",
+            "Friendly and professional.",
+            "Appointment process needs improvement."
+        ],
+        "hospital": {
+            "name": "Yashoda Hospital",
+            "address": "Somajiguda, Hyderabad",
+            "contact": "040-12345678"
+        }
+    },
+    {
+        "id": 95,
+        "doctor_name": "Dr. Ganesh Varma",
+        "specialization": "Dermatologist",
+        "location": "Nellore",
+        "experience": 18,
+        "rating": 4.7,
+        "reviews": [
+            "Very knowledgeable and caring.",
+            "Highly recommended for treatment.",
+            "Did not get enough explanation."
+        ],
+        "hospital": {
+            "name": "Nellore Care Hospital",
+            "address": "Trunk Road, Nellore",
+            "contact": "0861-332211"
+        }
+    },
+    {
+        "id": 96,
+        "doctor_name": "Dr. Divya Chowdary",
+        "specialization": "Psychiatrist",
+        "location": "Kurnool",
+        "experience": 19,
+        "rating": 3.3,
+        "reviews": [
+            "Friendly and professional.",
+            "Takes time to explain everything.",
+            "Appointment process needs improvement."
+        ],
+        "hospital": {
+            "name": "KIMS Hospital",
+            "address": "Guntur Road, Guntur",
+            "contact": "0863-445566"
+        }
+    },
+    {
+        "id": 97,
+        "doctor_name": "Dr. Deepak Naidu",
+        "specialization": "Dermatologist",
+        "location": "Nellore",
+        "experience": 31,
+        "rating": 3.7,
+        "reviews": [
+            "Excellent service and staff.",
+            "Really listens to patient concerns.",
+            "Did not get enough explanation."
+        ],
+        "hospital": {
+            "name": "KIMS Hospital",
+            "address": "Guntur Road, Guntur",
+            "contact": "0863-445566"
+        }
+    },
+    {
+        "id": 98,
+        "doctor_name": "Dr. Vikram Gupta",
+        "specialization": "Nephrologist",
+        "location": "Anantapur",
+        "experience": 35,
+        "rating": 4.0,
+        "reviews": [
+            "Highly recommended for treatment.",
+            "Friendly and professional.",
+            "Staff was not very helpful."
+        ],
+        "hospital": {
+            "name": "Yashoda Hospital",
+            "address": "Somajiguda, Hyderabad",
+            "contact": "040-12345678"
+        }
+    },
+    {
+        "id": 99,
+        "doctor_name": "Dr. Neha Kumar",
+        "specialization": "Ophthalmologist",
+        "location": "Vijayawada",
+        "experience": 33,
+        "rating": 4.2,
+        "reviews": [
+            "Very knowledgeable and caring.",
+            "Takes time to explain everything.",
+            "Appointment process needs improvement."
+        ],
+        "hospital": {
+            "name": "Government Hospital",
+            "address": "Main Road, Anantapur",
+            "contact": "08554-778899"
+        }
+    },
+    {
+        "id": 100,
+        "doctor_name": "Dr. Vikram Menon",
+        "specialization": "Ophthalmologist",
+        "location": "Guntur",
+        "experience": 14,
+        "rating": 4.4,
+        "reviews": [
+            "Friendly and professional.",
+            "Great experience, felt comfortable.",
+            "Appointment process needs improvement."
+        ],
+        "hospital": {
+            "name": "KIMS Hospital",
+            "address": "Guntur Road, Guntur",
+            "contact": "0863-445566"
         }
     }
 ]

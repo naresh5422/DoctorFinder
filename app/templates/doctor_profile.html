@@ -2,10 +2,13 @@
 {% block content %}
 <div class="container mt-4">
   <h2>Doctor Profile</h2>
+  <!-- Search Form-->
   <form method="POST" action="{{ url_for('doctor_profile') }}" class="mb-4">
     <div class="mb-3">
       <label for="text" class="form-label">Doctor Name</label>
-      <input type="text" name="doctor_name" id="doctor_name" class="form-control" placeholder="Ex. Anil" required>
+      <input type="text" name="doctor_name" id="doctor_name" 
+             class="form-control w-25" placeholder="Ex. Anil" 
+             value="{{ doctor_name }}" required>
     </div>
     <button type="submit" class="btn btn-primary">Find Doctor</button>
   </form>
@@ -19,10 +22,23 @@
           <p><strong>Specialization:</strong> {{ doc.specialization }}</p>
           <p><strong>Experience:</strong> {{ doc.experience }} years</p>
           <p><strong>Rating:</strong> {{ doc.rating }}/5</p>
-          <p><strong> Reviews:</strong> {{ doc. reviews | join(' ') }}</p>
           <p><strong>Hospital Name:</strong> {{ doc.hospital.name }}</p>
           <p><strong>Address:</strong> {{ doc.hospital.address }}</p>
           <p><strong>Contact:</strong> {{ doc.hospital.contact }}</p>
+          <!-- Show Reviews -->
+          <h6>Reviews:</h6>
+          <ul>
+            {% for review in doc.reviews %}
+              <li>{{ review }}</li>
+            {% endfor %}
+          </ul>
+          <!-- Add Review Form -->
+          <form method="POST">
+            <input type="hidden" name="doctor_id" value="{{ doc.id }}">
+              <textarea name="review_text" rows="2" cols="40" 
+                        placeholder="Write your review here" required></textarea><br>
+              <button type="submit">Submit Review</button>
+          </form>
           <a href="{{ doc.map_link }}" target="_blank" class="btn btn-outline-secondary">📍 View on Map</a>
         </div>
       </div>

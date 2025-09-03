@@ -48,15 +48,12 @@ def get_nearby_locations(location):
 #  {"name": "Dr. Sneha", "specialization": "Dermatologist", "location": "Gajuwaka"},
 #  {"name": "Dr. Kiran", "specialization": "Dentist", "location": "Visakhapatnam"}]
 
-
-def map_disease_to_specialist(disease):
-    mapping = {
-    "diabetes": "Endocrinologist", 
-    "thyroid disorder": "Endocrinologist",
-    "high blood pressure": "Cardiologist",
-    "chest pain": "Cardiologist",
-    "heart palpitations": "Cardiologist",
-    "fever": "General Physician",
+DISEASE_SPECIALIST_MAP = {"diabetes": "Endocrinologist",
+ "thyroid disorder": "Endocrinologist",
+ "high blood pressure": "Cardiologist",
+ "chest pain": "Cardiologist",
+ "heart palpitations": "Cardiologist",
+ "fever": "General Physician",
     "common cold": "General Physician",
     "body weakness": "General Physician",
     "migraine": "Neurologist",
@@ -124,5 +121,24 @@ def map_disease_to_specialist(disease):
     "infertility": "Gynecologist",
     "hepatitis": "Gastroenterologist",
     }
-    return mapping.get(disease.lower())
 
+SPECIALIST_SET = set(DISEASE_SPECIALIST_MAP.values())
+def map_disease_to_specialist(disease: str)->str:
+    """
+    Maps user input (either layman disease or specialist name) 
+    to a valid specialist mapping.
+    Returns formatted string like 'Fever - General Physician'.
+    """
+    term = disease.lower().strip()
+    # Case 1: Input is a layman disease
+    if term in DISEASE_SPECIALIST_MAP:
+        specialist = DISEASE_SPECIALIST_MAP[term]
+        return f"{term.title()} - {specialist}"
+    # Case 2: Input is already a specialist
+    for spec in SPECIALIST_SET:
+        if term == spec.lower():
+            return f"{spec} - {spec}"
+    # Default fallback
+    return f"{term.title()} - General Physician"
+
+print(map_disease_to_specialist('skin rash'))

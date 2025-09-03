@@ -6,11 +6,11 @@
   <form method="POST" action="{{ url_for('find_doctor') }}" class="mb-4">
     <div class="mb-3">
       <label for="location" class="form-label">Location</label>
-      <input type="text" name="location" id="location" class="form-control" placeholder="Enter city or area" required>
+      <input type="text" name="location" id="location" class="form-control" style="width: 300px;"  placeholder="Enter city or area" required>
     </div>
     <div class="mb-3">
       <label for="disease" class="form-label">Disease / Specialization</label>
-      <input type="text" name="disease" id="disease" class="form-control" placeholder="e.g. Cardiology, Diabetes" required>
+      <input type="text" name="disease" id="disease" class="form-control" style="width: 300px;"  placeholder="e.g. Cardiology, Diabetes" required>
     </div>
     <button type="submit" class="btn btn-primary">Find Doctor</button>
   </form>
