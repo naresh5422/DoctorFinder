@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Doctor Registration</h2>
+
+    <form method="POST" action="{{ url_for('doctor_register') }}" class="mx-auto" style="max-width: 600px;">
+        <div class="mb-3">
+            <label for="name" class="form-label">Full Name</label>
+            <input type="text" name="name" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" name="username" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="specialization" class="form-label">Specialization</label>
+            <input type="text" name="specialization" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="experience" class="form-label">Experience (Years)</label>
+            <input type="number" name="experience" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="mobile" class="form-label">Mobile</label>
+            <input type="text" name="mobile" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="location" class="form-label">Location</label>
+            <input type="text" name="location" class="form-control" required>
+        </div>
+
+        <h4 class="mt-4">Hospital Information</h4>
+        <div class="mb-3">
+            <label for="hospital_name" class="form-label">Hospital Name</label>
+            <input type="text" name="hospital_name" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label for="hospital_address" class="form-label">Hospital Address</label>
+            <input type="text" name="hospital_address" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label for="hospital_contact" class="form-label">Hospital Contact</label>
+            <input type="text" name="hospital_contact" class="form-control">
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Register</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Doctor Dashboard</title>
+</head>
+<body>
+    <h1>Welcome, {{ doctor['doctor_name'] }}</h1>
+    <p><b>Specialization:</b> {{ doctor['specialization'] }}</p>
+    <p><b>Experience:</b> {{ doctor['experience'] }} years</p>
+    <p><b>Rating:</b> {{ doctor['rating'] }}</p>
+
+    <h3>Reviews:</h3>
+    {% if doctor.get('reviews') %}
+        <ul>
+            {% for review in doctor['reviews'] %}
+                <li>{{ review }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No reviews yet.</p>
+    {% endif %}
+
+    <a href="{{ url_for('doctor_logout') }}">Logout</a>
+</body>
+</html>

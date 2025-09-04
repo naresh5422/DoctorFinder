@@ -23,4 +23,4 @@ capp = create_app()
 
 
 if __name__ == "__main__":
-    capp.run(debug=True)
+    capp.run(debug=True, port=5000)

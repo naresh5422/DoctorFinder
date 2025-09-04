@@ -52,6 +52,8 @@ negative_reviews = [
 doctors = []
 for i in range(100):
     id = i+1
+    username = f"doctor{id}"
+    password = "password"  # In real scenarios, use hashed passwords
     doctor_name = f"Dr. {random.choice(doctor_first_names)} {random.choice(doctor_last_names)}"
     specialization = random.choice(specializations)
     location = random.choice(locations)
@@ -62,8 +64,12 @@ for i in range(100):
 
     doctor = {
         "id": id,
+        "username": username,
+        "password": password,
         "doctor_name": doctor_name,
         "specialization": specialization,
+        "MobileNo": f"9{random.randint(100000000,999999999)}",
+        "EmailId": f"{username}@gmail.com",
         "location": location,
         "experience": experience,
         "rating": rating,

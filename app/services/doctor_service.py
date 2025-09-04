@@ -41,6 +41,7 @@ def get_nearby_locations(location):
         "Pune": ["Pune", "Hinjewadi", "Kothrud", "Baner"]
     }
     return nearby.get(location, [location])
+print(get_nearby_locations("Indiranagar"))
 
 # doctors = [{"name": "Dr. Ramesh", "specialization": "Endocrinologist", "location": "Gajuwaka"},
 #  {"name": "Dr. Priya", "specialization": "General Physician", "location": "Visakhapatnam"},
@@ -141,4 +142,4 @@ def map_disease_to_specialist(disease: str)->str:
     # Default fallback
     return f"{term.title()} - General Physician"
 
-print(map_disease_to_specialist('skin rash'))
+print(map_disease_to_specialist('Skin Rash'))
