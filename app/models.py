@@ -20,6 +20,8 @@ class User(db.Model):
     location = db.Column(db.String(120), nullable=False)
     login_count = db.Column(db.Integer, default=0)
     status = db.Column(db.String(10), default="logout")
+    image = db.Column(db.String(200), nullable=True)  # Path to profile image
+    bio = db.Column(db.Text, nullable=True)  # Extra details
 
     def __repr__(self):
         return f"<User {self.username}>"

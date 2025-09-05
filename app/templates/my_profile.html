@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>My Profile</h2>
+  {% if doctor %}
+    <div class="card p-3 shadow">
+      <h4>{{ doctor.doctor_name }}</h4>
+      <p><strong>Username:</strong> {{ doctor.username }}</p>
+      <p><strong>Specialization:</strong> {{ doctor.specialization }}</p>
+      <p><strong>Experience:</strong> {{ doctor.experience }} years</p>
+      <p><strong>Rating:</strong> {{ doctor.rating }}/5</p>
+      <p><strong>Email:</strong> {{ doctor.EmailId }}</p>
+      <p><strong>Mobile:</strong> {{ doctor.MobileNo }}</p>
+      <h5>Hospital</h5>
+      <p><strong>Name:</strong> {{ doctor.hospital.name }}</p>
+      <p><strong>Address:</strong> {{ doctor.hospital.address }}</p>
+      <p><strong>Contact:</strong> {{ doctor.hospital.contact }}</p>
+      <h5>Reviews</h5>
+      <ul>
+        {% for review in doctor.reviews %}
+          <li>{{ review }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% else %}
+    <p>No profile data found.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -10,9 +10,8 @@
 
   <style>
   .my-paragraph {
-    padding-top: 20px;   
-    padding-bottom: 20px;
-  }
+    padding-top: 20px;   /* Adds 20px space above the content */
+    padding-bottom: 20px; /* Adds 20px space below the content */}
   </style>
 </head>
 <body>
@@ -25,38 +24,43 @@
               aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
-          
-          {# -------------------- BEFORE LOGIN -------------------- #}
-          {% if not session.get('user_id') and not session.get('doctor_id') %}
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('about') }}">About</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('contactus') }}">Contact</a></li>
-            <!-- User Login/Signup -->
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">Login</a></li>
-            <!-- <li class="nav-item"><a class="nav-link" href="{{ url_for('signup') }}">Signup</a></li> -->
-            <!-- Doctor site link -->
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('doctor_login') }}">Doctor Site</a></li>
-          
-          {# -------------------- USER LOGGED IN -------------------- #}
-          {% elif session.get('user_id') %}
+          <!--if logged in as a user -->
+          {% if 'user_id' in session %}
             <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Home</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('services') }}">Services</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('user_profile') }}">Profile</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('about') }}">About</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('contactus') }}">Contact</a></li>
-            <li class="nav-item"><a class="nav-link text-warning" href="{{ url_for('logout') }}">Logout (User)</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('user_profile') }}">{{ session.username }}</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Logout</a></li>
 
-          {# -------------------- DOCTOR LOGGED IN -------------------- #}
+            <!-- If logged in as Doctor -->
           {% elif session.get('doctor_id') %}
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Home</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('doctor_dashboard') }}">Dashboard</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('my_profile') }}">Profile</a></li>
+            <!-- <li class="nav-item"><a class="nav-link" href="{{ url_for('doctor_profile') }}" class="btn btn-info">My Profile</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('doctor_reviews') }}">Reviews</a></li> -->
+            <li class="nav-item"><a class="nav-link text-warning" href="{{ url_for('doctor_logout') }}">Logout (Doctor)</a></li>
+
+          <!-- If not logged in → show role selection -->
+          {% else %}
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="roleDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Login / Signup
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="roleDropdown">
+                <li><h6 class="dropdown-header">User</h6></li>
+                <li><a class="dropdown-item" href="{{ url_for('login') }}">User Login</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('signup') }}">User Signup</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><h6 class="dropdown-header">Doctor</h6></li>
+                <li><a class="dropdown-item" href="{{ url_for('doctor_login') }}">Doctor Login</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('doctor_register') }}">Doctor Signup</a></li>
+              </ul>
+            </li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('services') }}">Services</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('about') }}">About</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('contactus') }}">Contact</a></li>
-            <li class="nav-item"><a class="nav-link text-warning" href="{{ url_for('doctor_logout') }}">Logout (Doctor)</a></li>
           {% endif %}
         </ul>
       </div>

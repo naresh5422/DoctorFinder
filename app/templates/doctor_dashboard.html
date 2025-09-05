@@ -1,25 +1,37 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Doctor Dashboard</title>
-</head>
-<body>
-    <h1>Welcome, {{ doctor['doctor_name'] }}</h1>
-    <p><b>Specialization:</b> {{ doctor['specialization'] }}</p>
-    <p><b>Experience:</b> {{ doctor['experience'] }} years</p>
-    <p><b>Rating:</b> {{ doctor['rating'] }}</p>
+{% extends "base.html" %}
 
-    <h3>Reviews:</h3>
-    {% if doctor.get('reviews') %}
-        <ul>
-            {% for review in doctor['reviews'] %}
-                <li>{{ review }}</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No reviews yet.</p>
-    {% endif %}
+{% block content %}
+  
+    <div class="container mt-4">
+    <h2 class="mb-4">Welcome, Dr. {{ doctor.doctor_name }}</h2>
+    
+    <div class="row">
 
-    <a href="{{ url_for('doctor_logout') }}">Logout</a>
-</body>
-</html>
+      <div class="col-md-4">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">Reviews</h5>
+            <ul>
+              {% for review in doctor.reviews %}
+              <li>{{ review }}</li>
+              {% else %}
+              <li>No reviews yet</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">Patients</h5>
+            <p>Feature Coming Soon</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <a href="{{ url_for('logout') }}" class="btn btn-danger mt-4">Logout</a>
+  </div>
+{% endblock %}

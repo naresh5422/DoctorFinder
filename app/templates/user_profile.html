@@ -1,0 +1,60 @@
+<!-- templates/user_profile.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>User Profile</h2>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="row">
+    <div class="col-md-4">
+      {% if user.image %}
+        <img src="{{ url_for('static', filename=user.image) }}" class="img-thumbnail" alt="Profile Picture", width = 150>
+      {% else %}
+        <img src="{{ url_for('static', filename='df.png') }}" class="img-thumbnail" alt="Default Picture">
+      {% endif %}
+    </div>
+
+    <div class="col-md-8">
+      <form method="POST" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label class="form-label">Full Name</label>
+          <input type="text" name="name" class="form-control" value="{{ user.name }}">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Mobile</label>
+          <input type="text" name="mobile" class="form-control" value="{{ user.mobile }}">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" value="{{ user.email }}">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Location</label>
+          <input type="text" name="location" class="form-control" value="{{ user.location }}">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">About You</label>
+          <textarea name="bio" class="form-control" rows="3">{{ user.bio }}</textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Profile Picture</label>
+          <input type="file" name="image" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-success">Update Profile</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

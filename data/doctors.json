@@ -2231,5 +2231,65 @@
             "address": "Tirupathi",
             "contact": "088-8739249"
         }
+    },
+    {
+        "id": 102,
+        "username": "Hikshi",
+        "password": "Hikshi",
+        "doctor_name": "HIkshith",
+        "specialization": "General Physician",
+        "MobileNo": "08179027681",
+        "EmailId": "tatanaboinanareshkumar@gmail.com",
+        "location": "Chinnapalli",
+        "experience": 16,
+        "rating": 0.0,
+        "reviews": [
+            "He is best doctor in his surrounding, and He is so friendly"
+        ],
+        "hospital": {
+            "name": "FMBW Hospital",
+            "address": "1-210, CHINNA BAKRAPURAM",
+            "contact": "088-26478233"
+        }
+    },
+    {
+        "id": 103,
+        "username": "ntk",
+        "password": "ntk",
+        "doctor_name": "Dr.Naresh Kumar",
+        "specialization": "Dentist",
+        "MobileNo": "9923747484",
+        "EmailId": "t.naresh5422@gmail.com",
+        "location": "Kurnool",
+        "experience": 12,
+        "rating": 0.0,
+        "reviews": [
+            "He is taking too much time"
+        ],
+        "hospital": {
+            "name": "Image Hospital",
+            "address": "Kurnool",
+            "contact": "088-26478233"
+        }
+    },
+    {
+        "id": 104,
+        "username": "hkt",
+        "password": "hkt",
+        "doctor_name": "Hikshith Kumar Tata",
+        "specialization": "Dermatologist",
+        "MobileNo": "7795892834",
+        "EmailId": "hikshi@hotmail.com",
+        "location": "Marathahalli",
+        "experience": 15,
+        "rating": 0.0,
+        "reviews": [
+            "He is My one of the favorate doctor in the city, I recommend his services"
+        ],
+        "hospital": {
+            "name": "TNK Multi Speciality Hospital",
+            "address": "Ramesh Nagar, Bengalore",
+            "contact": "088-76574832"
+        }
     }
 ]
