@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Edit My Profile{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h3>Edit Your Profile</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <h5 class="mt-3">Personal & Professional Details</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="doctor_name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="doctor_name" name="doctor_name" value="{{ doctor.doctor_name }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="specialization" class="form-label">Specialization</label>
+                                <input type="text" class="form-control" id="specialization" name="specialization" value="{{ doctor.specialization }}">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="bio" class="form-label">Biography</label>
+                            <textarea class="form-control" id="bio" name="bio" rows="3">{{ doctor.bio or '' }}</textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="education" class="form-label">Education (e.g., MBBS, MD)</label>
+                                <input type="text" class="form-control" id="education" name="education" value="{{ doctor.education or '' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="experience" class="form-label">Years of Experience</label>
+                                <input type="number" class="form-control" id="experience" name="experience" value="{{ doctor.experience }}">
+                            </div>
+                        </div>
+                         <div class="mb-3">
+                            <label for="certifications" class="form-label">Certifications (Comma-separated)</label>
+                            <textarea class="form-control" id="certifications" name="certifications" rows="2">{{ doctor.certifications or '' }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="image" class="form-label">Profile Image</label>
+                            <input class="form-control" type="file" id="image" name="image">
+                        </div>
+
+                        <h5 class="mt-4">Contact & Hospital Details</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3"><label for="mobile_no" class="form-label">Mobile</label><input type="text" class="form-control" id="mobile_no" name="mobile_no" value="{{ doctor.mobile_no }}"></div>
+                            <div class="col-md-6 mb-3"><label for="email_id" class="form-label">Email</label><input type="email" class="form-control" id="email_id" name="email_id" value="{{ doctor.email_id }}"></div>
+                        </div>
+                        <div class="mb-3"><label for="location" class="form-label">Primary Location</label><input type="text" class="form-control" id="location" name="location" value="{{ doctor.location }}"></div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3"><label for="hospital_name" class="form-label">Hospital Name</label><input type="text" class="form-control" id="hospital_name" name="hospital_name" value="{{ doctor.hospital_name }}"></div>
+                            <div class="col-md-6 mb-3"><label for="hospital_contact" class="form-label">Hospital Contact</label><input type="text" class="form-control" id="hospital_contact" name="hospital_contact" value="{{ doctor.hospital_contact }}"></div>
+                        </div>
+                        <div class="mb-3"><label for="hospital_address" class="form-label">Hospital Address</label><input type="text" class="form-control" id="hospital_address" name="hospital_address" value="{{ doctor.hospital_address }}"></div>
+
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -80,7 +80,7 @@ for i in range(100):
     doctors.append(doctor)
 
 # Save to doctors.json
-with open("D:\All_Projects\DoctorFinder\data\doctors.json", "w", encoding="utf-8") as f:
+with open("D:/All_Projects/DoctorFinder/app/data/doctors.json", "w", encoding="utf-8") as f:
     json.dump(doctors, f, indent=4, ensure_ascii=False)
 
 print("✅ doctors.json with 100 records generated successfully!")

@@ -1,23 +1,49 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Contact Us</h2>
-<form method="POST">
-    <li class = 'nav-item'>
-    <input type="text" name="first_name" placeholder="First_Name">
-    <input type="text" name="last_name" placeholder="Last_Name">
-    </li>
-    <li class = 'nav-item'></li>
-    <input type="email" name="email" placeholder="Email">
-    <input type="number" name="mobile no" placeholder="Phone number">
-    <input type="text" name="location" placeholder="current location">
-    </li>
-    <li class = 'nav-item'>
-    <textarea name="message" placeholder="Message" rows="5" cols="40"></textarea>
-    </li>
-    <button type="submit">Send</button>
-</form>
-    <p class="my-paragraph">Phone No: 8179027681<br>
-    Email_Id: t.naresh5422@gmail.com <br>
-    Address: CBPuran, RSNagar, Duvvur, Kadapa, AP - 516175, 
-    </p>
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4">Get in Touch</h1>
+        <p class="lead text-muted">We'd love to hear from you. Please fill out the form below or contact us directly.</p>
+    </div>
+    <div class="row">
+        <div class="col-lg-7 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h4 class="card-title mb-4">Send us a Message</h4>
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message</label>
+                            <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card shadow-sm bg-light border-0 h-100">
+                <div class="card-body p-4">
+                    <h4 class="card-title mb-4">Contact Information</h4>
+                    <p><i class="bi bi-geo-alt-fill text-primary me-2"></i><strong>Address:</strong><br>CBPuran, RSNagar, Duvvur, Kadapa, AP - 516175</p>
+                    <p><i class="bi bi-telephone-fill text-primary me-2"></i><strong>Phone:</strong><br><a href="tel:+918179027681" class="text-decoration-none text-dark">8179027681</a></p>
+                    <p><i class="bi bi-envelope-fill text-primary me-2"></i><strong>Email:</strong><br><a href="mailto:t.naresh5422@gmail.com" class="text-decoration-none text-dark">t.naresh5422@gmail.com</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

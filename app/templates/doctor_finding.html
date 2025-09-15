@@ -1,44 +1,79 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container mt-4">
-  <h2>Find a Doctor</h2>
-
-  <form method="POST" action="{{ url_for('find_doctor') }}" class="mb-4">
-    <div class="mb-3">
-      <label for="location" class="form-label">Location</label>
-      <input type="text" name="location" id="location" class="form-control" style="width: 300px;"  placeholder="Enter city or area" required>
+  <div class="p-5 mb-4 bg-light rounded-3 shadow-sm">
+    <div class="container-fluid py-5">
+      <h1 class="display-5 fw-bold">Find Your Doctor</h1>
+      <p class="col-md-8 fs-4">Use the form below to search for doctors by location and specialization or symptoms.</p>
+      <form method="POST" action="{{ url_for('find_doctor') }}" class="row g-3 align-items-end">
+        <div class="col-md-5">
+          <label for="location" class="form-label">Location</label>
+          <input type="text" name="location" id="location" class="form-control form-control-lg" placeholder="Enter city or area" required>
+        </div>
+        <div class="col-md-5">
+          <label for="disease" class="form-label">Disease / Specialization</label>
+          <input type="text" name="disease" id="disease" class="form-control form-control-lg" placeholder="e.g. Cardiology, Diabetes" required>
+        </div>
+        <div class="col-md-2 d-grid">
+          <button type="submit" class="btn btn-primary btn-lg">Find Doctor</button>
+        </div>
+      </form>
     </div>
-    <div class="mb-3">
-      <label for="disease" class="form-label">Disease / Specialization</label>
-      <input type="text" name="disease" id="disease" class="form-control" style="width: 300px;"  placeholder="e.g. Cardiology, Diabetes" required>
-    </div>
-    <button type="submit" class="btn btn-primary">Find Doctor</button>
-  </form>
+  </div>
 
   {% if doctors %}
-    <h4>Matching Doctors:</h4>
-    {% for doc in doctors %}
-      <div class="card mb-3">
-        <div class="card-body">
-          <h5 class="card-title">{{ doc.doctor_name }}</h5>
-          <p><strong>Specialization:</strong> {{ doc.specialization }}</p>
-          <p><strong>Experience:</strong> {{ doc.experience }} years</p>
-          <p><strong>Rating:</strong> {{ doc.rating }}/5</p>
-          <p><strong>Hospital Name:</strong> {{ doc.hospital.name }}</p>
-          <p><strong>Address:</strong> {{ doc.hospital.address }}</p>
-          <p><strong>Contact:</strong> {{ doc.hospital.contact }}</p>
-          <a href="{{ doc.map_link }}" target="_blank" class="btn btn-outline-secondary">📍 View on Map</a>
-          <h6>Reviews:</h6>
-          <ul>
-            {% for review in doc.reviews %}
-              <li>{{ review }}</li>
-            {% endfor %}
-          </ul>
+    <h4 class="mb-4">Matching Doctors:</h4>
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+      {% for doc in doctors %}
+        <div class="col">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+              <div class="d-flex align-items-center mb-3">
+                {% if doc.image %}
+                  <img src="{{ url_for('static', filename=doc.image) }}" alt="Dr. {{ doc.doctor_name }}" class="rounded-circle me-3" style="width: 80px; height: 80px; object-fit: cover;">
+                {% else %}
+                  <img src="https://static.vecteezy.com/system/resources/previews/005/544/718/original/profile-icon-design-free-vector.jpg" alt="Default Avatar" class="rounded-circle me-3" style="width: 80px;">
+                {% endif %}
+                <div>
+                  <h5 class="card-title mb-0">{{ doc.doctor_name }}</h5>
+                  <p class="card-text text-muted">{{ doc.specialization }}</p>
+                </div>
+              </div>
+              <p class="card-text">
+                <i class="bi bi-briefcase-fill text-info"></i> <strong>Experience:</strong> {{ doc.experience }} years<br>
+                <i class="bi bi-hospital-fill text-secondary"></i> <strong>Hospital:</strong> {{ doc.hospital_name }}<br>
+                <i class="bi bi-geo-alt-fill text-danger"></i> <strong>Location:</strong> {{ doc.location }}
+              </p>
+              
+              {% if doc.available_slots %}
+              <div class="mt-3">
+                <h6><i class="bi bi-clock"></i> Available Slots:</h6>
+                {% for date, times in doc.available_slots.items()|sort %}
+                  {% if times %}
+                  <div class="mb-2">
+                    <strong>{{ date }}:</strong>
+                    {% for time in times %}
+                      <a href="{{ url_for('book_appointment', doctor_id=doc.id, date=date, time=time) }}" class="badge bg-light text-dark border text-decoration-none">
+                        {{ time }}
+                      </a>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            <div class="card-footer bg-transparent border-top-0">
+              <a href="{{ url_for('book_appointment', doctor_id=doc.id) }}" class="btn btn-success w-100"><i class="bi bi-calendar-plus"></i> Book Appointment</a>
+            </div>
+          </div>
         </div>
-      </div>
-    {% endfor %}
+      {% endfor %}
+    </div>
   {% elif request.method == 'POST' %}
-    <p>No matching doctors found for your criteria.</p>
+    <div class="text-center py-5">
+      <p class="lead">No matching doctors found for your criteria.</p>
+    </div>
   {% endif %}
 </div>
 {% endblock %}

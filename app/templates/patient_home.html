@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - Doctor Finder{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h1 class="display-5">Welcome, {{ patient.name }}!</h1>
+        <p class="lead text-muted">Your health journey starts here. What would you like to do today?</p>
+    </div>
+
+    <div class="row">
+        <!-- Card: Find a Doctor -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-primary">
+                <div class="card-body text-center">
+                    <i class="bi bi-search-heart-fill fs-1 text-primary"></i>
+                    <h5 class="card-title mt-3">Find a Doctor</h5>
+                    <p class="card-text">Search for specialists by location and symptoms to find the right care for you.</p>
+                    <a href="{{ url_for('find_doctor') }}" class="btn btn-primary">Start Searching</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card: Go to Dashboard -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-success">
+                <div class="card-body text-center">
+                    <i class="bi bi-layout-text-window-reverse fs-1 text-success"></i>
+                    <h5 class="card-title mt-3">View Dashboard</h5>
+                    <p class="card-text">See your upcoming appointments, review history, and recent activity.</p>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-success">Go to Dashboard</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card: Manage Profile -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-info">
+                <div class="card-body text-center">
+                    <i class="bi bi-person-circle fs-1 text-info"></i>
+                    <h5 class="card-title mt-3">Manage Your Profile</h5>
+                    <p class="card-text">Keep your personal information and contact details up to date.</p>
+                    <a href="{{ url_for('user_profile') }}" class="btn btn-info">Edit Profile</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

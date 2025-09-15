@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Book Appointment - {{ doctor.doctor_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+        <div class="card shadow-lg border-0 rounded-lg mt-5">
+            <div class="card-header">
+                <h3 class="text-center font-weight-light my-4">
+                    <i class="bi bi-calendar-plus"></i> Book Appointment
+                </h3>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">With Dr. {{ doctor.doctor_name }}</h5>
+                <p class="card-text text-muted">{{ doctor.specialization }}</p>
+                <hr>
+                <form method="post">
+                    {% if preselected_date and preselected_time %}
+                    <div class="alert alert-info">
+                        You have selected an appointment on <strong>{{ preselected_date }}</strong> at <strong>{{ preselected_time }}</strong>.
+                    </div>
+                    <input type="hidden" name="appointment_date" value="{{ preselected_date }}">
+                    <input type="hidden" name="appointment_time" value="{{ preselected_time }}">
+
+                    {% elif doctor.available_slots %}
+                    <div class="mb-3">
+                        <label for="appointment_date_select" class="form-label">Select an Available Date</label>
+                        <select class="form-select" id="appointment_date_select" name="appointment_date" required>
+                            <option value="" selected disabled>-- Choose a date --</option>
+                            {% for date in doctor.available_slots.keys()|sort %}
+                                <option value="{{ date }}">{{ date }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3" id="time-slots-container" style="display: none;">
+                        <label class="form-label">Select an Available Time</label>
+                        <div id="time-slots-pills" class="d-flex flex-wrap gap-2">
+                            <!-- Time slots will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="mb-3">
+                        <label for="appointment_date" class="form-label">Select Date and Time</label>
+                        <input type="datetime-local" class="form-control" id="appointment_date" name="appointment_date" required>
+                    </div>
+                    <p class="text-warning small">Note: This doctor has not specified their available slots. Please select a date and time manually.</p>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label for="consultation_for" class="form-label">Consultation For</label>
+                        <select class="form-select" id="consultation_for" name="consultation_for">
+                            <option>Self</option>
+                            <option>Spouse</option>
+                            <option>Child</option>
+                            <option>Parent</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">Reason for Visit (Optional)</label>
+                        <textarea class="form-control" id="reason" name="reason" rows="3" placeholder="Briefly describe your symptoms or reason for visit..."></textarea>
+                    </div>
+                    <div class="d-grid mt-4 mb-0">
+                        <button type="submit" class="btn btn-primary btn-block">Request Appointment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const availableSlots = {{ doctor.available_slots|tojson if doctor.available_slots else '{}' }};
+
+    document.getElementById('appointment_date_select').addEventListener('change', function() {
+        const selectedDate = this.value;
+        const times = availableSlots[selectedDate] || [];
+        const timeSlotsContainer = document.getElementById('time-slots-container');
+        const timeSlotsPills = document.getElementById('time-slots-pills');
+
+        timeSlotsPills.innerHTML = ''; // Clear previous time slots
+
+        if (times.length > 0) {
+            times.forEach((time, index) => {
+                const id = `time-${index}`;
+                timeSlotsPills.innerHTML += `
+                    <div>
+                        <input type="radio" class="btn-check" name="appointment_time" id="${id}" value="${time}" autocomplete="off" required>
+                        <label class="btn btn-outline-primary" for="${id}">${time}</label>
+                    </div>
+                `;
+            });
+            timeSlotsContainer.style.display = 'block';
+        } else {
+            timeSlotsContainer.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

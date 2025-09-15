@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Availability{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h3>Manage Your Available Slots</h3>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Set a date and add the specific times you are available for appointments. This will overwrite any previously saved slots.</p>
+                    <form action="{{ url_for('manage_slots') }}" method="POST" id="availability-form">
+                        <input type="hidden" name="slots_data" id="slots_data_input">
+                        <div class="row align-items-end">
+                        <div class="col-md-3 mb-3">
+                            <label for="slot_date" class="form-label">Date</label>
+                            <input type="date" id="slot_date" class="form-control">
+                        </div>
+                        <div class="col-md-7 mb-3">
+                            <label for="new_time_slot" class="form-label">Add a Time Slot</label>
+                            <div class="input-group">
+                                <input type="time" id="new_time_slot" class="form-control">
+                                <button type="button" class="btn btn-outline-secondary" onclick="addTimeSlot()">+ Add</button>
+                            </div>
+                            <div id="time-slot-helper" class="form-text text-danger" style="height: 1em;"></div>
+                        </div>
+                        </div>
+                        <div class="col-md-2 mb-3 d-grid align-self-end">
+                            <button type="submit" class="btn btn-primary">Save Availability</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-10 mt-3">
+            <h5>Current Slots</h5>
+            <div id="slots-display-area"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let availability = {{ doctor.available_slots|tojson if doctor.available_slots else '{}' }};
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInput = document.getElementById('slot_date');
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+        dateInput.min = today;
+
+        renderAllSlots();
+
+        document.getElementById('availability-form').addEventListener('submit', function(e) {
+            document.getElementById('slots_data_input').value = JSON.stringify(availability);
+        });
+    });
+
+    function addTimeSlot() {
+        const timeInput = document.getElementById('new_time_slot');
+        const dateInput = document.getElementById('slot_date');
+        const timeValue = timeInput.value;
+        const dateValue = dateInput.value;
+
+        if (!timeValue || !dateValue) return;
+
+        if (!availability[dateValue]) {
+            availability[dateValue] = [];
+        }
+
+        if (availability[dateValue].includes(timeValue)) {
+            const helper = document.getElementById('time-slot-helper');
+            helper.textContent = 'Time slot already specified for this date.';
+            timeInput.classList.add('is-invalid');
+            setTimeout(() => { helper.textContent = ''; timeInput.classList.remove('is-invalid'); }, 2000);
+            return;
+        }
+
+        availability[dateValue].push(timeValue);
+        availability[dateValue].sort();
+        timeInput.value = '';
+        renderAllSlots();
+    }
+
+    function removeTimeSlot(date, time) {
+        const index = availability[date].indexOf(time);
+        if (index > -1) {
+            availability[date].splice(index, 1);
+        }
+        if (availability[date].length === 0) {
+            delete availability[date];
+        }
+        renderAllSlots();
+    }
+
+    function renderAllSlots() {
+        const displayArea = document.getElementById('slots-display-area');
+        displayArea.innerHTML = '';
+        const sortedDates = Object.keys(availability).sort();
+
+        if (sortedDates.length === 0) {
+            displayArea.innerHTML = '<p class="text-muted">No slots added yet.</p>';
+            return;
+        }
+
+        for (const date of sortedDates) {
+            let pillsHTML = availability[date].map(time => `
+                <span class="badge bg-primary me-2 mb-2 p-2">
+                    ${time}
+                    <button type="button" class="btn-close btn-close-white ms-2" style="font-size: 0.65em;" onclick="removeTimeSlot('${date}', '${time}')"></button>
+                </span>`).join('');
+            displayArea.innerHTML += `<div class="mb-3"><p class="mb-1"><strong>${date}</strong></p><div>${pillsHTML}</div></div>`;
+        }
+    }
+</script>
+{% endblock %}

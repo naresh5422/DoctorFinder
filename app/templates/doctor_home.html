@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Doctor Home - Doctor Finder{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h1 class="display-5">Welcome, {{ doctor_name }}!</h1>
+        <p class="lead text-muted">Your central hub for managing your professional presence on Doctor Finder.</p>
+    </div>
+
+    <div class="row">
+        <!-- Service: Manage Appointments -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-primary">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-check-fill fs-1 text-primary"></i>
+                    <h5 class="card-title mt-3">Manage Appointments</h5>
+                    <p class="card-text">View, confirm, and track all your patient appointments in one place.</p>
+                    <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service: Edit Profile -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-success">
+                <div class="card-body text-center">
+                    <i class="bi bi-person-lines-fill fs-1 text-success"></i>
+                    <h5 class="card-title mt-3">Update Your Profile</h5>
+                    <p class="card-text">Keep your professional details, bio, and experience up-to-date for patients.</p>
+                    <a href="{{ url_for('edit_doctor_profile') }}" class="btn btn-success">Edit Profile</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service: Manage Availability -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-info">
+                <div class="card-body text-center">
+                    <i class="bi bi-clock-history fs-1 text-info"></i>
+                    <h5 class="card-title mt-3">Set Your Availability</h5>
+                    <p class="card-text">Manage your available time slots to let patients book appointments easily.</p>
+                    <a href="{{ url_for('manage_slots') }}" class="btn btn-info">Update Slots</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

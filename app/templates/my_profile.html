@@ -1,29 +1,82 @@
 {% extends "base.html" %}
+
+{% block title %}My Profile - {{ doctor.doctor_name }}{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
-  <h2>My Profile</h2>
-  {% if doctor %}
-    <div class="card p-3 shadow">
-      <h4>{{ doctor.doctor_name }}</h4>
-      <p><strong>Username:</strong> {{ doctor.username }}</p>
-      <p><strong>Specialization:</strong> {{ doctor.specialization }}</p>
-      <p><strong>Experience:</strong> {{ doctor.experience }} years</p>
-      <p><strong>Rating:</strong> {{ doctor.rating }}/5</p>
-      <p><strong>Email:</strong> {{ doctor.EmailId }}</p>
-      <p><strong>Mobile:</strong> {{ doctor.MobileNo }}</p>
-      <h5>Hospital</h5>
-      <p><strong>Name:</strong> {{ doctor.hospital.name }}</p>
-      <p><strong>Address:</strong> {{ doctor.hospital.address }}</p>
-      <p><strong>Contact:</strong> {{ doctor.hospital.contact }}</p>
-      <h5>Reviews</h5>
-      <ul>
-        {% for review in doctor.reviews %}
-          <li>{{ review }}</li>
-        {% endfor %}
-      </ul>
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body text-center">
+                    {% if doctor.image %}
+                        <img src="{{ url_for('static', filename=doctor.image) }}" alt="Doctor Avatar" class="rounded-circle img-fluid" style="max-width: 150px; aspect-ratio: 1 / 1; object-fit: cover;">
+                    {% else %}
+                        <img src="https://static.vecteezy.com/system/resources/previews/005/544/718/original/profile-icon-design-free-vector.jpg" alt="Doctor Avatar" class="rounded-circle img-fluid" style="width: 150px;">
+                    {% endif %}
+                    <h4 class="my-3">{{ doctor.doctor_name }}</h4>
+                    <p class="text-muted mb-1">{{ doctor.specialization }}</p>
+                    <p class="text-muted mb-4">{{ doctor.location }}</p>
+                    <div class="d-flex justify-content-center mb-2">
+                        <a href="{{ url_for('edit_doctor_profile') }}" class="btn btn-primary">Edit Profile</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <ul class="nav nav-tabs" id="myProfileTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab" aria-controls="details" aria-selected="true">Details</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="hospital-tab" data-bs-toggle="tab" data-bs-target="#hospital" type="button" role="tab" aria-controls="hospital" aria-selected="false">Hospital</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab" aria-controls="reviews" aria-selected="false">Reviews</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content pt-3" id="myProfileTabContent">
+                        <!-- Professional Details Tab -->
+                        <div class="tab-pane fade show active" id="details" role="tabpanel" aria-labelledby="details-tab">
+                            <div class="row"><div class="col-sm-3"><p class="mb-0">Username</p></div><div class="col-sm-9"><p class="text-muted mb-0">{{ doctor.username }}</p></div></div><hr>
+                            <div class="row"><div class="col-sm-3"><p class="mb-0">Email</p></div><div class="col-sm-9"><p class="text-muted mb-0">{{ doctor.email_id }}</p></div></div><hr>
+                            <div class="row"><div class="col-sm-3"><p class="mb-0">Mobile</p></div><div class="col-sm-9"><p class="text-muted mb-0">{{ doctor.mobile_no }}</p></div></div><hr>
+                            <div class="row"><div class="col-sm-3"><p class="mb-0">Experience</p></div><div class="col-sm-9"><p class="text-muted mb-0">{{ doctor.experience }} years</p></div></div><hr>
+                            <div class="row"><div class="col-sm-3"><p class="mb-0">Rating</p></div><div class="col-sm-9"><p class="text-muted mb-0">{{ doctor.rating or 'N/A' }}/5</p></div></div>
+                            <hr>
+                            <p class="mb-1"><strong>Education & Certifications</strong></p>
+                            <p class="text-muted mb-0"><strong>Education:</strong> {{ doctor.education or 'Not specified.' }}</p>
+                            <p class="text-muted mb-0"><strong>Certifications:</strong> {{ doctor.certifications or 'Not specified.' }}</p>
+                            <hr>
+                            <p class="mb-1"><strong>Biography</strong></p>
+                            <p class="text-muted mb-0">{{ doctor.bio or 'No biography provided.' }}</p>
+                        </div>
+                        <!-- Hospital Info Tab -->
+                        <div class="tab-pane fade" id="hospital" role="tabpanel" aria-labelledby="hospital-tab">
+                            <div class="row"><div class="col-sm-3"><p class="mb-0">Hospital Name</p></div><div class="col-sm-9"><p class="text-muted mb-0">{{ doctor.hospital_name }}</p></div></div><hr>
+                            <div class="row"><div class="col-sm-3"><p class="mb-0">Address</p></div><div class="col-sm-9"><p class="text-muted mb-0">{{ doctor.hospital_address }}</p></div></div><hr>
+                            <div class="row"><div class="col-sm-3"><p class="mb-0">Contact</p></div><div class="col-sm-9"><p class="text-muted mb-0">{{ doctor.hospital_contact }}</p></div></div>
+                        </div>
+                        <!-- Reviews Tab -->
+                        <div class="tab-pane fade" id="reviews" role="tabpanel" aria-labelledby="reviews-tab">
+                            {% if doctor.reviews %}
+                                <ul class="list-group list-group-flush">
+                                {% for review_text in doctor.reviews %}
+                                    <li class="list-group-item d-flex align-items-start px-0">
+                                        <i class="bi bi-quote me-2"></i>
+                                        <p class="mb-0 fst-italic">"{{ review_text }}"</p>
+                                    </li>
+                                {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="text-muted text-center">No reviews yet.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  {% else %}
-    <p>No profile data found.</p>
-  {% endif %}
 </div>
 {% endblock %}

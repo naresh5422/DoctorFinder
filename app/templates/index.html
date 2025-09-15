@@ -1,30 +1,47 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <div class="text-center my-5">
-    <h1 class="display-5 fw-bold">Welcome to Doctor Finder</h1>
-    <p class="lead">Easily find trusted doctors and hospitals near you.</p>
-    <a href="{{ url_for('find_doctor') }}" class="btn btn-primary btn-lg mt-3">Find a Doctor</a>
-    {% if user %}
-      <p class="lead">Welcome back, {{ user.username }}!</p>
-    {% endif %}
+  <!-- Hero Section -->
+  <div class="px-4 py-5 my-5 text-center bg-light rounded-3 shadow-sm">
+    <img class="d-block mx-auto mb-4" src="{{ url_for('static', filename='df.png') }}" alt="Doctor Finder Logo" width="92">
+    <h1 class="display-5 fw-bold text-body-emphasis">Find Your Perfect Doctor</h1>
+    <div class="col-lg-6 mx-auto">
+      <p class="lead mb-4">Your health is our priority. Search for verified doctors, read patient reviews, and book appointments with confidence. All in one place.</p>
+      <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+        <a href="{{ url_for('find_doctor') }}" class="btn btn-primary btn-lg px-4 gap-3">Find a Doctor</a>
+        <a href="{{ url_for('about') }}" class="btn btn-outline-secondary btn-lg px-4">Learn More</a>
+      </div>
+    </div>
   </div>
 
-  <hr class="my-5">
-
-  <div class="row">
-    <div class="col-md-6">
-      <h3>Why Choose Doctor Finder?</h3>
-      <ul>
-        <li>Verified doctor profiles with accurate details</li>
-        <li>Search by specialization, location, and hospital</li>
-        <li>View positive and negative reviews before booking</li>
-        <li>Track your search history</li>
-      </ul>
+  <!-- Features Section -->
+  <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+    <div class="col d-flex align-items-start">
+      <div class="icon-square text-body-emphasis bg-body-secondary d-inline-flex align-items-center justify-content-center fs-4 flex-shrink-0 me-3">
+        <i class="bi bi-person-check" style="font-size: 1.5rem;"></i>
+      </div>
+      <div>
+        <h3 class="fs-2 text-body-emphasis">Verified Doctors</h3>
+        <p>Connect with a network of trusted and verified medical professionals across various specializations.</p>
+      </div>
     </div>
-    <div class="col-md-6 text-center">
-      <img src="{{ url_for('static', filename='df.png') }}" 
-           alt="Doctor Search" class="img-fluid rounded shadow">
+    <div class="col d-flex align-items-start">
+      <div class="icon-square text-body-emphasis bg-body-secondary d-inline-flex align-items-center justify-content-center fs-4 flex-shrink-0 me-3">
+        <i class="bi bi-search" style="font-size: 1.5rem;"></i>
+      </div>
+      <div>
+        <h3 class="fs-2 text-body-emphasis">Smart Search</h3>
+        <p>Easily find the right doctor by location, specialization, or even by describing your symptoms.</p>
+      </div>
+    </div>
+    <div class="col d-flex align-items-start">
+      <div class="icon-square text-body-emphasis bg-body-secondary d-inline-flex align-items-center justify-content-center fs-4 flex-shrink-0 me-3">
+        <i class="bi bi-chat-quote" style="font-size: 1.5rem;"></i>
+      </div>
+      <div>
+        <h3 class="fs-2 text-body-emphasis">Real Reviews</h3>
+        <p>Make informed decisions by reading authentic reviews and ratings from other patients.</p>
+      </div>
     </div>
   </div>
 {% endblock %}

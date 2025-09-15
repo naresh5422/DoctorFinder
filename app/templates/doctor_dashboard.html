@@ -1,37 +1,179 @@
 {% extends "base.html" %}
 
+{% block title %}Doctor Dashboard{% endblock %}
+
 {% block content %}
-  
-    <div class="container mt-4">
-    <h2 class="mb-4">Welcome, Dr. {{ doctor.doctor_name }}</h2>
-    
+<div class="container-fluid">
+    <h3 class="mt-4">Welcome, {{ doctor.doctor_name }}</h3>
+    <p class="lead mb-4">Manage your appointments and availability.</p>
+
+    <!-- Stats Cards -->
     <div class="row">
-
-      <div class="col-md-4">
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h5 class="card-title">Reviews</h5>
-            <ul>
-              {% for review in doctor.reviews %}
-              <li>{{ review }}</li>
-              {% else %}
-              <li>No reviews yet</li>
-              {% endfor %}
-            </ul>
-          </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Pending Appointments</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_appointments|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-clock-history fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-
-      <div class="col-md-4">
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h5 class="card-title">Patients</h5>
-            <p>Feature Coming Soon</p>
-          </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Confirmed Appointments</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ confirmed_appointments|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-calendar-check fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Appointments</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ (pending_appointments|length) + (confirmed_appointments|length) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-clipboard-data fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Available Slots Today</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ doctor.available_slots[today_date]|length if doctor.available_slots and today_date in doctor.available_slots else 0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-hourglass-split fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <a href="{{ url_for('logout') }}" class="btn btn-danger mt-4">Logout</a>
-  </div>
+    <!-- Current Availability Display -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Your Current Availability</h6>
+                    <a href="{{ url_for('manage_slots') }}" class="btn btn-sm btn-primary">Update Slots</a>
+                </div>
+                <div class="card-body">
+                    {% if doctor.available_slots %}
+                        {% for date, times in doctor.available_slots.items()|sort %}
+                        <div class="mb-3 border-bottom pb-2">
+                            <h6 class="card-title">Date: <span class="text-success">{{ date }}</span></h6>
+                            {% if times %}
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for time in times %}
+                                    {% if date + '_' + time in booked_slots %}
+                                        <span class="badge bg-success p-2" title="Booked">{{ time }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary p-2">{{ time }}</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <p class="text-muted small">No time slots for this date.</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">You have not set your availability yet. Click "Update Slots" to add them.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointments and Reviews -->
+    <div class="row mt-4">
+        <!-- Appointments Management -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Appointment Requests</h6>
+                </div>
+                <div class="card-body">
+                    {% if pending_appointments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Patient</th>
+                                        <th>Date & Time</th>
+                                        <th>Reason</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% for appt in pending_appointments %}
+                                    <tr>
+                                        <td>{{ appt.patient.username }}</td>
+                                        <td>{{ appt.appointment_date.strftime('%b %d, %Y at %I:%M %p') }}</td>
+                                        <td>{{ appt.reason or 'N/A' }}</td>
+                                        <td>
+                                            <form method="POST" action="{{ url_for('update_appointment_status', appointment_id=appt.id, status='Confirmed') }}" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-success">Confirm</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-center">No pending appointments.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Patient Reviews -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Patient Reviews</h6>
+                </div>
+                <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                    {% if doctor.reviews %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-xs font-weight-bold text-warning text-uppercase">Total Reviews</span>
+                            <span class="h5 mb-0 font-weight-bold text-gray-800">{{ doctor.reviews|length }}</span>
+                        </div>
+                        <hr class="mt-0">
+                        {% for review in doctor.reviews %}
+                            <div class="mb-3 border-bottom pb-2">                                
+                                <p class="mb-0">"{{ review }}"</p>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-center">No reviews yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

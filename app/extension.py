@@ -14,9 +14,8 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
+        if 'patient_id' not in session:
             flash("Please log in to continue.", "warning")
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
-

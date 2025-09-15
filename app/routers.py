@@ -1,26 +1,18 @@
-import os
-import json
 from flask import render_template, request, session, redirect, url_for, flash
-from services.doctor_service import find_doctors, get_nearby_locations, map_disease_to_specialist
-from models import SearchHistory, User
+from app.services.doctor_service import find_doctors, get_nearby_locations, map_disease_to_specialist
+from app.models import SearchHistory, Patient, Doctor, Appointment, Review
 from werkzeug.utils import secure_filename
-from extension import db, login_required
-# from app import app
-
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(current_dir)
-file_path = os.path.join(project_root, "data", "doctors.json")
-file_path = os.path.normpath(file_path)
+from app.extension import db, login_required
+from datetime import datetime
 
 
 def setup_routes(app):
     @app.context_processor
     def inject_user():
-        user = None
-        if 'user_id' in session:
-            user = User.query.get(session['user_id'])
-        return dict(user=user)
+        patient = None
+        if 'patient_id' in session:
+            patient = Patient.query.get(session['patient_id'])
+        return dict(patient=patient)
 
     @app.route("/login", methods=["GET", "POST"])
     def login():
@@ -30,16 +22,14 @@ def setup_routes(app):
         # POST: handle login
         username = request.form.get("username")
         password = request.form.get("password")
-        user = User.query.filter_by(username=username, password=password).first()
-        if user:
-            session["user_id"] = user.id
-            user.login_count += 1
-            user.status = "login"
+        patient = Patient.query.filter_by(username=username).first()
+
+        if patient and patient.check_password(password):
+            session["patient_id"] = patient.id
+            patient.login_count += 1
+            patient.status = "login"
             db.session.commit()
-            next_url = session.pop("next_url", None)
-            if next_url and "/signup" in next_url:
-                next_url = url_for("index")
-            return redirect(next_url or url_for("index"))  # Adjust if using blueprint
+            return redirect(url_for("patient_home"))  # Redirect to patient homepage
         else:
             flash("Invalid username or password", "danger")
         return render_template("login.html")
@@ -60,20 +50,20 @@ def setup_routes(app):
                 flash("Please fill all required fields", "danger")
                 return render_template("signup.html")
             # Check if user already exists
-            existing_user = User.query.filter_by(username=username).first()
-            if existing_user:
+            existing_patient = Patient.query.filter_by(username=username).first()
+            if existing_patient:
                 flash("Username already taken. Please choose another one.", "warning")
                 return render_template("signup.html")
             # Create new user
-            user = User(
+            patient = Patient(
                 username=username,
-                password=password,   # ⚠️ you should hash password later using werkzeug.security
                 name=name,
                 mobile=mobile,
                 email=email,
                 location=location
             )
-            db.session.add(user)
+            patient.set_password(password)
+            db.session.add(patient)
             db.session.commit()
             flash("Account created successfully! Please log in.", "success")
             return redirect(url_for("login"))
@@ -82,41 +72,74 @@ def setup_routes(app):
 
     @app.route("/logout")
     def logout():
-        user_id = session.get("user_id")
-        if user_id:
-            user = User.query.get(user_id)
-            if user:
-                user.status = "logout"
+        patient_id = session.get("patient_id")
+        if patient_id:
+            patient = Patient.query.get(patient_id)
+            if patient:
+                patient.status = "logout"
                 db.session.commit()
-        session.pop("user_id", None)
-        flash("You have been logged out.", "info")
+        session.pop("patient_id", None)
+        flash("You have been logged out successfully.", "info")
         return redirect(url_for("index"))
+
+    @app.route("/forgot_password", methods=['GET', 'POST'])
+    def user_forgot_password():
+        # Placeholder for user password reset logic
+        return render_template("user_forgot_password.html")
 
 
     @app.route("/")
     def index():
         return render_template("index.html")
     
+    @app.route("/home")
+    @login_required
+    def patient_home():
+        patient = Patient.query.get(session['patient_id'])
+        return render_template("patient_home.html", patient=patient)
+    
+    @app.route("/dashboard")
+    @login_required
+    def dashboard():
+        patient_id = session["patient_id"]
+        
+        # Fetch all appointments for stats
+        all_appointments = Appointment.query.filter_by(user_id=patient_id).all()
+        total_appointments = len(all_appointments)
+        pending_appointments_count = len([a for a in all_appointments if a.status == 'Pending'])
+        
+        # Count unique doctors consulted
+        consulted_doctor_ids = {a.doctor_id for a in all_appointments if a.status in ['Confirmed', 'Completed']}
+        doctors_consulted_count = len(consulted_doctor_ids)
+
+        # Fetch reviews given by the patient
+        reviews_given = Review.query.filter_by(patient_id=patient_id).order_by(Review.timestamp.desc()).all()
+
+        recent_searches = SearchHistory.query.filter_by(patient_id=patient_id).order_by(SearchHistory.timestamp.desc()).limit(5).all()
+        upcoming_appointments = Appointment.query.filter(
+            Appointment.user_id == patient_id,
+            Appointment.appointment_date >= datetime.utcnow()
+        ).order_by(Appointment.appointment_date.asc()).all()
+        return render_template("user_dashboard.html", recent_searches=recent_searches, upcoming_appointments=upcoming_appointments, total_appointments=total_appointments, pending_appointments_count=pending_appointments_count, doctors_consulted_count=doctors_consulted_count, reviews_given=reviews_given)
+
     @app.route("/repeat_search", defaults={"search_id": None})
     @app.route("/repeat_search/<int:search_id>", methods = ["GET","POST"])
     @login_required
     def repeat_search(search_id):
-        if "user_id" not in session:
+        if "patient_id" not in session:
             return redirect(url_for("login"))
         search = SearchHistory.query.get(search_id)
-        if not search or search.user_id != session["user_id"]:
+        if not search or search.patient_id != session["patient_id"]:
             return "Unauthorized or invalid search"
         nearby_locations = get_nearby_locations(search.location)
         specialist = map_disease_to_specialist(search.disease)
         results = find_doctors(nearby_locations, specialist)
-        recent_searches = SearchHistory.query.filter_by(user_id=session["user_id"]).order_by(SearchHistory.timestamp.desc()).limit(5).all()
+        recent_searches = SearchHistory.query.filter_by(patient_id=session["patient_id"]).order_by(SearchHistory.timestamp.desc()).limit(5).all()
         return render_template("index.html", results=results, recent_searches=recent_searches)
 
     @app.route('/find_doctor', methods=['GET', 'POST'])
     @login_required
     def find_doctor():
-        with open(file_path, 'r') as f:
-            doctors_data = json.load(f)
         results = []
         recent_searchs = []
         if request.method == "POST":
@@ -126,19 +149,36 @@ def setup_routes(app):
             specialist_mapping = map_disease_to_specialist(disease)
             specialist = specialist_mapping.split(" - ")[1]
             # Save search to database
-            search = SearchHistory(user_id=session["user_id"],
+            search = SearchHistory(patient_id=session["patient_id"],
                                    location=location,
                                    disease=disease)
             db.session.add(search)
             db.session.commit()
             ## Doctor search logic
             nearby_locations = get_nearby_locations(location.strip().lower())
-            # results = find_doctors(nearby_locations, specialist)
-            results = [doc for doc in doctors_data
-                       if doc['location'].lower() in nearby_locations
-                       and doc['specialization'] == specialist]
-            recent_searchs = (
-                SearchHistory.query.filter_by(user_id=session["user_id"])
+            results = Doctor.query.filter(
+                Doctor.location.in_(nearby_locations),
+                Doctor.specialization == specialist
+            ).all()
+
+            # Filter out booked slots
+            for doctor in results:
+                if doctor.available_slots:
+                    booked_slots = {}
+                    # Get all appointments for this doctor on their available dates
+                    appointments = Appointment.query.filter(
+                        Appointment.doctor_id == doctor.id,
+                        Appointment.appointment_date.cast(db.Date).in_(doctor.available_slots.keys()),
+                        Appointment.status.in_(['Pending', 'Confirmed'])
+                    ).all()
+                    for appt in appointments:
+                        appt_date_str = appt.appointment_date.strftime('%Y-%m-%d')
+                        appt_time_str = appt.appointment_date.strftime('%H:%M')
+                        if appt_date_str in doctor.available_slots and appt_time_str in doctor.available_slots[appt_date_str]:
+                            doctor.available_slots[appt_date_str].remove(appt_time_str)
+
+            recent_searches = (
+                SearchHistory.query.filter_by(patient_id=session["patient_id"])
                 .order_by(SearchHistory.id.desc())
                 .limit(5)
                 .all())
@@ -156,118 +196,6 @@ def setup_routes(app):
     def services():
         return render_template("services.html")
     
-    # Doctor Services
-    @app.route('/doctor_profile', methods = ['GET','POST'])
-    @login_required
-    def doctor_profile():
-        doctors = []   # ✅ Always initialize
-        doctor_name = ""  # ✅ Default empty (to avoid undefined in template)
-        with open(file_path, 'r') as f:
-            doctors_data = json.load(f)
-        if request.method == 'POST':
-            if "review_text" in request.form and "doctor_id" in request.form:
-                doctor_id_str = request.form.get("doctor_id", "").strip()
-                doctor_id = int(doctor_id_str) if doctor_id_str.isdigit() else None
-                review_text = request.form["review_text"].strip()
-                for doc in doctors_data:
-                    if doc.get("id") == doctor_id:
-                        if "reviews" not in doc:
-                            doc["reviews"] = []
-                        doc["reviews"].append(review_text)
-                # Save updated JSON
-                with open(file_path, 'w') as f:
-                    json.dump(doctors_data, f, indent=4)
-                # Redirect back to doctor search result
-                return redirect(url_for("doctor_profile", doctor_name=request.args.get("doctor_name", "")))
-            doctor_name = request.form.get('doctor_name', '').strip().lower()
-            doctors = [doc for doc in doctors_data if doctor_name in doc['doctor_name'].lower()]
-        return render_template('doctor_profile.html', doctors=doctors, doctor_name=doctor_name)
-
-
-    # @app.route('/doctor_profile', methods=['GET', 'POST'])
-    # def doctor_profile():
-    #     doctors = []
-    #     doctor_name = ""  
-    #     # Load doctors JSON
-    #     with open(file_path, 'r') as f:
-    #         doctors_data = json.load(f)
-    #     if request.method == 'POST':
-    #         # ✅ Add Review
-    #         if "review_text" in request.form and "doctor_id" in request.form:
-    #             doctor_id_str = request.form.get("doctor_id", "").strip()
-    #             doctor_id = int(doctor_id_str) if doctor_id_str.isdigit() else None
-    #             review_text = request.form["review_text"].strip()
-
-    #             for doc in doctors_data:
-    #                 if doc.get("id") == doctor_id:
-    #                     if "reviews" not in doc:
-    #                         doc["reviews"] = []
-    #                     doc["reviews"].append(review_text)
-
-    #             # Save updated JSON
-    #             with open(file_path, 'w') as f:
-    #                 json.dump(doctors_data, f, indent=4)
-
-    #             return redirect(url_for("doctor_profile", doctor_name=request.args.get("doctor_name", "")))
-
-    #         # ✅ Search by doctor name
-    #         doctor_name = request.form.get('doctor_name', '').strip().lower()
-    #         doctors = [doc for doc in doctors_data if doctor_name in doc['doctor_name'].lower()]
-
-    #     return render_template('doctor_profile.html', doctors=doctors, doctor_name=doctor_name)
-    
-    # ✅ My Profile (Only logged-in Doctor)
-    # @app.route("/my_profile", methods=["GET", "POST"])
-    # def my_profile():
-    #     # if "doctor" not in session:
-    #     #     return redirect(url_for("doctor_login"))
-
-    #     logged_in_doctor = session["doctor"]
-
-    #     with open(file_path, 'r') as f:
-    #         doctors_data = json.load(f)
-
-    #     doctor = next((doc for doc in doctors_data if doc.get("username") == logged_in_doctor), None)
-
-    #     return render_template("my_profile.html", doctor=doctor)
-
-    # @app.route("/my_profile", methods=["GET"])
-    # def my_profile():
-    #     if "doctor_username" not in session:
-    #         flash("Please login first", "warning")
-    #         return redirect(url_for("doctor_login"))
-
-    #     logged_in_doctor = session["doctor_username"]
-
-    #     # Path to doctors.json
-    #     file_path = os.path.join(app.root_path, "data", "doctors.json")
-    #     with open(file_path, 'r') as f:
-    #         doctors_data = json.load(f)
-
-    #     doctor = next((doc for doc in doctors_data if doc.get("username") == logged_in_doctor), None)
-
-    #     if not doctor:
-    #         flash("Doctor profile not found.", "danger")
-    #         return redirect(url_for("doctor_login"))
-
-    #     return render_template("my_profile.html", doctor=doctor)
-
-    @app.route("/my_profile", methods=["GET"])
-    def my_profile():
-        if "doctor_id" not in session:
-            flash("Please login first", "warning")
-            return redirect(url_for("doctor_login"))
-        doctor_id = session["doctor_id"]
-        with open(file_path, 'r') as f:
-            doctors_data = json.load(f)
-        doctor = next((doc for doc in doctors_data if doc.get("id") == doctor_id), None)
-        if not doctor:
-            flash("Doctor profile not found.", "danger")
-            return redirect(url_for("doctor_login"))
-        return render_template("my_profile.html", doctor=doctor)
-
-
-
     # Hospital Services
     @app.route('/hospital_finding')
     @login_required
@@ -276,19 +204,19 @@ def setup_routes(app):
     
     @app.route("/user_profile", methods=["GET", "POST"])
     def user_profile():
-        if "user_id" not in session:
+        if "patient_id" not in session:
             flash("Please login first!", "danger")
             return redirect(url_for("login"))
 
-        user = User.query.get(session["user_id"])
+        patient = Patient.query.get(session["patient_id"])
 
         if request.method == "POST":
             # Update text fields
-            user.name = request.form.get("name", user.name)
-            user.mobile = request.form.get("mobile", user.mobile)
-            user.email = request.form.get("email", user.email)
-            user.location = request.form.get("location", user.location)
-            user.bio = request.form.get("bio", user.bio)
+            patient.name = request.form.get("name", patient.name)
+            patient.mobile = request.form.get("mobile", patient.mobile)
+            patient.email = request.form.get("email", patient.email)
+            patient.location = request.form.get("location", patient.location)
+            patient.bio = request.form.get("bio", patient.bio)
 
             # Handle profile image upload
             if "image" in request.files:
@@ -297,156 +225,66 @@ def setup_routes(app):
                     filename = secure_filename(file.filename)
                     filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
                     file.save(filepath)
-                    user.image = f"uploads/{filename}"  # store relative path
+                    patient.image = f"uploads/{filename}"  # store relative path
 
             db.session.commit()
             flash("Profile updated successfully!", "success")
             return redirect(url_for("user_profile"))
-        return render_template("user_profile.html", user=user)
+        return render_template("user_profile.html", patient=patient)
 
     @app.route('/hospital_doctor')
     @login_required
     def hospital_doctor():
         return render_template('hospital_doctor.html')
-    
-    @app.route('/user_dashboard')
-    @login_required
-    def user_dashboard():
-        return render_template('user_dashboard.html')
 
     @app.route('/hospital_reviews')
     @login_required
     def hospital_reviews():
         return render_template('hospital_reviews.html')
 
-    @app.route("/doctor_register", methods=["GET", "POST"])
-    def doctor_register():
-        if request.method == "POST":
-            print(request.form.to_dict())
-            # Collect doctor data from form
-            # Path to doctors.json
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            project_root = os.path.dirname(current_dir)
-            file_path = os.path.join(project_root, "data", "doctors.json")
-            file_path = os.path.normpath(file_path)
-            # Load existing doctors
-            if os.path.exists(file_path):
-                with open(file_path, "r") as f:
-                    try:
-                        doctors = json.load(f)
-                    except json.JSONDecodeError:
-                        doctors = []
-            else:
-                doctors = []
-            ids = [doc.get("id") for doc in doctors if isinstance(doc.get("id"), int)]
-            new_id = (max(ids) if ids else 100) + 1
-            doctor_data = {
-                "id": new_id,
-                "username": request.form.get("username"),
-                "password": request.form.get("password"),  # ⚠️ hash in production
-                "doctor_name": request.form.get("name"),
-                "specialization": request.form.get("specialization"),
-                "MobileNo": request.form.get("mobile"),
-                "EmailId": request.form.get("email"),
-                "location": request.form.get("location"),
-                "experience": int(request.form.get("experience", 0)),
-                "rating": float(request.form.get("rating", 0.0)),  # optional
-                "reviews": [],  # default empty list
-                "hospital": {
-                    "name": request.form.get("hospital_name"),
-                    "address": request.form.get("hospital_address"),
-                    "contact": request.form.get("hospital_contact")
-                }
-            }
-            # Validate required fields
-            if not all([doctor_data["username"], doctor_data["password"], doctor_data["doctor_name"],
-                    doctor_data["specialization"], doctor_data["MobileNo"], doctor_data["EmailId"],
-                    doctor_data["location"], doctor_data["hospital"]["name"]]):
-                flash("Please fill all required fields", "danger")
-                return redirect(url_for("doctor_register"))
-            # Check for duplicate username
-            if any(doc["username"].lower() == doctor_data["username"].lower() for doc in doctors):
-                flash("Username already exists. Please choose another one.", "danger")
-                return redirect(url_for("doctor_register"))
-            # Append new doctor
-            doctors.append(doctor_data)
-            # Save back to JSON
-            with open(file_path, "w") as f:
-                json.dump(doctors, f, indent=4, ensure_ascii=False)
-            flash("Doctor registered successfully!", "success")
-            return redirect(url_for("doctor_login"))
-        return render_template("doctor_registration.html")
+    @app.route('/book_appointment/<int:doctor_id>', methods=['GET', 'POST'])
+    @login_required
+    def book_appointment(doctor_id):
+        # Fetch doctor details from the database
+        doctor = Doctor.query.get_or_404(doctor_id)
+        if not doctor:
+            return "Doctor not found", 404
 
-    # Doctor Login
-    # @app.route("/doctor_login", methods=["GET", "POST"])
-    # def doctor_login():
-    #     if request.method == "POST":
-    #         username = request.form["username"].strip()
-    #         password = request.form["password"].strip()
-    #         with open(file_path, 'r') as f:
-    #             doctors_data = json.load(f)
-    #         doctor = next((doc for doc in doctors_data if doc["username"] == username and doc["password"] == password), None)
-    #         if doctor:
-    #             session["doctor_id"] = doctor["id"]
-    #             session["doctor_name"] = doctor["doctor_name"]
-    #             flash("Login successful!", "success")
-    #             return redirect(url_for("doctor_dashboard"))
-    #         else:
-    #             flash("Invalid username or password", "danger")
-    #     return render_template("doctor_login.html")
+        # Pre-fill from query parameters if available
+        preselected_date = request.args.get('date')
+        preselected_time = request.args.get('time')
 
-    @app.route("/doctor_login", methods=["GET", "POST"])
-    def doctor_login():
-        if request.method == "POST":
-            username = request.form["username"].strip()
-            password = request.form["password"].strip()
+        if request.method == 'POST':
+            reason = request.form.get('reason')
+            consultation_for = request.form.get('consultation_for', 'Self')
+            patient_id = session.get('patient_id')
+            appointment_date = None
 
-            with open(file_path, 'r') as f:
-                doctors_data = json.load(f)
+            # Check if booking is based on pre-defined slots
+            if 'appointment_time' in request.form:
+                slot_time_str = request.form.get('appointment_time')
+                slot_date_str = request.form.get('appointment_date') # The date is now from a select input
+                if not slot_date_str or not slot_time_str:
+                    flash('Invalid slot selection. Please try again.', 'danger')
+                    return redirect(url_for('book_appointment', doctor_id=doctor_id))
+                appointment_date = datetime.strptime(f"{slot_date_str} {slot_time_str}", '%Y-%m-%d %H:%M')
+            else: # Fallback to datetime-local input
+                appointment_date_str = request.form.get('appointment_date')
+                if not appointment_date_str:
+                    flash('Please select a date and time for the appointment.', 'danger')
+                    return redirect(url_for('book_appointment', doctor_id=doctor_id))
+                appointment_date = datetime.strptime(appointment_date_str, '%Y-%m-%dT%H:%M')
 
-            doctor = next(
-                (doc for doc in doctors_data if doc["username"] == username and doc["password"] == password),
-                None)
-            if doctor:
-                # ✅ Store username in session (so my_profile can find it)
-                session["doctor_username"] = doctor["username"]
-                session["doctor_id"] = doctor["id"]
-                session["doctor_name"] = doctor["doctor_name"]
+            new_appointment = Appointment(
+                user_id=patient_id,
+                doctor_id=doctor_id,
+                appointment_date=appointment_date,
+                consultation_for=consultation_for,
+                reason=reason
+            )
+            db.session.add(new_appointment)
+            db.session.commit()
+            flash(f'Appointment requested with {doctor.doctor_name}. You will be notified upon confirmation.', 'success')
+            return redirect(url_for('find_doctor'))
 
-                flash("Login successful!", "success")
-                return redirect(url_for("doctor_dashboard"))
-            else:
-                flash("Invalid username or password", "danger")
-        return render_template("doctor_login.html")
-
-
-
-    # Doctor Dashboard (after login)
-    @app.route("/doctor_dashboard")
-    def doctor_dashboard():
-        if "doctor_id" not in session:
-            flash("Please log in as doctor to continue.", "danger")
-            return redirect(url_for("doctor_login"))
-        doctor_id = session["doctor_id"]
-        with open(file_path, 'r') as f:
-            doctors_data = json.load(f)
-        doctor = next((doc for doc in doctors_data if doc.get("id") == doctor_id), None)
-        return render_template("doctor_dashboard.html", doctor=doctor)
-
-
-    # Doctor Logout
-    @app.route("/doctor_logout")
-    def doctor_logout():
-        session.clear()
-        return redirect(url_for("doctor_login"))
-    
-    @app.route("/doctor_reviews")
-    def doctor_reviews():
-        if "doctor_id" not in session:
-            return redirect(url_for("doctor_login"))
-        doctor_id = session["doctor_id"]
-        with open(file_path, 'r') as f:
-            doctors_data = json.load(f)
-        doctor = next((doc for doc in doctors_data if doc.get("id") == doctor_id), None)
-        reviews = doctor.get("reviews", []) if doctor else []
-        return render_template("doctor_reviews.html", reviews=reviews, doctor=doctor)
+        return render_template('book_appointment.html', doctor=doctor, preselected_date=preselected_date, preselected_time=preselected_time)

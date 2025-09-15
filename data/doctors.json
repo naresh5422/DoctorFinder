@@ -415,7 +415,10 @@
             "name": "Sunshine Hospital",
             "address": "KPHB, Hyderabad",
             "contact": "040-87654321"
-        }
+        },
+        "bio": "",
+        "education": "MBBS",
+        "certifications": ""
     },
     {
         "id": 20,
