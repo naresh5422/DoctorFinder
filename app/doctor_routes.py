@@ -29,28 +29,58 @@ def setup_doctor_routes(app):
     def doctor_profile():
         doctors = []
         doctor_name_query = ""
+        is_review_submission = "review_text" in request.form and "doctor_id" in request.form
 
         if request.method == 'POST':
-            if "review_text" in request.form and "doctor_id" in request.form:
+            if is_review_submission:
                 doctor_id_str = request.form.get("doctor_id", "").strip()
                 doctor_id = int(doctor_id_str) if doctor_id_str.isdigit() else None
                 review_text = request.form["review_text"].strip()
+                rating = int(request.form.get("rating", 5))
+
                 if doctor_id and review_text and 'patient_id' in session:
-                    new_review = Review(text=review_text, doctor_id=doctor_id, patient_id=session['patient_id'])
+                    new_review = Review(text=review_text, rating=rating, doctor_id=doctor_id, patient_id=session['patient_id'])
                     db.session.add(new_review)
+
+                    # Recalculate doctor's average rating
+                    doctor = Doctor.query.get(doctor_id)
+                    if doctor:
+                        # Fetch all ratings for the doctor
+                        all_reviews = Review.query.filter_by(doctor_id=doctor_id).all()
+                        total_ratings = sum(r.rating for r in all_reviews)
+                        average_rating = total_ratings / len(all_reviews)
+                        doctor.rating = round(average_rating, 1)
+
                     db.session.commit()
                     flash("Your review has been submitted.", "success")
-                return redirect(url_for("doctor_profile", doctor_name=request.args.get("doctor_name_query", "")))
-            
-            doctor_name_query = request.form.get('doctor_name', '').strip()
-            if doctor_name_query:
-                # Search doctors in the database
-                doctors = Doctor.query.filter(Doctor.doctor_name.ilike(f'%{doctor_name_query}%')).all()
+
+                # Redirect back to the 'next' URL if provided, otherwise default to the doctor profile page.
+                # This ensures the user returns to the page they were on (e.g., My Appointments).
+                next_url = request.args.get('next') or url_for("doctor_profile")
+                return redirect(next_url)
+            else:
+                # This is for the doctor search form on the profile page itself
+                doctor_name_query = request.form.get('doctor_name', '').strip()
+                if doctor_name_query:
+                    doctors = Doctor.query.filter(Doctor.doctor_name.ilike(f'%{doctor_name_query}%')).all()
         
         # For GET requests with a query parameter
         elif 'doctor_name' in request.args:
             doctor_name_query = request.args.get('doctor_name', '')
-            doctors = Doctor.query.filter(Doctor.doctor_name.ilike(f'%{doctor_name_query}%')).all()
+            doctors = Doctor.query.filter(Doctor.doctor_name.ilike(f'%{doctor_name_query}%')).all() if doctor_name_query else []
+
+        # For each doctor, check if the logged-in patient has a completed appointment
+        if 'patient_id' in session and doctors:
+            patient_id = session['patient_id']
+            for doc in doctors:
+                completed_appointment = Appointment.query.filter_by(
+                    doctor_id=doc.id,
+                    user_id=patient_id,
+                ).filter(Appointment.status.in_(['Confirmed', 'Completed'])).first()
+                doc.can_be_reviewed_by_user = completed_appointment is not None
+        else:
+            for doc in doctors:
+                doc.can_be_reviewed_by_user = False
             
         return render_template('doctor_profile.html', doctors=doctors, doctor_name=doctor_name_query)
 
@@ -70,6 +100,7 @@ def setup_doctor_routes(app):
         if request.method == "POST":
             username = request.form.get("username")
             password = request.form.get("password")
+            confirm_password = request.form.get("confirm_password")
             doctor_name = request.form.get("name")
             specialization = request.form.get("specialization")
             mobile_no = request.form.get("mobile")
@@ -80,6 +111,10 @@ def setup_doctor_routes(app):
             # Validate required fields
             if not all([username, password, doctor_name, specialization, mobile_no, email_id, location, hospital_name]):
                 flash("Please fill all required fields", "danger")
+                return redirect(url_for("doctor_register"))
+            
+            if password != confirm_password:
+                flash("Passwords do not match.", "danger")
                 return redirect(url_for("doctor_register"))
 
             # Check for duplicate username in the database
@@ -102,7 +137,7 @@ def setup_doctor_routes(app):
                 bio=request.form.get("bio"),
                 education=request.form.get("education"),
                 certifications=request.form.get("certifications"),
-                available_slots={"slots": []}
+                available_slots='{}'
             )
             new_doctor.set_password(password) # Hash the password
 
@@ -190,7 +225,7 @@ If you did not make this request then simply ignore this email and no changes wi
                     try:
                         client = Client(app.config['TWILIO_ACCOUNT_SID'], app.config['TWILIO_AUTH_TOKEN'])
                         message = client.messages.create(
-                            body=f"Your password reset OTP for DoctorFinder is: {otp}",
+                            body=f"Your password reset OTP for CareConnect is: {otp}",
                             from_=app.config['TWILIO_PHONE_NUMBER'],
                             to=doctor.mobile_no # Ensure this includes the country code, e.g., +1234567890
                         )

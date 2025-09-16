@@ -20,10 +20,10 @@
           </div>
           <p class="card-text text-muted">Empowering you to take control of your health journey with ease and confidence.</p>
           <ul class="list-group list-group-flush">
-            <li class="list-group-item"><i class="bi bi-search text-primary me-2"></i> Find Doctors by specialty and location.</li>
-            <li class="list-group-item"><i class="bi bi-person-lines-fill text-primary me-2"></i> View detailed doctor profiles and reviews.</li>
-            <li class="list-group-item"><i class="bi bi-calendar2-check text-primary me-2"></i> Book appointments instantly online.</li>
-            <li class="list-group-item"><i class="bi bi-clock-history text-primary me-2"></i> Manage your upcoming appointments.</li>
+            <li class="list-group-item"><a href="{{ url_for('find_doctor') }}" class="text-decoration-none text-dark"><i class="bi bi-search text-primary me-2"></i> Find Doctors by specialty and location.</a></li>
+            <li class="list-group-item"><a href="{{ url_for('doctor_profile') }}" class="text-decoration-none text-dark"><i class="bi bi-person-lines-fill text-primary me-2"></i> View detailed doctor profiles and reviews.</a></li>
+            <li class="list-group-item"><a href="{{ url_for('find_doctor') }}" class="text-decoration-none text-dark"><i class="bi bi-calendar2-check text-primary me-2"></i> Book appointments instantly online.</a></li>
+            <li class="list-group-item"><a href="{{ url_for('dashboard') }}" class="text-decoration-none text-dark"><i class="bi bi-clock-history text-primary me-2"></i> Manage your upcoming appointments.</a></li>
           </ul>
         </div>
       </div>

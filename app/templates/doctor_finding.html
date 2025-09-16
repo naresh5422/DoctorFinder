@@ -51,7 +51,7 @@
                 {% for date, times in doc.available_slots.items()|sort %}
                   {% if times %}
                   <div class="mb-2">
-                    <strong>{{ date }}:</strong>
+                    <strong>{{ date }} ({{ datetime.strptime(date, '%Y-%m-%d').strftime('%a') }}):</strong>
                     {% for time in times %}
                       <a href="{{ url_for('book_appointment', doctor_id=doc.id, date=date, time=time) }}" class="badge bg-light text-dark border text-decoration-none">
                         {{ time }}
@@ -63,8 +63,8 @@
               </div>
               {% endif %}
             </div>
-            <div class="card-footer bg-transparent border-top-0">
-              <a href="{{ url_for('book_appointment', doctor_id=doc.id) }}" class="btn btn-success w-100"><i class="bi bi-calendar-plus"></i> Book Appointment</a>
+            <div class="card-footer bg-transparent border-top-0 pt-0">
+                <a href="{{ url_for('book_appointment', doctor_id=doc.id) }}" class="btn btn-success w-100"><i class="bi bi-calendar-plus"></i> Book Appointment</a>
             </div>
           </div>
         </div>

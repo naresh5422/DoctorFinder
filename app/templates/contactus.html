@@ -1,46 +1,60 @@
 {% extends "base.html" %}
+
+{% block title %}Contact Us - CareConnect{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
+<div class="container py-5">
     <div class="text-center mb-5">
-        <h1 class="display-4">Get in Touch</h1>
-        <p class="lead text-muted">We'd love to hear from you. Please fill out the form below or contact us directly.</p>
+        <h1 class="display-5 fw-bold">Get in Touch</h1>
+        <p class="lead text-muted">We'd love to hear from you. Whether you have a question, feedback, or need support, our team is ready to help.</p>
     </div>
-    <div class="row">
-        <div class="col-lg-7 mb-4">
-            <div class="card shadow-sm">
+
+    <div class="row g-5">
+        <!-- Contact Form Column -->
+        <div class="col-lg-7">
+            <div class="card h-100 shadow-sm border-0">
                 <div class="card-body p-4">
-                    <h4 class="card-title mb-4">Send us a Message</h4>
+                    <h4 class="mb-4">Send Us a Message</h4>
                     <form method="POST">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="first_name" class="form-label">First Name</label>
-                                <input type="text" class="form-control" id="first_name" name="first_name" required>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" id="name" name="name" placeholder="Your Name" required>
+                                    <label for="name">Your Name</label>
+                                </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="last_name" class="form-label">Last Name</label>
-                                <input type="text" class="form-control" id="last_name" name="last_name" required>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="email" class="form-control" id="email" name="email" placeholder="Your Email" required>
+                                    <label for="email">Your Email</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" id="subject" name="subject" placeholder="Subject" required>
+                                    <label for="subject">Subject</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <textarea class="form-control" id="message" name="message" placeholder="Leave a message here" style="height: 150px" required></textarea>
+                                    <label for="message">Message</label>
+                                </div>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email Address</label>
-                            <input type="email" class="form-control" id="email" name="email" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="message" class="form-label">Message</label>
-                            <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Send Message</button>
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mt-4">Send Message</button>
                     </form>
                 </div>
             </div>
         </div>
+        <!-- Contact Information Column -->
         <div class="col-lg-5">
-            <div class="card shadow-sm bg-light border-0 h-100">
+            <div class="card h-100 border-0" style="background-color: #f0f7ff;">
                 <div class="card-body p-4">
                     <h4 class="card-title mb-4">Contact Information</h4>
-                    <p><i class="bi bi-geo-alt-fill text-primary me-2"></i><strong>Address:</strong><br>CBPuran, RSNagar, Duvvur, Kadapa, AP - 516175</p>
-                    <p><i class="bi bi-telephone-fill text-primary me-2"></i><strong>Phone:</strong><br><a href="tel:+918179027681" class="text-decoration-none text-dark">8179027681</a></p>
-                    <p><i class="bi bi-envelope-fill text-primary me-2"></i><strong>Email:</strong><br><a href="mailto:t.naresh5422@gmail.com" class="text-decoration-none text-dark">t.naresh5422@gmail.com</a></p>
+                    <div class="d-flex align-items-start mb-4"><i class="bi bi-geo-alt-fill fs-4 text-primary me-3"></i><div><h6 class="mb-0">Our Office</h6><p class="text-muted">CBPuran, RSNagar, Duvvur, Kadapa, AP - 516175</p></div></div>
+                    <div class="d-flex align-items-start mb-4"><i class="bi bi-envelope-fill fs-4 text-primary me-3"></i><div><h6 class="mb-0">Email Us</h6><p class="text-muted"><a href="mailto:t.naresh5422@gmail.com" class="text-decoration-none text-dark">t.naresh5422@gmail.com</a></p></div></div>
+                    <div class="d-flex align-items-start"><i class="bi bi-telephone-fill fs-4 text-primary me-3"></i><div><h6 class="mb-0">Call Us</h6><p class="text-muted"><a href="tel:+918179027681" class="text-decoration-none text-dark">8179027681</a></p></div></div>
                 </div>
             </div>
         </div>

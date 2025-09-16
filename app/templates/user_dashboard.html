@@ -1,101 +1,122 @@
 {% extends "base.html" %}
 
-{% block title %}My Dashboard{% endblock %}
+{% block title %}My Dashboard - CareConnect{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container-fluid">
+    <h3 class="mt-4">Welcome, {{ patient.name }}</h3>
+    <p class="lead mb-4">Here's a summary of your activity.</p>
+
+    <!-- Stats Cards -->
     <div class="row">
-        <div class="col-md-3">
-            <!-- Sidebar -->
-            <div class="card shadow-sm">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
                 <div class="card-body">
-                    <h5 class="card-title">Welcome, <br class="d-none d-lg-block">{{ patient.name }}!</h5>
-                    <p class="card-text text-muted">Manage your health journey.</p>
-                    <div class="list-group">
-                        <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action active"><i class="bi bi-layout-text-window-reverse me-2"></i>Dashboard</a>
-                        <a href="{{ url_for('user_profile') }}" class="list-group-item list-group-item-action"><i class="bi bi-person-circle me-2"></i>My Profile</a>
-                        <a href="{{ url_for('find_doctor') }}" class="list-group-item list-group-item-action"><i class="bi bi-search me-2"></i>Find a Doctor</a>
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Upcoming Appointments</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ upcoming_appointments|length }}</div>
+                        </div>
+                        <div class="col-auto"><i class="bi bi-calendar-week fs-2 text-gray-300"></i></div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-9">
-            <!-- Stats Cards -->
-            <div class="row">
-                <div class="col-md-4 mb-4">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body text-center">
-                            <i class="bi bi-calendar-event fs-1 text-primary"></i>
-                            <h5 class="card-title mt-2">Total Appointments</h5>
-                            <p class="card-text fs-4 fw-bold">{{ total_appointments }}</p>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Completed Appointments</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ completed_appointments_count }}</div>
                         </div>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body text-center">
-                            <i class="bi bi-clock-history fs-1 text-warning"></i>
-                            <h5 class="card-title mt-2">Pending Appointments</h5>
-                            <p class="card-text fs-4 fw-bold">{{ pending_appointments_count }}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body text-center">
-                            <i class="bi bi-people-fill fs-1 text-success"></i>
-                            <h5 class="card-title mt-2">Doctors Consulted</h5>
-                            <p class="card-text fs-4 fw-bold">{{ doctors_consulted_count }}</p>
-                        </div>
+                        <div class="col-auto"><i class="bi bi-check2-circle fs-2 text-gray-300"></i></div>
                     </div>
                 </div>
             </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Doctors Consulted</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ doctors_consulted_count }}</div>
+                        </div>
+                        <div class="col-auto"><i class="bi bi-person-video3 fs-2 text-gray-300"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Reviews Given</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ reviews_given_count }}</div>
+                        </div>
+                        <div class="col-auto"><i class="bi bi-star-fill fs-2 text-gray-300"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            <!-- Upcoming Appointments -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-calendar-check text-info"></i> Upcoming Appointments</h5>
+    <!-- Main Content Row -->
+    <div class="row">
+        <!-- Upcoming Appointments -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Upcoming Appointments</h6>
                 </div>
                 <div class="card-body">
                     {% if upcoming_appointments %}
                         <div class="list-group list-group-flush">
-                            {% for appointment in upcoming_appointments %}
+                            {% for appt in upcoming_appointments %}
                                 <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>Appointment with <strong>Dr. {{ appointment.doctor.doctor_name }}</strong> for <strong>{{ appointment.consultation_for }}</strong> on {{ appointment.appointment_date.strftime('%B %d, %Y at %I:%M %p') }}</div>
-                                    <span class="badge bg-info rounded-pill">{{ appointment.status }}</span>
+                                    <div>
+                                        <h6 class="mb-0">Dr. {{ appt.doctor.doctor_name }}</h6>
+                                        <small class="text-muted">{{ appt.doctor.specialization }}</small>
+                                    </div>
+                                    <div>
+                                        <span class="fw-bold">{{ appt.appointment_date.strftime('%a, %b %d, %Y at %I:%M %p') }}</span>
+                                        <span class="badge rounded-pill bg-{% if appt.status == 'Confirmed' %}success{% else %}warning text-dark{% endif %} ms-2">{{ appt.status }}</span>
+                                    </div>
                                 </div>
                             {% endfor %}
                         </div>
                     {% else %}
-                        <p class="text-muted text-center mb-0">You have no upcoming appointments.</p>
+                        <p class="text-center text-muted">You have no upcoming appointments.</p>
+                        <div class="text-center">
+                            <a href="{{ url_for('find_doctor') }}" class="btn btn-primary">Find a Doctor</a>
+                        </div>
                     {% endif %}
                 </div>
             </div>
+        </div>
 
-            <!-- Review History -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-star-fill text-warning"></i> Your Review History</h5>
+        <!-- Recent Searches -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Searches</h6>
                 </div>
                 <div class="card-body">
-                    {% if reviews_given %}
+                    {% if recent_searches %}
                         <ul class="list-group list-group-flush">
-                            {% for review in reviews_given %}
+                            {% for search in recent_searches %}
                                 <li class="list-group-item">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1">Review for <strong>Dr. {{ review.doctor.doctor_name }}</strong></h6>
-                                        <small class="text-muted">{{ review.timestamp.strftime('%Y-%m-%d') }}</small>
-                                    </div>
-                                    <p class="mb-1 fst-italic">"{{ review.text }}"</p>
+                                    <a href="{{ url_for('repeat_search', search_id=search.id) }}" class="text-decoration-none">"{{ search.disease }}" in "{{ search.location }}"</a>
                                 </li>
                             {% endfor %}
                         </ul>
                     {% else %}
-                        <p class="text-muted text-center mb-0">You haven't written any reviews yet.</p>
+                        <p class="text-center text-muted">No recent search history.</p>
                     {% endif %}
                 </div>
             </div>
-
         </div>
     </div>
 </div>

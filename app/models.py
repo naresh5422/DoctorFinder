@@ -79,6 +79,7 @@ class SearchHistory(db.Model):
 class Review(db.Model):
     __tablename__ = 'reviews'
     id = db.Column(db.Integer, primary_key=True)
+    rating = db.Column(db.Integer, nullable=False, default=5) # Rating from 1 to 5
     text = db.Column(db.Text, nullable=False)
     doctor_id = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=False)
     patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False)

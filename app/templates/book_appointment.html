@@ -27,7 +27,7 @@
                     <div class="mb-3">
                         <label for="appointment_date_select" class="form-label">Select an Available Date</label>
                         <select class="form-select" id="appointment_date_select" name="appointment_date" required>
-                            <option value="" selected disabled>-- Choose a date --</option>
+                            <option value="" selected disabled>-- Choose a date to see times --</option>
                             {% for date in doctor.available_slots.keys()|sort %}
                                 <option value="{{ date }}">{{ date }}</option>
                             {% endfor %}

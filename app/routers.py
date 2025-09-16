@@ -3,7 +3,7 @@ from app.services.doctor_service import find_doctors, get_nearby_locations, map_
 from app.models import SearchHistory, Patient, Doctor, Appointment, Review
 from werkzeug.utils import secure_filename
 from app.extension import db, login_required
-from datetime import datetime
+from datetime import datetime, date
 
 
 def setup_routes(app):
@@ -39,6 +39,7 @@ def setup_routes(app):
         if request.method == "POST":
             username = request.form["username"].strip()
             password = request.form["password"].strip()
+            confirm_password = request.form.get("confirm_password", "").strip()
             name = request.form.get("name", "").strip()
             mobile = request.form.get("mobile", "").strip()
             email = request.form.get("email", "").strip() or None
@@ -48,6 +49,9 @@ def setup_routes(app):
                 return render_template('signup.html')
             if not username or not password or not name or not location:
                 flash("Please fill all required fields", "danger")
+                return render_template("signup.html")
+            if password != confirm_password:
+                flash("Passwords do not match.", "danger")
                 return render_template("signup.html")
             # Check if user already exists
             existing_patient = Patient.query.filter_by(username=username).first()
@@ -68,6 +72,10 @@ def setup_routes(app):
             flash("Account created successfully! Please log in.", "success")
             return redirect(url_for("login"))
         return render_template("signup.html")
+
+    @app.route("/register")
+    def register():
+        return render_template("register.html")
 
 
     @app.route("/logout")
@@ -90,10 +98,10 @@ def setup_routes(app):
 
     @app.route("/")
     def index():
-        # In the future, you can fetch top-rated doctors to display on the homepage
-        # For example: featured_doctors = Doctor.query.order_by(Doctor.rating.desc()).limit(3).all()
-        # return render_template("index.html", featured_doctors=featured_doctors)
-        return render_template("index.html") # Currently no data is passed
+        # Fetch 3 doctors to display on the homepage.
+        # In the future, you could order this by rating: .order_by(Doctor.rating.desc())
+        featured_doctors = Doctor.query.limit(3).all()
+        return render_template("index.html", featured_doctors=featured_doctors)
     
     @app.route("/home")
     @login_required
@@ -108,22 +116,42 @@ def setup_routes(app):
         
         # Fetch all appointments for stats
         all_appointments = Appointment.query.filter_by(user_id=patient_id).all()
-        total_appointments = len(all_appointments)
-        pending_appointments_count = len([a for a in all_appointments if a.status == 'Pending'])
+        total_appointments = len(all_appointments) 
+        pending_appointments_count = sum(1 for a in all_appointments if a.status == 'Pending')
+        completed_appointments_count = sum(1 for a in all_appointments if a.status == 'Completed')
         
         # Count unique doctors consulted
         consulted_doctor_ids = {a.doctor_id for a in all_appointments if a.status in ['Confirmed', 'Completed']}
         doctors_consulted_count = len(consulted_doctor_ids)
 
         # Fetch reviews given by the patient
-        reviews_given = Review.query.filter_by(patient_id=patient_id).order_by(Review.timestamp.desc()).all()
+        reviews_given_count = Review.query.filter_by(patient_id=patient_id).count()
 
         recent_searches = SearchHistory.query.filter_by(patient_id=patient_id).order_by(SearchHistory.timestamp.desc()).limit(5).all()
         upcoming_appointments = Appointment.query.filter(
             Appointment.user_id == patient_id,
-            Appointment.appointment_date >= datetime.utcnow()
+            Appointment.status.in_(['Pending', 'Confirmed']),
+            Appointment.appointment_date >= datetime.now()
         ).order_by(Appointment.appointment_date.asc()).all()
-        return render_template("user_dashboard.html", recent_searches=recent_searches, upcoming_appointments=upcoming_appointments, total_appointments=total_appointments, pending_appointments_count=pending_appointments_count, doctors_consulted_count=doctors_consulted_count, reviews_given=reviews_given)
+        
+        return render_template("user_dashboard.html", recent_searches=recent_searches, upcoming_appointments=upcoming_appointments, 
+                               total_appointments=total_appointments, pending_appointments_count=pending_appointments_count, 
+                               doctors_consulted_count=doctors_consulted_count, reviews_given_count=reviews_given_count,
+                               completed_appointments_count=completed_appointments_count)
+
+    @app.route("/my_appointments")
+    @login_required
+    def my_appointments():
+        patient_id = session['patient_id']
+        
+        # Fetch all appointments for the patient
+        appointments = Appointment.query.filter_by(user_id=patient_id).order_by(Appointment.appointment_date.desc()).all()
+        
+        # Get a set of doctor IDs the patient has already reviewed
+        reviewed_doctor_ids = {review.doctor_id for review in Review.query.filter_by(patient_id=patient_id).all()}
+
+        return render_template('my_appointments.html', appointments=appointments, reviewed_doctor_ids=reviewed_doctor_ids)
+
 
     @app.route("/repeat_search", defaults={"search_id": None})
     @app.route("/repeat_search/<int:search_id>", methods = ["GET","POST"])
@@ -164,28 +192,44 @@ def setup_routes(app):
                 Doctor.specialization == specialist
             ).all()
 
-            # Filter out booked slots
+            # Filter out booked slots and past slots
+            today = date.today()
+            now = datetime.now()
+
             for doctor in results:
                 if doctor.available_slots:
-                    booked_slots = {}
+                    # Create a new dictionary for valid, upcoming slots
+                    valid_slots = {}
                     # Get all appointments for this doctor on their available dates
                     appointments = Appointment.query.filter(
                         Appointment.doctor_id == doctor.id,
                         Appointment.appointment_date.cast(db.Date).in_(doctor.available_slots.keys()),
                         Appointment.status.in_(['Pending', 'Confirmed'])
                     ).all()
-                    for appt in appointments:
-                        appt_date_str = appt.appointment_date.strftime('%Y-%m-%d')
-                        appt_time_str = appt.appointment_date.strftime('%H:%M')
-                        if appt_date_str in doctor.available_slots and appt_time_str in doctor.available_slots[appt_date_str]:
-                            doctor.available_slots[appt_date_str].remove(appt_time_str)
+                    booked_slot_times = {f"{appt.appointment_date.strftime('%Y-%m-%d')}_{appt.appointment_date.strftime('%H:%M')}" for appt in appointments}
+
+                    for slot_date_str, times in doctor.available_slots.items():
+                        # Add a check to ensure the key is a valid date format before processing
+                        try:
+                            slot_date = datetime.strptime(slot_date_str, '%Y-%m-%d').date()
+                            if slot_date >= today:
+                                available_times = []
+                                for time_str in times:
+                                    slot_datetime = datetime.strptime(f"{slot_date_str} {time_str}", '%Y-%m-%d %H:%M')
+                                    if slot_datetime > now and f"{slot_date_str}_{time_str}" not in booked_slot_times:
+                                        available_times.append(time_str)
+                                if available_times:
+                                    valid_slots[slot_date_str] = available_times
+                        except ValueError:
+                            continue # Safely skip keys that are not dates (like 'slots')
+                    doctor.available_slots = valid_slots
 
             recent_searches = (
                 SearchHistory.query.filter_by(patient_id=session["patient_id"])
                 .order_by(SearchHistory.id.desc())
                 .limit(5)
                 .all())
-        return render_template('doctor_finding.html', doctors=results, recent_searches=recent_searchs)
+        return render_template('doctor_finding.html', doctors=results, recent_searches=recent_searchs, datetime=datetime)
     
     @app.route("/about")
     def about():
@@ -252,6 +296,11 @@ def setup_routes(app):
         doctor = Doctor.query.get_or_404(doctor_id)
         if not doctor:
             return "Doctor not found", 404
+
+        # Ensure doctor has slots before proceeding to the general booking page
+        if not doctor.available_slots and not (request.args.get('date') and request.args.get('time')):
+            flash(f"Dr. {doctor.doctor_name} has not set up their online availability. Please check back later.", "warning")
+            return redirect(request.referrer or url_for('find_doctor'))
 
         # Pre-fill from query parameters if available
         preselected_date = request.args.get('date')

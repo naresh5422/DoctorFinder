@@ -3,7 +3,7 @@
 {# Apply the new background class to the body #}
 {% block body_class %}homepage-body{% endblock %}
 
-{% block title %}Welcome to DoctorFinder{% endblock %}
+{% block title %}Welcome to CareConnect{% endblock %}
 
 {% block content %}
 <div class="hero-section">
@@ -42,42 +42,27 @@
 <div class="py-5 featured-doctors-section">
     <div class="container">
         <h2 class="section-title">Our Featured Doctors</h2>
-        <div class="row g-4">
-            <!-- This is a placeholder. You can make this dynamic by looping through doctors passed from your route -->
-            <div class="col-md-4">
-                <div class="card text-center h-100 doctor-card">
-                    <div class="card-body">
-                        <img src="https://via.placeholder.com/100" class="rounded-circle mb-3" alt="Doctor Photo" style="width: 100px; height: 100px; object-fit: cover;">
-                        <h5 class="card-title">Dr. Emily Carter</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">Cardiologist</h6>
-                        <p class="card-text mt-3">15 years of experience in treating heart conditions. Known for her patient-centric approach.</p>
-                        <a href="#" class="btn btn-outline-primary btn-sm">View Profile</a>
+        {% if featured_doctors %}
+            <div class="row g-4">
+                {% for doc in featured_doctors %}
+                <div class="col-md-4">
+                    <div class="card text-center h-100 doctor-card">
+                        <div class="card-body">
+                            {% if doc.image %}
+                                <img src="{{ url_for('static', filename=doc.image) }}" class="rounded-circle mb-3" alt="Dr. {{ doc.doctor_name }}" style="width: 100px; height: 100px; object-fit: cover;">
+                            {% else %}
+                                <img src="https://static.vecteezy.com/system/resources/previews/005/544/718/original/profile-icon-design-free-vector.jpg" class="rounded-circle mb-3" alt="Doctor Photo" style="width: 100px; height: 100px; object-fit: cover;">
+                            {% endif %}
+                            <h5 class="card-title">{{ doc.doctor_name }}</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">{{ doc.specialization }}</h6>
+                            <p class="card-text mt-3">{{ doc.bio or 'An experienced medical professional dedicated to patient care.'|truncate(100) }}</p>
+                            <a href="{{ url_for('book_appointment', doctor_id=doc.id) }}" class="btn btn-outline-primary btn-sm">View Profile & Book</a>
+                        </div>
                     </div>
                 </div>
+                {% endfor %}
             </div>
-            <div class="col-md-4">
-                <div class="card text-center h-100 doctor-card">
-                    <div class="card-body">
-                        <img src="https://via.placeholder.com/100" class="rounded-circle mb-3" alt="Doctor Photo" style="width: 100px; height: 100px; object-fit: cover;">
-                        <h5 class="card-title">Dr. Ben Adams</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">Dermatologist</h6>
-                        <p class="card-text mt-3">Specializes in advanced dermatological procedures and cosmetic skincare.</p>
-                        <a href="#" class="btn btn-outline-primary btn-sm">View Profile</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-center h-100 doctor-card">
-                    <div class="card-body">
-                        <img src="https://via.placeholder.com/100" class="rounded-circle mb-3" alt="Doctor Photo" style="width: 100px; height: 100px; object-fit: cover;">
-                        <h5 class="card-title">Dr. Olivia Chen</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">Pediatrician</h6>
-                        <p class="card-text mt-3">Compassionate care for children from infancy through adolescence.</p>
-                        <a href="#" class="btn btn-outline-primary btn-sm">View Profile</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {% endif %}
         <div class="text-center mt-5">
             <a href="{{ url_for('find_doctor') }}" class="btn btn-primary btn-lg">View All Doctors</a>
         </div>
@@ -86,7 +71,7 @@
 
 <!-- Features Section -->
 <div class="container px-4 py-5">
-    <h2 class="section-title">Why Choose DoctorFinder?</h2>
+    <h2 class="section-title">Why Choose CareConnect?</h2>
     <div class="row g-4">
         <div class="col-md-4">
             <div class="feature-card">
@@ -143,7 +128,7 @@
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="testimonial-card">
-                    <p>"DoctorFinder made it so easy to find a specialist in my area. The booking process was seamless. Highly recommended!"</p>
+                    <p>"CareConnect made it so easy to find a specialist in my area. The booking process was seamless. Highly recommended!"</p>
                     <footer class="blockquote-footer mt-3">Sarah J.</footer>
                 </div>
             </div>
