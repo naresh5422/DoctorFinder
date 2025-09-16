@@ -2,5 +2,5 @@ Flask==2.3.2
 flask 
 flask_sqlalchemy 
 mysql-connector-python
-redirect
-url_for
+Flask-Mail
+twilio

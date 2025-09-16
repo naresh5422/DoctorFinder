@@ -81,24 +81,27 @@
                 </div>
                 <div class="card-body">
                     {% if doctor.available_slots %}
+                        {% set has_slots = false %}
                         {% for date, times in doctor.available_slots.items()|sort %}
-                        <div class="mb-3 border-bottom pb-2">
-                            <h6 class="card-title">Date: <span class="text-success">{{ date }}</span></h6>
-                            {% if times %}
-                            <div class="d-flex flex-wrap gap-2">
-                                {% for time in times %}
-                                    {% if date + '_' + time in booked_slots %}
-                                        <span class="badge bg-success p-2" title="Booked">{{ time }}</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary p-2">{{ time }}</span>
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-                            {% else %}
-                            <p class="text-muted small">No time slots for this date.</p>
+                            {% if times and date >= today_date %}
+                                {% set has_slots = true %}
+                                <div class="mb-3 border-bottom pb-2">
+                                    <h6 class="card-title">Date: <span class="text-success">{{ date }} ({{ datetime.strptime(date, '%Y-%m-%d').strftime('%a') }})</span></h6>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% for time in times %}
+                                            {% if date + '_' + time in booked_slots %}
+                                                <span class="badge bg-success p-2" title="Booked">{{ time }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary p-2">{{ time }}</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
                             {% endif %}
-                        </div>
                         {% endfor %}
+                        {% if not has_slots %}
+                            <p class="text-muted text-center">You have not set any available time slots yet. Click "Update Slots" to add them.</p>
+                        {% endif %}
                     {% else %}
                         <p class="text-muted text-center">You have not set your availability yet. Click "Update Slots" to add them.</p>
                     {% endif %}

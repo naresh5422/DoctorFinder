@@ -1,8 +1,140 @@
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
     margin: 0;
-    background-color: #f9f9f9;
+    background-color: #f8f9fa;
+    color: #495057;
 }
+
+/* --- New Homepage Theme --- */
+.homepage-body {
+    background-color: #FFFFFF; /* A crisp white background */
+}
+
+.hero-section {
+    background-color: #f0f7ff; /* A very light, professional blue */
+    padding: 5rem 0;
+}
+
+.hero-section h1 {
+    font-size: 3.2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #2c3e50; /* A deep, professional blue-gray */
+}
+
+.hero-section p {
+    font-size: 1.1rem;
+    color: #5a6a7b; /* Softer text color */
+    margin-bottom: 2.5rem;
+}
+
+.search-form-container {
+    background-color: #ffffff; 
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.input-with-icon {
+    position: relative;
+}
+
+.input-with-icon .form-control {
+    padding-left: 2.5rem; /* Make space for the icon */
+}
+
+.input-with-icon .input-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d; /* Muted icon color */
+    font-size: 1.1rem;
+}
+
+.section-title {
+    text-align: center;
+    margin-bottom: 3rem;
+    font-weight: 700;
+    color: #343a40; 
+}
+
+.feature-card {
+    background-color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 123, 255, 0.1);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    color: #007bff; /* A brighter blue */
+    margin-bottom: 1rem;
+}
+
+.how-it-works-step {
+    text-align: center;
+}
+
+.how-it-works-step .step-number {
+    background-color: #007bff; 
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.testimonial-card {
+    background-color: #ffffff;
+    border-left: 5px solid #007bff;
+    padding: 2rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    position: relative;
+    font-style: italic;
+}
+
+.testimonial-card p {
+    font-size: 0.95rem;
+    font-style: italic;
+}
+/* --- End Homepage Theme --- */
+
+/* --- Featured Doctors Section --- */
+.featured-doctors-section {
+    background-color: #f8f9fa; /* A light gray background to make the section stand out */
+}
+
+.doctor-card {
+    border: 1px solid #e9ecef;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    background-color: #fff;
+}
+
+.doctor-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.doctor-card .card-text {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+/* --- End Featured Doctors Section --- */
 
 nav {
     background-color: #007BFF;
@@ -56,4 +188,11 @@ form input, form button {
     padding: 8px;
     width: 100%;
     max-width: 400px;
+}
+
+.navbar .btn-primary {
+    --bs-btn-bg: #007bff;
+    --bs-btn-border-color: #007bff;
+    --bs-btn-hover-bg: #0069d9;
+}
 }

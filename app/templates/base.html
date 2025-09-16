@@ -24,10 +24,11 @@
             color: white;
         }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
     <div class="container">
         <a class="navbar-brand" href="{{ url_for('index') }}">
             <i class="bi bi-heart-pulse-fill"></i>
@@ -71,10 +72,21 @@
                     </li>
                 {% else %}
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('services') }}">Services</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('about') }}">About</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('contactus') }}">Contact Us</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">Patient Login</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('doctor_login') }}">Doctor Login</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarLoginDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Login
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarLoginDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('login') }}"><i class="bi bi-person me-2"></i>Patient</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('doctor_login') }}"><i class="bi bi-clipboard2-pulse me-2"></i>Doctor</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item ms-lg-2">
+                        <a href="{{ url_for('signup') }}" class="btn btn-primary">Register</a>
+                    </li>
                 {% endif %}
             </ul>
         </div>

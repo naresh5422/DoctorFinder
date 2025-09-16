@@ -1,9 +1,13 @@
 import os
 import json
+import random
 from flask import render_template, request, session, redirect, url_for, flash, current_app
-from datetime import date
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
+from flask_mail import Message
+from twilio.rest import Client
+from datetime import date, datetime
 from app.models import Doctor, Review, Appointment
-from app.extension import db
+from app.extension import db, mail
 from werkzeug.utils import secure_filename
 
 def setup_doctor_routes(app):
@@ -119,6 +123,8 @@ def setup_doctor_routes(app):
             # Query the database for the doctor
             doctor = Doctor.query.filter_by(username=username).first()
 
+            # The check_password method correctly handles hashed passwords.
+            # For backward compatibility with unhashed passwords from initial data load,
             if doctor and doctor.check_password(password):
                 session['doctor_id'] = doctor.id
                 session['doctor_name'] = doctor.doctor_name
@@ -149,15 +155,126 @@ def setup_doctor_routes(app):
 
     @app.route("/doctor/forgot_password", methods=['GET', 'POST'])
     def doctor_forgot_password():
-        # Placeholder for password reset logic
+        if request.method == 'POST':
+            identifier = request.form.get('identifier').strip()
+            
+            # Check if identifier is an email or a mobile number
+            if '@' in identifier:
+                doctor = Doctor.query.filter_by(email_id=identifier).first()
+            else:
+                doctor = Doctor.query.filter_by(mobile_no=identifier).first()
+
+            if doctor:
+                # Generate a secure token
+                s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+                token = s.dumps(doctor.id, salt='password-reset-salt')
+
+                if '@' in identifier:
+                    # Send a real email
+                    reset_url = url_for('doctor_reset_with_token', token=token, _external=True)
+                    msg = Message('Password Reset Request',
+                                  sender=app.config['MAIL_USERNAME'],
+                                  recipients=[doctor.email_id])
+                    msg.body = f'''To reset your password, visit the following link:
+{reset_url}
+If you did not make this request then simply ignore this email and no changes will be made.'''
+                    mail.send(msg)
+                    flash(f"A password reset link has been sent to {doctor.email_id}.", "info")
+                else:
+                    # Generate a random 6-digit OTP
+                    otp = str(random.randint(100000, 999999))
+                    session['reset_otp'] = otp
+                    session['reset_doctor_id'] = doctor.id
+
+                    # Send the OTP via Twilio
+                    try:
+                        client = Client(app.config['TWILIO_ACCOUNT_SID'], app.config['TWILIO_AUTH_TOKEN'])
+                        message = client.messages.create(
+                            body=f"Your password reset OTP for DoctorFinder is: {otp}",
+                            from_=app.config['TWILIO_PHONE_NUMBER'],
+                            to=doctor.mobile_no # Ensure this includes the country code, e.g., +1234567890
+                        )
+                        flash(f"An OTP has been sent to your mobile number.", "info")
+                    except Exception as e:
+                        flash("Failed to send OTP. Please check your mobile number or try again later.", "danger")
+                        # More detailed logging for debugging
+                        print(f"Twilio Error: {e}")
+                        app.logger.error(f"Twilio failed to send SMS: {e}")
+                        return redirect(url_for('doctor_forgot_password'))
+
+                    return redirect(url_for('doctor_verify_otp'))
+            else:
+                flash("No account found with that email or mobile number.", "danger")
+            
+            return redirect(url_for('doctor_login'))
+
         return render_template("doctor_forgot_password.html")
+
+    @app.route('/doctor/verify_otp', methods=['GET', 'POST'])
+    def doctor_verify_otp():
+        if 'reset_doctor_id' not in session:
+            flash("Please start the password reset process again.", "warning")
+            return redirect(url_for('doctor_forgot_password'))
+
+        if request.method == 'POST':
+            submitted_otp = request.form.get('otp')
+            if submitted_otp == session.get('reset_otp'):
+                # OTP is correct, allow password reset.
+                session['otp_verified'] = True # Set a flag
+                return redirect(url_for('doctor_reset_with_token', token='use-otp'))
+            else:
+                flash("Invalid OTP. Please try again.", "danger")
+
+        return render_template('doctor_verify_otp.html')
+
+
+    @app.route('/doctor/reset/<token>', methods=['GET', 'POST'])
+    def doctor_reset_with_token(token):
+        s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+        
+        if request.method == 'POST':
+            password = request.form['password']
+            confirm_password = request.form['confirm_password']
+
+            if password != confirm_password:
+                flash("Passwords do not match.", "danger")
+                return redirect(url_for('doctor_reset_with_token', token=token))
+            
+            # Logic for OTP-based reset
+            if token == 'use-otp':
+                # Check if OTP was verified in the previous step
+                if session.get('otp_verified'):
+                    doctor = Doctor.query.get(session['reset_doctor_id'])
+                    doctor.set_password(password)
+                    db.session.commit()
+                    # Clean up session variables
+                    session.pop('reset_otp', None); session.pop('reset_doctor_id', None); session.pop('otp_verified', None)
+                    flash('Your password has been updated!', 'success')
+                    return redirect(url_for('doctor_login'))
+                else:
+                    flash('OTP not verified. Please complete the verification step.', 'danger')
+                    return redirect(url_for('doctor_forgot_password'))
+            
+            # Logic for email token-based reset
+            try:
+                doctor_id = s.loads(token, salt='password-reset-salt', max_age=3600) # 1-hour expiry
+                doctor = Doctor.query.get(doctor_id)
+                doctor.set_password(password)
+                db.session.commit()
+                flash('Your password has been updated!', 'success')
+                return redirect(url_for('doctor_login'))
+            except (SignatureExpired, BadTimeSignature):
+                flash('The password reset link is invalid or has expired.', 'danger')
+                return redirect(url_for('doctor_forgot_password'))
+
+        return render_template('doctor_reset_password.html', token=token, otp_method=(token == 'use-otp'))
 
     @app.route("/doctor_dashboard")
     def doctor_dashboard():
         if "doctor_id" not in session:
             flash("Please log in as doctor to continue.", "danger")
             return redirect(url_for("doctor_login"))
-        doctor_id = session["doctor_id"]
+        doctor_id = session["doctor_id"] 
         doctor = session.get('doctor_details')
 
         if not doctor:
@@ -182,8 +299,9 @@ def setup_doctor_routes(app):
                                pending_appointments=pending_appointments,
                                confirmed_appointments=confirmed_appointments,
                                completed_appointments=completed_appointments,
-                               today_date=date.today().isoformat(),
-                               booked_slots=booked_slots)
+                               today_date=date.today().isoformat(), 
+                               booked_slots=booked_slots,
+                               datetime=datetime)
 
     @app.route("/doctor/home")
     def doctor_home_page():
@@ -306,3 +424,23 @@ def setup_doctor_routes(app):
             return redirect(url_for('doctor_dashboard'))
 
         return render_template('manage_slots.html', doctor=session.get('doctor_details'))
+
+    # --- TEMPORARY DEBUGGING ROUTE ---
+    # This route is for debugging the password issue.
+    # Access it via /reset_doctor_password?username=THE_USERNAME&password=NEW_PASSWORD
+    # REMOVE THIS ROUTE IN PRODUCTION
+    @app.route('/reset_doctor_password')
+    def reset_doctor_password():
+        username = request.args.get('username')
+        new_password = request.args.get('password')
+
+        if not username or not new_password:
+            return "Please provide 'username' and 'password' as query parameters.", 400
+
+        doctor = Doctor.query.filter_by(username=username).first()
+        if not doctor:
+            return f"Doctor with username '{username}' not found.", 404
+
+        doctor.set_password(new_password)
+        db.session.commit()
+        return f"Password for doctor '{username}' has been reset successfully. You can now log in with the new password."

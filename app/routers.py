@@ -90,7 +90,10 @@ def setup_routes(app):
 
     @app.route("/")
     def index():
-        return render_template("index.html")
+        # In the future, you can fetch top-rated doctors to display on the homepage
+        # For example: featured_doctors = Doctor.query.order_by(Doctor.rating.desc()).limit(3).all()
+        # return render_template("index.html", featured_doctors=featured_doctors)
+        return render_template("index.html") # Currently no data is passed
     
     @app.route("/home")
     @login_required

@@ -1,10 +1,12 @@
 from flask_sqlalchemy import SQLAlchemy
 import os
 from flask import Flask
+from flask_mail import Mail
 from functools import wraps
 from flask import session, redirect, url_for, flash
 
 db = SQLAlchemy()
+mail = Mail()
 app = Flask(__name__)
 
 # config.py
