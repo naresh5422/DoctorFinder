@@ -120,3 +120,20 @@ class Message(db.Model):
 
     def __repr__(self):
         return f'<Message {self.id}>'
+
+class Prescription(db.Model):
+    __tablename__ = 'prescriptions'
+    id = db.Column(db.Integer, primary_key=True)
+    appointment_id = db.Column(db.Integer, db.ForeignKey('appointments.id'), nullable=False, unique=True)
+    doctor_id = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=False)
+    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False)
+    medication_details = db.Column(db.Text, nullable=False)
+    notes = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    appointment = db.relationship('Appointment', backref=db.backref('prescription', uselist=False, cascade="all, delete-orphan"))
+    doctor = db.relationship('Doctor', backref='prescriptions')
+    patient = db.relationship('Patient', backref='prescriptions')
+
+    def __repr__(self):
+        return f'<Prescription for Appointment {self.appointment_id}>'

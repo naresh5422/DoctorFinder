@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="h-100">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1"> 
@@ -7,11 +7,12 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        body {
+        html, body {
+            height: 100%;
+        }
+        body.d-flex {
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
-            background-color: #f8f9fa;
         }
         .main-content {
             flex: 1;
@@ -19,14 +20,10 @@
         .navbar-brand {
             font-weight: bold;
         }
-        .footer {
-            background-color: #343a40;
-            color: white;
-        }
     </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
+<body class="d-flex flex-column {% block body_class %}{% endblock %}">
 
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
     <div class="container">
@@ -43,11 +40,6 @@
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('patient_home') }}">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('about') }}">About</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('contactus') }}">Contact Us</a></li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('list_conversations') }}">
-                            Messages {% if unread_patient_messages > 0 %}<span class="badge bg-danger rounded-pill align-middle">{{ unread_patient_messages }}</span>{% endif %}
-                        </a>
-                    </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarPatientDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             {{ patient.name }}
@@ -64,11 +56,6 @@
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('doctor_home_page') }}">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('about') }}">About Us</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('contactus') }}">Contact Us</a></li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('doctor_list_conversations') }}">
-                            Messages {% if unread_doctor_messages > 0 %}<span class="badge bg-danger rounded-pill align-middle">{{ unread_doctor_messages }}</span>{% endif %}
-                        </a>
-                    </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDoctorDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             {{ doctor_details.doctor_name }}
@@ -103,15 +90,17 @@
     </div>
 </nav>
 
-<main class="main-content container mt-4">
+<main class="main-content">
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
+            <div class="container mt-4">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
         {% endif %}
     {% endwith %}
     {% block content %}{% endblock %}
@@ -119,7 +108,7 @@
 
 <footer class="footer mt-auto py-3">
     <div class="container text-center">
-        <span>&copy; 2024 CareConnect. All Rights Reserved.</span>
+        <span class="text-muted">&copy; 2024 CareConnect. All Rights Reserved.</span>
     </div>
 </footer>
 

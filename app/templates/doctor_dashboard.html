@@ -3,176 +3,143 @@
 {% block title %}Doctor Dashboard{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <h3 class="mt-4">Welcome, {{ doctor.doctor_name }}</h3>
-    <p class="lead mb-4">Manage your appointments and availability.</p>
+<div class="container py-4">
+    <h1 class="mb-4">Welcome, Dr. {{ doctor.doctor_name }}</h1>
 
-    <!-- Stats Cards -->
-    <div class="row">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Pending Appointments</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_appointments|length }}</div>
+    <div class="row g-4">
+        <!-- Left Sidebar Column -->
+        <div class="col-lg-8">
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card text-white bg-warning">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ pending_appointments|length }}</h5>
+                            <p class="card-text">Pending</p>
                         </div>
-                        <div class="col-auto">
-                            <i class="bi bi-clock-history fs-2 text-gray-300"></i>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-white bg-success">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ confirmed_appointments|length }}</h5>
+                            <p class="card-text">Confirmed</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-white bg-info">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ completed_appointments|length }}</h5>
+                            <p class="card-text">Completed</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Confirmed Appointments</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ confirmed_appointments|length }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-calendar-check fs-2 text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Appointments</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ (pending_appointments|length) + (confirmed_appointments|length) }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-clipboard-data fs-2 text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Available Slots Today</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ doctor.available_slots[today_date]|length if doctor.available_slots and today_date in doctor.available_slots else 0 }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-hourglass-split fs-2 text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Current Availability Display -->
-    <div class="row">
-        <div class="col-lg-12 mb-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Your Current Availability</h6>
-                    <a href="{{ url_for('manage_slots') }}" class="btn btn-sm btn-primary">Update Slots</a>
+            <!-- Weekly Availability Section -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-calendar-week me-2"></i>Your Availability (Next 7 Days)</h5>
+                    <a href="{{ url_for('manage_slots') }}" class="btn btn-sm btn-outline-primary">Manage All Slots</a>
                 </div>
                 <div class="card-body">
-                    {% if doctor.available_slots %}
-                        {% set has_slots = false %}
-                        {% for date, times in doctor.available_slots.items()|sort %}
-                            {% if times and date >= today_date %}
-                                {% set has_slots = true %}
-                                <div class="mb-3 border-bottom pb-2">
-                                    <h6 class="card-title">Date: <span class="text-success">{{ date }} ({{ datetime.strptime(date, '%Y-%m-%d').strftime('%a') }})</span></h6>
-                                    <div class="d-flex flex-wrap gap-2">
-                                        {% for time in times %}
-                                            {% if date + '_' + time in booked_slots %}
-                                                <span class="badge bg-success p-2" title="Booked">{{ time }}</span>
-                                            {% else %}
-                                                <span class="badge bg-secondary p-2">{{ time }}</span>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                        {% if not has_slots %}
-                            <p class="text-muted text-center">You have not set any available time slots yet. Click "Update Slots" to add them.</p>
-                        {% endif %}
-                    {% else %}
-                        <p class="text-muted text-center">You have not set your availability yet. Click "Update Slots" to add them.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Appointments and Reviews -->
-    <div class="row mt-4">
-        <!-- Appointments Management -->
-        <div class="col-lg-8 mb-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Appointment Requests</h6>
-                </div>
-                <div class="card-body">
-                    {% if pending_appointments %}
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Patient</th>
-                                        <th>Date & Time</th>
-                                        <th>Reason</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                {% for appt in pending_appointments %}
-                                    <tr>
-                                        <td>{{ appt.patient.username }}</td>
-                                        <td>{{ appt.appointment_date.strftime('%b %d, %Y at %I:%M %p') }}</td>
-                                        <td>{{ appt.reason or 'N/A' }}</td>
-                                        <td>
-                                            <form method="POST" action="{{ url_for('update_appointment_status', appointment_id=appt.id, status='Confirmed') }}" class="d-inline">
-                                                <button type="submit" class="btn btn-sm btn-success">Confirm</button>
-                                            </form>
-                                        </td>
-                                    </tr>
+                    {% if weekly_slots %}
+                        {% for date, times in weekly_slots.items() %}
+                            <div class="mb-2">
+                                <strong>{{ datetime.strptime(date, '%Y-%m-%d').strftime('%A, %b %d') }}:</strong>
+                                <div class="d-flex flex-wrap gap-2 mt-1">
+                                {% for time in times %}
+                                    <span class="badge bg-light text-dark border">{{ time }}</span>
                                 {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p class="text-center">No pending appointments.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent Patient Reviews -->
-        <div class="col-lg-4 mb-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Recent Patient Reviews</h6>
-                </div>
-                <div class="card-body" style="max-height: 300px; overflow-y: auto;">
-                    {% if doctor.reviews %}
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-xs font-weight-bold text-warning text-uppercase">Total Reviews</span>
-                            <span class="h5 mb-0 font-weight-bold text-gray-800">{{ doctor.reviews|length }}</span>
-                        </div>
-                        <hr class="mt-0">
-                        {% for review in doctor.reviews %}
-                            <div class="mb-3 border-bottom pb-2">                                
-                                <p class="mb-0">"{{ review }}"</p>
+                                </div>
                             </div>
                         {% endfor %}
                     {% else %}
-                        <p class="text-center">No reviews yet.</p>
+                        <p class="text-muted text-center mb-0">You have not set any availability for the next 7 days.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Appointments Management -->
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="appointmentTabs" role="tablist">
+                        <li class="nav-item" role="presentation"><button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">Pending ({{ pending_appointments|length }})</button></li>
+                        <li class="nav-item" role="presentation"><button class="nav-link" id="confirmed-tab" data-bs-toggle="tab" data-bs-target="#confirmed" type="button" role="tab">Confirmed ({{ confirmed_appointments|length }})</button></li>
+                        <li class="nav-item" role="presentation"><button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab">Completed ({{ completed_appointments|length }})</button></li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="appointmentTabsContent">
+                        <div class="tab-pane fade show active" id="pending" role="tabpanel">
+                            {% for appt in pending_appointments %}<div class="d-flex justify-content-between align-items-center border-bottom py-2"><div><strong>{{ appt.patient.name }}</strong> on {{ appt.appointment_date.strftime('%b %d, %Y at %I:%M %p') }}</div><div><form action="{{ url_for('update_appointment_status', appointment_id=appt.id, status='Confirmed') }}" method="POST" class="d-inline"><button type="submit" class="btn btn-sm btn-success">Confirm</button></form><form action="{{ url_for('update_appointment_status', appointment_id=appt.id, status='Canceled') }}" method="POST" class="d-inline"><button type="submit" class="btn btn-sm btn-danger">Cancel</button></form></div></div>{% else %}<p class="text-muted text-center">No pending appointments.</p>{% endfor %}
+                        </div>
+                        <div class="tab-pane fade" id="confirmed" role="tabpanel">
+                            {% for appt in confirmed_appointments %}<div class="d-flex justify-content-between align-items-center border-bottom py-2"><div><strong>{{ appt.patient.name }}</strong> on {{ appt.appointment_date.strftime('%b %d, %Y at %I:%M %p') }}</div><div class="btn-group"><button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Actions</button><ul class="dropdown-menu dropdown-menu-end"><li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#followUpModal-{{ appt.id }}"><i class="bi bi-headset me-2"></i>Follow Up</button></li><li><a class="dropdown-item" href="{{ url_for('write_prescription', appointment_id=appt.id) }}">{% if appt.prescription %}<i class="bi bi-pencil-square me-2"></i>Edit Prescription{% else %}<i class="bi bi-file-earmark-medical me-2"></i>Write Prescription{% endif %}</a></li><li><hr class="dropdown-divider"></li><li><form action="{{ url_for('update_appointment_status', appointment_id=appt.id, status='Completed') }}" method="POST"><button type="submit" class="dropdown-item text-info"><i class="bi bi-check-circle me-2"></i>Mark as Completed</button></form></li></ul></div></div><!-- Follow-up Modal --><div class="modal fade" id="followUpModal-{{ appt.id }}" tabindex="-1" aria-labelledby="followUpModalLabel-{{ appt.id }}" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="followUpModalLabel-{{ appt.id }}">Follow Up with {{ appt.patient.name }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body text-center py-4"><p class="lead">How would you like to follow up?</p><div class="d-grid gap-2 d-sm-flex justify-content-sm-center"><a href="{{ url_for('doctor_conversation', patient_id=appt.patient.id) }}" class="btn btn-primary btn-lg px-4 gap-3"><i class="bi bi-chat-dots-fill me-2"></i>Start Chat</a><a href="tel:{{ appt.patient.mobile }}" class="btn btn-success btn-lg px-4"><i class="bi bi-telephone-fill me-2"></i>Call Patient</a></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div></div></div></div>{% else %}<p class="text-muted text-center">No confirmed appointments.</p>{% endfor %}
+                        </div>
+                        <div class="tab-pane fade" id="completed" role="tabpanel">
+                            {% for appt in completed_appointments %}<div class="border-bottom py-2"><strong>{{ appt.patient.name }}</strong> on {{ appt.appointment_date.strftime('%b %d, %Y at %I:%M %p') }}</div>{% else %}<p class="text-muted text-center">No completed appointments.</p>{% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar Column -->
+        <div class="col-lg-4">
+            <!-- Recent Messages Section -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-chat-dots-fill me-2"></i>Recent Messages</h5>
+                    <a href="{{ url_for('doctor_list_conversations') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% if recent_conversations %}
+                        {% for conv in recent_conversations %}
+                            <a href="{{ url_for('doctor_conversation', patient_id=conv.patient.id) }}" class="list-group-item list-group-item-action {% if conv.unread_count > 0 %}list-group-item-light fw-bold{% endif %}">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <p class="mb-1">
+                                        <img src="{{ url_for('static', filename=conv.patient.image or 'images/default-patient.png') }}" class="rounded-circle me-2" alt="{{ conv.patient.name }}" style="width: 32px; height: 32px; object-fit: cover;">
+                                        {{ conv.patient.name }}
+                                        {% if conv.unread_count > 0 %}
+                                            <span class="badge bg-danger rounded-pill ms-2">{{ conv.unread_count }} new</span>
+                                        {% endif %}
+                                    </p>
+                                    <small class="text-muted">{{ conv.last_message.timestamp.strftime('%b %d') }}</small>
+                                </div>
+                                <small class="text-muted ps-5">
+                                    {% if conv.last_message.sender_type == 'doctor' %}You: {% endif %}{{ conv.last_message.content|truncate(50) }}
+                                </small>
+                            </a>
+                        {% endfor %}
+                    {% else %}
+                        <div class="list-group-item text-center text-muted">You have no messages yet.</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Reviews Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-star-fill me-2"></i>Recent Reviews</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% if recent_reviews %}
+                        {% for review in recent_reviews %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ review.patient.name }}</h6>
+                                    <small class="text-muted">{{ review.timestamp.strftime('%b %d, %Y') }}</small>
+                                </div>
+                                <p class="mb-1">
+                                    {% for i in range(review.rating) %}<i class="bi bi-star-fill text-warning"></i>{% endfor %}{% for i in range(5 - review.rating) %}<i class="bi bi-star text-warning"></i>{% endfor %}
+                                </p>
+                                <small class="text-muted">"{{ review.text|truncate(80) }}"</small>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="list-group-item text-center text-muted">No reviews yet.</div>
                     {% endif %}
                 </div>
             </div>

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Write Prescription{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex align-items-center mb-4">
+        <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+        <h1 class="mb-0">{% if prescription %}Edit{% else %}Write{% endif %} Prescription</h1>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5>Appointment Details</h5>
+        </div>
+        <div class="card-body">
+            <p><strong>Patient:</strong> {{ appointment.patient.name }}</p>
+            <p><strong>Appointment Date:</strong> {{ appointment.appointment_date.strftime('%b %d, %Y at %I:%M %p') }}</p>
+            <p><strong>Reason for Visit:</strong> {{ appointment.reason or 'N/A' }}</p>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5>Prescription Form</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="mb-3">
+                    <label for="medication_details" class="form-label">Medication & Dosage</label>
+                    <textarea class="form-control" id="medication_details" name="medication_details" rows="8" placeholder="e.g.,&#10;1. Paracetamol 500mg - 1 tablet after food, twice a day for 3 days.&#10;2. Amoxicillin 250mg - 1 capsule, three times a day for 5 days." required>{{ prescription.medication_details if prescription }}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="notes" class="form-label">Additional Notes (Optional)</label>
+                    <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="e.g., Drink plenty of water. Avoid spicy food.">{{ prescription.notes if prescription }}</textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">{% if prescription %}Update{% else %}Save{% endif %} Prescription</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -5,10 +5,11 @@ from flask import render_template, request, session, redirect, url_for, flash, c
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 from flask_mail import Message
 from twilio.rest import Client
-from datetime import date, datetime 
-from app.models import Doctor, Review, Appointment, Message
-from app.extension import db, mail
+from datetime import date, datetime, timedelta
+from app.models import Doctor, Review, Appointment, Message, Patient, Prescription 
+from app.extension import db, mail, doctor_login_required
 from werkzeug.utils import secure_filename
+from sqlalchemy import func
 
 def setup_doctor_routes(app):
     # Doctor Services
@@ -43,23 +44,43 @@ def setup_doctor_routes(app):
                 doctor_id = int(doctor_id_str) if doctor_id_str.isdigit() else None
                 review_text = request.form["review_text"].strip()
                 rating = int(request.form.get("rating", 5))
+                patient_id = session.get('patient_id')
 
-                if doctor_id and review_text and 'patient_id' in session:
-                    new_review = Review(text=review_text, rating=rating, doctor_id=doctor_id, patient_id=session['patient_id'])
-                    db.session.add(new_review)
+                if not all([doctor_id, review_text, patient_id]):
+                    flash("Invalid review submission.", "danger")
+                    return redirect(request.args.get('next') or url_for("doctor_profile"))
+                
+                # Security Check: A patient can only review a doctor after a completed appointment.
+                can_review = Appointment.query.filter_by(
+                    doctor_id=doctor_id,
+                    user_id=patient_id,
+                    status='Completed'
+                ).first()
 
-                    # Recalculate doctor's average rating
-                    doctor = Doctor.query.get(doctor_id)
-                    if doctor:
-                        # Fetch all ratings for the doctor
-                        all_reviews = Review.query.filter_by(doctor_id=doctor_id).all()
-                        total_ratings = sum(r.rating for r in all_reviews)
-                        average_rating = total_ratings / len(all_reviews)
-                        doctor.rating = round(average_rating, 1)
+                if not can_review:
+                    flash("You can only review a doctor after a completed appointment.", "danger")
+                    return redirect(request.args.get('next') or url_for("doctor_profile"))
+                
+                # Prevent duplicate reviews
+                if Review.query.filter_by(doctor_id=doctor_id, patient_id=patient_id).first():
+                    flash("You have already submitted a review for this doctor.", "warning")
+                    return redirect(request.args.get('next') or url_for("doctor_profile"))
 
-                    db.session.commit()
-                    flash("Your review has been submitted.", "success")
+                # All checks passed, add the review
+                new_review = Review(text=review_text, rating=rating, doctor_id=doctor_id, patient_id=patient_id)
+                db.session.add(new_review)
 
+                # Recalculate doctor's average rating
+                doctor = Doctor.query.get(doctor_id)
+                if doctor:
+                    all_reviews = Review.query.filter_by(doctor_id=doctor_id).all()
+                    total_ratings = sum(r.rating for r in all_reviews)
+                    average_rating = total_ratings / len(all_reviews) if all_reviews else 0
+                    doctor.rating = round(average_rating, 1)
+
+                db.session.commit()
+                flash("Your review has been submitted.", "success")
+                
                 # Redirect back to the 'next' URL if provided, otherwise default to the doctor profile page.
                 # This ensures the user returns to the page they were on (e.g., My Appointments).
                 next_url = request.args.get('next') or url_for("doctor_profile")
@@ -82,7 +103,7 @@ def setup_doctor_routes(app):
                 completed_appointment = Appointment.query.filter_by(
                     doctor_id=doc.id,
                     user_id=patient_id,
-                ).filter(Appointment.status.in_(['Confirmed', 'Completed'])).first()
+                ).filter(Appointment.status == 'Completed').first()
                 doc.can_be_reviewed_by_user = completed_appointment is not None
         else:
             for doc in doctors:
@@ -143,7 +164,7 @@ def setup_doctor_routes(app):
                 bio=request.form.get("bio"),
                 education=request.form.get("education"),
                 certifications=request.form.get("certifications"),
-                available_slots='{}'
+                available_slots={}
             )
             new_doctor.set_password(password) # Hash the password
 
@@ -316,33 +337,98 @@ If you did not make this request then simply ignore this email and no changes wi
             flash("Please log in as doctor to continue.", "danger")
             return redirect(url_for("doctor_login"))
         doctor_id = session["doctor_id"] 
-        doctor = session.get('doctor_details')
+        doctor_session_details = session.get('doctor_details')
 
-        if not doctor:
+        if not doctor_session_details:
             flash("Doctor profile not found.", "danger")
             return redirect(url_for("doctor_login"))
         
+        doctor = Doctor.query.get(doctor_id)
+        if not doctor:
+            flash("Doctor database record not found.", "danger")
+            return redirect(url_for("doctor_login"))
+
         # Appointments are still fetched from the database
-        # We query appointments directly using the doctor_id from the session
-        all_appointments = Appointment.query.filter_by(doctor_id=doctor_id).all()
+        all_appointments = Appointment.query.filter_by(doctor_id=doctor_id).order_by(Appointment.appointment_date.desc()).all()
 
         pending_appointments = [a for a in all_appointments if a.status == 'Pending']
         confirmed_appointments = [a for a in all_appointments if a.status == 'Confirmed']
         completed_appointments = [a for a in all_appointments if a.status == 'Completed']
 
-        # Create a set of booked "date time" strings for easy lookup in the template
-        booked_slots = {
-            f"{appt.appointment_date.strftime('%Y-%m-%d')}_{appt.appointment_date.strftime('%H:%M')}"
-            for appt in all_appointments if appt.status in ['Pending', 'Confirmed']
-        }
+        # --- Start: Logic to get recent conversations for dashboard ---
+        # Subquery to get the last message for each patient conversation
+        subq = db.session.query(
+            Message.patient_id,
+            func.max(Message.timestamp).label('max_ts')
+        ).filter(Message.doctor_id == doctor_id).group_by(Message.patient_id).subquery()
 
-        return render_template("doctor_dashboard.html", doctor=doctor,
+        # Join to get the full last message details, order by most recent, and limit
+        last_messages_q = db.session.query(Message).join(
+            subq,
+            db.and_(Message.patient_id == subq.c.patient_id, Message.timestamp == subq.c.max_ts)
+        ).order_by(subq.c.max_ts.desc()).limit(5)
+        
+        recent_conversations = []
+        for msg in last_messages_q.all():
+            patient = Patient.query.get(msg.patient_id)
+            # Count unread messages from this patient
+            unread_count = Message.query.filter_by(
+                doctor_id=doctor_id, 
+                patient_id=patient.id, 
+                is_read=False, 
+                sender_type='patient'
+            ).count()
+            recent_conversations.append({
+                'patient': patient,
+                'last_message': msg,
+                'unread_count': unread_count
+            })
+        # --- End: Logic for recent conversations ---
+        
+        # --- New: Get recent reviews ---
+        recent_reviews = Review.query.filter_by(doctor_id=doctor_id).order_by(Review.timestamp.desc()).limit(3).all()
+
+        # --- New: Get slots for the next 7 days ---
+        today = date.today()
+        now = datetime.now()
+        weekly_slots = {}
+
+        # Robustly handle available_slots which might be a string from old data
+        current_slots = doctor.available_slots
+        if isinstance(current_slots, str):
+            try:
+                current_slots = json.loads(current_slots)
+            except json.JSONDecodeError:
+                current_slots = {}
+
+        if current_slots:
+            # Sort the dates first to process them in order
+            sorted_dates = sorted(current_slots.keys())
+            for date_str in sorted_dates:
+                try:
+                    slot_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                    if today <= slot_date < today + timedelta(days=7):
+                        # Filter out past times for today's date
+                        if slot_date == today:
+                            future_times = [
+                                time_str for time_str in current_slots[date_str]
+                                if datetime.strptime(f"{date_str} {time_str}", '%Y-%m-%d %H:%M') > now
+                            ]
+                            if future_times:
+                                weekly_slots[date_str] = future_times
+                        else: # For future dates, all slots are valid
+                            weekly_slots[date_str] = current_slots[date_str]
+                except ValueError:
+                    continue # Ignore invalid date keys
+
+        return render_template("doctor_dashboard.html", doctor=doctor_session_details,
                                pending_appointments=pending_appointments,
                                confirmed_appointments=confirmed_appointments,
                                completed_appointments=completed_appointments,
-                               today_date=date.today().isoformat(), 
-                               booked_slots=booked_slots,
-                               datetime=datetime)
+                               datetime=datetime,
+                               recent_conversations=recent_conversations,
+                               recent_reviews=recent_reviews,
+                               weekly_slots=weekly_slots)
 
     @app.route("/doctor/home")
     def doctor_home_page():
@@ -465,6 +551,48 @@ If you did not make this request then simply ignore this email and no changes wi
             return redirect(url_for('doctor_dashboard'))
 
         return render_template('manage_slots.html', doctor=session.get('doctor_details'))
+
+    @app.route('/doctor/write_prescription/<int:appointment_id>', methods=['GET', 'POST'])
+    @doctor_login_required
+    def write_prescription(appointment_id):
+        appointment = Appointment.query.get_or_404(appointment_id)
+        
+        # Security check: ensure the appointment belongs to the logged-in doctor
+        if appointment.doctor_id != session['doctor_id']:
+            flash("You are not authorized to access this appointment.", "danger")
+            return redirect(url_for('doctor_dashboard'))
+    
+        # A prescription can only be written for a confirmed or completed appointment
+        if appointment.status not in ['Confirmed', 'Completed']:
+            flash("Prescriptions can only be written for confirmed or completed appointments.", "warning")
+            return redirect(url_for('doctor_dashboard'))
+    
+        # Check if a prescription already exists for this appointment
+        prescription = appointment.prescription # Using the backref
+    
+        if request.method == 'POST':
+            medication_details = request.form.get('medication_details')
+            notes = request.form.get('notes')
+    
+            if not medication_details:
+                flash("Medication details are required.", "danger")
+                return render_template('write_prescription.html', appointment=appointment, prescription=prescription)
+    
+            if prescription:
+                # Update existing prescription
+                prescription.medication_details = medication_details
+                prescription.notes = notes
+                flash("Prescription updated successfully.", "success")
+            else:
+                # Create new prescription
+                new_prescription = Prescription(appointment_id=appointment.id, doctor_id=appointment.doctor_id, patient_id=appointment.user_id, medication_details=medication_details, notes=notes)
+                db.session.add(new_prescription)
+                flash("Prescription created successfully.", "success")
+            
+            db.session.commit()
+            return redirect(url_for('doctor_dashboard'))
+    
+        return render_template('write_prescription.html', appointment=appointment, prescription=prescription)
 
     # --- TEMPORARY DEBUGGING ROUTE ---
     # This route is for debugging the password issue.
