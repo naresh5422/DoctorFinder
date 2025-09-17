@@ -104,3 +104,19 @@ class Appointment(db.Model):
 
     def __repr__(self):
         return f"<Appointment {self.id} with Dr. {self.doctor_id} for Patient {self.user_id}>"
+
+class Message(db.Model):
+    __tablename__ = 'messages'
+    id = db.Column(db.Integer, primary_key=True)
+    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False)
+    doctor_id = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=False)
+    sender_type = db.Column(db.String(10), nullable=False)  # 'patient' or 'doctor'
+    content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    is_read = db.Column(db.Boolean, default=False, nullable=False)
+
+    patient = db.relationship('Patient', backref=db.backref('messages', lazy='dynamic'))
+    doctor = db.relationship('Doctor', backref=db.backref('messages', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<Message {self.id}>'

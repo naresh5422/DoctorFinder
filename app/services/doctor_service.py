@@ -1,31 +1,92 @@
 import os
 import json
+import random
+from app.extension import db
+from app.models import Doctor
 
 def find_doctors(locations, specialization):
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    file_path = os.path.join(base_dir,"..", "data", "doctors.json")
-    file_path = os.path.normpath(file_path)
-
-    with open(file_path, "r") as f:
-        doctors_data = json.load(f)
+    # This function now reads from the database to be consistent.
+    doctors_db = Doctor.query.filter(
+        Doctor.location.in_(locations),
+        Doctor.specialization == specialization
+    ).all()
 
     results = []
-    for entry in doctors_data:
-        if entry["location"] in locations and entry["specialization"] == specialization:
-            results.append({
-                "doctor_name": entry["doctor_name"],
-                "specialization": entry["specialization"],
-                "experience": entry["experience"],
-                "rating": entry["rating"],
-                "reviews": entry["reviews"],
-                "hospital_name": entry["hospital"]["name"],
-                "hospital_address": entry["hospital"]["address"],
-                "hospital_contact": entry["hospital"]["contact"],
-                "map_link": f"https://www.google.com/maps/search/{entry['hospital']['address'].replace(' ', '+')}"
-            })
+    for doc in doctors_db:
+        results.append({
+            "doctor_name": doc.doctor_name,
+            "specialization": doc.specialization,
+            "experience": doc.experience,
+            "rating": doc.rating,
+            "reviews": doc.review_texts,
+            "hospital_name": doc.hospital_name,
+            "hospital_address": doc.hospital_address,
+            "hospital_contact": doc.hospital_contact,
+            "map_link": f"https://www.google.com/maps/search/{doc.hospital_address.replace(' ', '+')}" if doc.hospital_address else ""
+        })
     return results
 
 
+def find_hospitals(locations):
+    # This function now reads from the database to ensure data consistency.
+    # NOTE: Hospital services are randomly generated as they are not stored in the database.
+    hospital_services = [
+        "24/7 Emergency Care", "ICU", "Cardiology", "Neurology", "Orthopedics",
+        "Oncology", "Pediatrics", "Gynecology", "Radiology", "Pharmacy",
+        "Ambulance Service", "General Surgery", "Diagnostics Lab"
+    ]
+
+    # Find distinct hospitals in the given locations from the Doctor table
+    hospitals_db = db.session.query(
+        Doctor.hospital_name,
+        Doctor.hospital_address,
+        Doctor.hospital_contact,
+        Doctor.location
+    ).filter(Doctor.location.in_(locations), Doctor.hospital_name != None).distinct().all()
+
+    hospitals = []
+    for h in hospitals_db:
+        hospitals.append({
+            "name": h.hospital_name,
+            "address": h.hospital_address,
+            "contact": h.hospital_contact,
+            "location": h.location,
+            "map_link": f"https://www.google.com/maps/search/{h.hospital_address.replace(' ', '+')}" if h.hospital_address else "",
+            "services": random.sample(hospital_services, k=random.randint(4, 7))
+        })
+    
+    return hospitals
+
+
+def get_featured_hospitals(limit=3):
+    # This function now reads from the database to ensure data consistency.
+    # NOTE: Hospital services are randomly generated as they are not stored in the database.
+    hospital_services = [
+        "24/7 Emergency Care", "ICU", "Cardiology", "Neurology", "Orthopedics",
+        "Oncology", "Pediatrics", "Gynecology", "Radiology", "Pharmacy",
+        "Ambulance Service", "General Surgery", "Diagnostics Lab"
+    ]
+
+    # Get all unique hospitals from the Doctor table
+    all_hospitals_db = db.session.query(
+        Doctor.hospital_name, 
+        Doctor.hospital_address,
+        Doctor.location
+    ).filter(Doctor.hospital_name != None).distinct().all()
+    
+    # Convert to list of dicts
+    unique_hospitals = [
+        {
+            "name": h.hospital_name,
+            "address": h.hospital_address,
+            "location": h.location,
+            "services": random.sample(hospital_services, k=random.randint(4, 7))
+        } for h in all_hospitals_db
+    ]
+
+    random.shuffle(unique_hospitals)
+    
+    return unique_hospitals[:limit]
 
 def get_nearby_locations(location):
     nearby = {
@@ -41,7 +102,7 @@ def get_nearby_locations(location):
         "Pune": ["Pune", "Hinjewadi", "Kothrud", "Baner"]
     }
     return nearby.get(location, [location])
-print(get_nearby_locations("Indiranagar"))
+# print(get_nearby_locations("Indiranagar"))
 
 # doctors = [{"name": "Dr. Ramesh", "specialization": "Endocrinologist", "location": "Gajuwaka"},
 #  {"name": "Dr. Priya", "specialization": "General Physician", "location": "Visakhapatnam"},
@@ -142,4 +203,4 @@ def map_disease_to_specialist(disease: str)->str:
     # Default fallback
     return f"{term.title()} - General Physician"
 
-print(map_disease_to_specialist('Skin Rash'))
+# print(map_disease_to_specialist('Skin Rash'))

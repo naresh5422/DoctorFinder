@@ -13,17 +13,23 @@ specializations = ["Endocrinologist", "General Physician", "Pulmonologist", "Der
 locations = ["Tirupati", "Renigunta", "Chittoor", "Nellore", "Hyderabad", "Vijayawada", "Guntur",
              "Kurnool", "Anantapur", "Rajahmundry"]
 
+hospital_services = [
+    "24/7 Emergency Care", "ICU", "Cardiology", "Neurology", "Orthopedics",
+    "Oncology", "Pediatrics", "Gynecology", "Radiology", "Pharmacy",
+    "Ambulance Service", "General Surgery", "Diagnostics Lab"
+]
+
 hospitals = [
-    {"name": "Apollo Clinic", "address": "AIR Bypass Road, Tirupati", "contact": "0877-2233445"},
-    {"name": "Renigunta Medical Center", "address": "Main Road, Renigunta", "contact": "0877-1122334"},
-    {"name": "CMC Hospital", "address": "City Center, Chittoor", "contact": "08572-224466"},
-    {"name": "Nellore Care Hospital", "address": "Trunk Road, Nellore", "contact": "0861-332211"},
-    {"name": "Yashoda Hospital", "address": "Somajiguda, Hyderabad", "contact": "040-12345678"},
-    {"name": "Ramesh Hospitals", "address": "MG Road, Vijayawada", "contact": "0866-998877"},
-    {"name": "KIMS Hospital", "address": "Guntur Road, Guntur", "contact": "0863-445566"},
-    {"name": "Government Hospital", "address": "Main Road, Anantapur", "contact": "08554-778899"},
-    {"name": "Sunshine Hospital", "address": "KPHB, Hyderabad", "contact": "040-87654321"},
-    {"name": "LV Prasad Eye Institute", "address": "Banjara Hills, Hyderabad", "contact": "040-66554433"},
+    {"name": "Apollo Clinic", "address": "AIR Bypass Road, Tirupati", "contact": "0877-2233445", "services": random.sample(hospital_services, k=random.randint(4, 7))},
+    {"name": "Renigunta Medical Center", "address": "Main Road, Renigunta", "contact": "0877-1122334", "services": random.sample(hospital_services, k=random.randint(3, 6))},
+    {"name": "CMC Hospital", "address": "City Center, Chittoor", "contact": "08572-224466", "services": random.sample(hospital_services, k=random.randint(5, 8))},
+    {"name": "Nellore Care Hospital", "address": "Trunk Road, Nellore", "contact": "0861-332211", "services": random.sample(hospital_services, k=random.randint(4, 7))},
+    {"name": "Yashoda Hospital", "address": "Somajiguda, Hyderabad", "contact": "040-12345678", "services": random.sample(hospital_services, k=random.randint(6, 10))},
+    {"name": "Ramesh Hospitals", "address": "MG Road, Vijayawada", "contact": "0866-998877", "services": random.sample(hospital_services, k=random.randint(5, 8))},
+    {"name": "KIMS Hospital", "address": "Guntur Road, Guntur", "contact": "0863-445566", "services": random.sample(hospital_services, k=random.randint(5, 9))},
+    {"name": "Government Hospital", "address": "Main Road, Anantapur", "contact": "08554-778899", "services": random.sample(hospital_services, k=random.randint(4, 6))},
+    {"name": "Sunshine Hospital", "address": "KPHB, Hyderabad", "contact": "040-87654321", "services": random.sample(hospital_services, k=random.randint(6, 9))},
+    {"name": "LV Prasad Eye Institute", "address": "Banjara Hills, Hyderabad", "contact": "040-66554433", "services": ["Ophthalmology", "Eye Surgery", "Optical Shop", "Diagnostics Lab"]},
 ]
 
 positive_reviews = [

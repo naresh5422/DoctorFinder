@@ -1,18 +1,26 @@
 from flask import render_template, request, session, redirect, url_for, flash
-from app.services.doctor_service import find_doctors, get_nearby_locations, map_disease_to_specialist
-from app.models import SearchHistory, Patient, Doctor, Appointment, Review
+from app.services.doctor_service import find_doctors, get_nearby_locations, map_disease_to_specialist, find_hospitals, get_featured_hospitals
+from app.models import SearchHistory, Patient, Doctor, Appointment, Review, Message
 from werkzeug.utils import secure_filename
-from app.extension import db, login_required
+from app.extension import db, login_required, doctor_login_required
 from datetime import datetime, date
+from sqlalchemy import func
 
 
 def setup_routes(app):
     @app.context_processor
-    def inject_user():
-        patient = None
+    def inject_user_data():
+        context = {'patient': None, 'unread_patient_messages': 0}
         if 'patient_id' in session:
             patient = Patient.query.get(session['patient_id'])
-        return dict(patient=patient)
+            if patient:
+                context['patient'] = patient
+                context['unread_patient_messages'] = Message.query.filter_by(
+                    patient_id=patient.id,
+                    sender_type='doctor',
+                    is_read=False
+                ).count()
+        return context
 
     @app.route("/login", methods=["GET", "POST"])
     def login():
@@ -101,8 +109,9 @@ def setup_routes(app):
         # Fetch 3 doctors to display on the homepage.
         # In the future, you could order this by rating: .order_by(Doctor.rating.desc())
         featured_doctors = Doctor.query.limit(3).all()
-        return render_template("index.html", featured_doctors=featured_doctors)
-    
+        featured_hospitals = get_featured_hospitals(limit=3)
+        return render_template("index.html", featured_doctors=featured_doctors, featured_hospitals=featured_hospitals)
+
     @app.route("/home")
     @login_required
     def patient_home():
@@ -243,11 +252,166 @@ def setup_routes(app):
     def services():
         return render_template("services.html")
     
+    @app.route('/emergency_services')
+    def emergency_services():
+        services = [
+            {'name': 'National Emergency Number', 'number': '112', 'icon': 'bi-telephone-fill', 'description': 'For all-in-one emergency assistance.'},
+            {'name': 'Police', 'number': '100', 'icon': 'bi-shield-shaded', 'description': 'For police assistance and crime reporting.'},
+            {'name': 'Fire Brigade', 'number': '101', 'icon': 'bi-fire', 'description': 'For fire-related emergencies.'},
+            {'name': 'Ambulance', 'number': '102', 'icon': 'bi-ambulance', 'description': 'For medical emergencies and ambulance services.'},
+            {'name': 'Disaster Management', 'number': '108', 'icon': 'bi-cloud-hail', 'description': 'For natural disasters and major incidents.'},
+            {'name': 'Women Helpline', 'number': '1091', 'icon': 'bi-gender-female', 'description': 'For women in distress or facing harassment.'},
+            {'name': 'Child Helpline', 'number': '1098', 'icon': 'bi-person-hearts', 'description': 'For children in need of care and protection.'},
+            {'name': 'Senior Citizen Helpline', 'number': '14567', 'icon': 'bi-person-wheelchair', 'description': 'For assistance to senior citizens.'},
+        ]
+        return render_template('emergency_services.html', services=services)
+
+    @app.route('/messages')
+    @login_required
+    def list_conversations():
+        patient_id = session['patient_id']
+        
+        # Find all doctors the patient has had an appointment with
+        appointments = Appointment.query.filter_by(user_id=patient_id).all()
+        doctor_ids = {app.doctor_id for app in appointments}
+        
+        # Also include doctors they have messaged
+        messages_with_doctors = Message.query.filter_by(patient_id=patient_id).all()
+        doctor_ids.update({msg.doctor_id for msg in messages_with_doctors})
+
+        if not doctor_ids:
+            return render_template('conversations.html', conversations=[])
+
+        doctors = Doctor.query.filter(Doctor.id.in_(doctor_ids)).all()
+        
+        # Optimized query to get the last message for each conversation
+        subq = db.session.query(
+            Message.doctor_id,
+            func.max(Message.timestamp).label('max_ts')
+        ).filter(
+            Message.patient_id == patient_id,
+            Message.doctor_id.in_(doctor_ids)
+        ).group_by(Message.doctor_id).subquery()
+
+        last_messages_q = db.session.query(Message).join(
+            subq,
+            db.and_(Message.doctor_id == subq.c.doctor_id, Message.timestamp == subq.c.max_ts)
+        )
+        last_messages_map = {msg.doctor_id: msg for msg in last_messages_q.all()}
+        
+        conversations = []
+        for doc in doctors:
+            conversations.append({
+                'doctor': doc,
+                'last_message': last_messages_map.get(doc.id)
+            })
+        
+        # Sort conversations by last message time, descending
+        conversations.sort(key=lambda x: x['last_message'].timestamp if x['last_message'] else datetime.min, reverse=True)
+
+        return render_template('conversations.html', conversations=conversations)
+
+    @app.route('/messages/<int:doctor_id>', methods=['GET', 'POST'])
+    @login_required
+    def conversation(doctor_id):
+        patient_id = session['patient_id']
+        doctor = Doctor.query.get_or_404(doctor_id)
+
+        if request.method == 'POST':
+            content = request.form.get('content')
+            if content:
+                message = Message(patient_id=patient_id, doctor_id=doctor_id, sender_type='patient', content=content)
+                db.session.add(message)
+                db.session.commit()
+            return redirect(url_for('conversation', doctor_id=doctor_id))
+
+        # Mark messages from this doctor as read upon opening the chat
+        Message.query.filter_by(
+            patient_id=patient_id, 
+            doctor_id=doctor_id, 
+            sender_type='doctor', 
+            is_read=False
+        ).update({Message.is_read: True})
+        db.session.commit()
+
+        messages = Message.query.filter_by(patient_id=patient_id, doctor_id=doctor_id).order_by(Message.timestamp.asc()).all()
+        return render_template('conversation.html', doctor=doctor, messages=messages)
+
+    # Doctor-side Messaging
+    @app.route('/doctor/messages')
+    @doctor_login_required
+    def doctor_list_conversations():
+        doctor_id = session['doctor_id']
+        
+        # Subquery to get the last message for each patient conversation
+        subq = db.session.query(
+            Message.patient_id,
+            func.max(Message.timestamp).label('max_ts')
+        ).filter(Message.doctor_id == doctor_id).group_by(Message.patient_id).subquery()
+
+        # Join to get the full last message details
+        last_messages_q = db.session.query(Message).join(
+            subq,
+            db.and_(Message.patient_id == subq.c.patient_id, Message.timestamp == subq.c.max_ts)
+        )
+        
+        conversations = []
+        for msg in last_messages_q.all():
+            patient = Patient.query.get(msg.patient_id)
+            # Count unread messages from this patient
+            unread_count = Message.query.filter_by(
+                doctor_id=doctor_id, 
+                patient_id=patient.id, 
+                is_read=False, 
+                sender_type='patient'
+            ).count()
+            conversations.append({
+                'patient': patient,
+                'last_message': msg,
+                'unread_count': unread_count
+            })
+        
+        # Sort conversations by the timestamp of the last message
+        conversations.sort(key=lambda x: x['last_message'].timestamp, reverse=True)
+
+        return render_template('doctor_conversations.html', conversations=conversations)
+
+    @app.route('/doctor/messages/<int:patient_id>', methods=['GET', 'POST'])
+    @doctor_login_required
+    def doctor_conversation(patient_id):
+        doctor_id = session['doctor_id']
+        patient = Patient.query.get_or_404(patient_id)
+
+        if request.method == 'POST':
+            content = request.form.get('content')
+            if content:
+                message = Message(patient_id=patient_id, doctor_id=doctor_id, sender_type='doctor', content=content)
+                db.session.add(message)
+                db.session.commit()
+            return redirect(url_for('doctor_conversation', patient_id=patient_id))
+
+        # Mark messages from this patient as read upon opening the chat
+        Message.query.filter_by(
+            doctor_id=doctor_id, 
+            patient_id=patient_id, 
+            sender_type='patient', 
+            is_read=False
+        ).update({Message.is_read: True})
+        db.session.commit()
+
+        messages = Message.query.filter_by(patient_id=patient_id, doctor_id=doctor_id).order_by(Message.timestamp.asc()).all()
+        return render_template('doctor_conversation.html', patient=patient, messages=messages)
+
     # Hospital Services
     @app.route('/hospital_finding')
-    @login_required
     def hospital_finder():
-        return render_template('hospital_finder.html')
+        hospitals = []
+        location_query = request.args.get("location", "").strip()
+        if location_query:
+            # Re-use the nearby locations logic
+            nearby_locations = get_nearby_locations(location_query)
+            hospitals = find_hospitals(nearby_locations)
+        return render_template('hospital_finder.html', hospitals=hospitals, location_query=location_query)
     
     @app.route("/user_profile", methods=["GET", "POST"])
     def user_profile():

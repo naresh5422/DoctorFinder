@@ -21,3 +21,12 @@ def login_required(f):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
+
+def doctor_login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'doctor_id' not in session:
+            flash("Please log in as a doctor to continue.", "warning")
+            return redirect(url_for('doctor_login')) # Assumes 'doctor_login' route exists
+        return f(*args, **kwargs)
+    return decorated_function

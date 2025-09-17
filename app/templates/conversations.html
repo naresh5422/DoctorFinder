@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}My Messages{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">My Conversations</h1>
+    <div class="list-group">
+        {% if conversations %}
+            {% for conv in conversations %}
+                <a href="{{ url_for('conversation', doctor_id=conv.doctor.id) }}" class="list-group-item list-group-item-action p-3">
+                    <div class="d-flex align-items-center">
+                        <img src="{{ url_for('static', filename=conv.doctor.image or 'images/default-doctor.png') }}" class="rounded-circle me-3" alt="Dr. {{ conv.doctor.doctor_name }}" style="width: 50px; height: 50px; object-fit: cover;">
+                        <div class="flex-grow-1">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">Dr. {{ conv.doctor.doctor_name }}</h5>
+                                {% if conv.last_message %}
+                                    <small class="text-muted">{{ conv.last_message.timestamp.strftime('%b %d') }}</small>
+                                {% endif %}
+                            </div>
+                            <p class="mb-0 text-muted small">
+                                {% if conv.last_message %}
+                                    {% if conv.last_message.sender_type == 'patient' %}<strong>You:</strong> {% endif %}
+                                    {{ conv.last_message.content|truncate(70) }}
+                                {% else %}
+                                    Start a conversation with Dr. {{ conv.doctor.doctor_name }}.
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info">You have no conversations yet. You can message a doctor after booking an appointment with them.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

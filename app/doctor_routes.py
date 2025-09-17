@@ -5,8 +5,8 @@ from flask import render_template, request, session, redirect, url_for, flash, c
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 from flask_mail import Message
 from twilio.rest import Client
-from datetime import date, datetime
-from app.models import Doctor, Review, Appointment
+from datetime import date, datetime 
+from app.models import Doctor, Review, Appointment, Message
 from app.extension import db, mail
 from werkzeug.utils import secure_filename
 
@@ -19,10 +19,16 @@ def setup_doctor_routes(app):
         return redirect(url_for('doctor_login'))
 
     @app.context_processor
-    def inject_doctor():
+    def inject_doctor_data():
+        context = {'doctor_details': None, 'unread_doctor_messages': 0}
         if 'doctor_id' in session:
-            return dict(doctor_details=session.get('doctor_details'))
-        return dict(doctor_details=None)
+            context['doctor_details'] = session.get('doctor_details')
+            context['unread_doctor_messages'] = Message.query.filter_by(
+                doctor_id=session['doctor_id'],
+                sender_type='patient',
+                is_read=False
+            ).count()
+        return context
 
 
     @app.route('/doctor_profile', methods = ['GET','POST'])
