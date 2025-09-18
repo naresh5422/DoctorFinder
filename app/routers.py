@@ -1,11 +1,53 @@
 from flask import render_template, request, session, redirect, url_for, flash
 from app.services.doctor_service import find_doctors, get_nearby_locations, map_disease_to_specialist, find_hospitals, get_featured_hospitals
 from app.models import SearchHistory, Patient, Doctor, Appointment, Review, Message
+import os
+import random
 from werkzeug.utils import secure_filename
-from app.extension import db, login_required, doctor_login_required
+from app.extension import db, mail, login_required, doctor_login_required
 from datetime import datetime, date
 from sqlalchemy import func
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
+from flask_mail import Message as MailMessage # Alias to avoid name conflict with model
+from twilio.rest import Client
 
+
+def _filter_doctor_slots(doctors_list):
+    """
+    A helper function to filter a list of doctors' available_slots.
+    It removes past slots and already booked slots.
+    """
+    today = date.today()
+    now = datetime.now()
+    for doctor in doctors_list:
+        if not isinstance(doctor.available_slots, dict):
+            doctor.available_slots = {}
+            continue
+        
+        valid_slots = {}
+        # Get all appointments for this doctor on their available dates
+        appointments = Appointment.query.filter(
+            Appointment.doctor_id == doctor.id,
+            Appointment.appointment_date.cast(db.Date).in_(doctor.available_slots.keys()),
+            Appointment.status.in_(['Pending', 'Confirmed'])
+        ).all()
+        booked_slot_times = {f"{appt.appointment_date.strftime('%Y-%m-%d')}_{appt.appointment_date.strftime('%H:%M')}" for appt in appointments}
+
+        for slot_date_str, times in doctor.available_slots.items():
+            try:
+                slot_date = datetime.strptime(slot_date_str, '%Y-%m-%d').date()
+                if slot_date >= today:
+                    available_times = []
+                    for time_str in times:
+                        slot_datetime = datetime.strptime(f"{slot_date_str} {time_str}", '%Y-%m-%d %H:%M')
+                        if slot_datetime > now and f"{slot_date_str}_{time_str}" not in booked_slot_times:
+                            available_times.append(time_str)
+                    if available_times:
+                        valid_slots[slot_date_str] = available_times
+            except (ValueError, TypeError):
+                continue
+        doctor.available_slots = valid_slots
+    return doctors_list
 
 def setup_routes(app):
     @app.context_processor
@@ -25,7 +67,14 @@ def setup_routes(app):
     @app.route("/login", methods=["GET", "POST"])
     def login():
         if request.method == "GET":
-            session["next_url"] = request.args.get("next") or request.referrer
+            # If login_required redirected here, it will have a 'next' parameter.
+            # We store that in the session to use after successful login.
+            next_page = request.args.get('next')
+            if next_page:
+                session['next_url'] = next_page
+            else:
+                # If a user navigates to login directly, clear any old 'next' URL.
+                session.pop('next_url', None)
             return render_template("login.html")
         # POST: handle login
         username = request.form.get("username")
@@ -37,7 +86,12 @@ def setup_routes(app):
             patient.login_count += 1
             patient.status = "login"
             db.session.commit()
-            return redirect(url_for("patient_home"))  # Redirect to patient homepage
+            
+            # Redirect to the page the user was trying to access, or to the patient homepage.
+            next_url = session.pop("next_url", None)
+            if next_url:
+                return redirect(next_url)
+            return redirect(url_for("patient_home"))
         else:
             flash("Invalid username or password", "danger")
         return render_template("login.html")
@@ -116,8 +170,30 @@ def setup_routes(app):
     @login_required
     def patient_home():
         patient = Patient.query.get(session['patient_id'])
-        return render_template("patient_home.html", patient=patient)
+        # Fetch top-rated doctors to display on the patient's homepage
+        top_doctors = Doctor.query.order_by(Doctor.rating.desc()).limit(3).all()
+        _filter_doctor_slots(top_doctors)
+        return render_template("patient_home.html", patient=patient, top_doctors=top_doctors)
     
+    @app.route('/browse_doctors')
+    @login_required
+    def browse_doctors():
+        """Displays all doctors, sorted by rating."""
+        # Fetch all doctors, sorted by rating (high priority)
+        all_doctors_list = Doctor.query.order_by(Doctor.rating.desc()).all()
+
+        # Filter slots to show only valid, available ones
+        _filter_doctor_slots(all_doctors_list)
+
+        # Fetch recent searches for the sidebar
+        recent_searches = []
+        if 'patient_id' in session:
+            recent_searches = SearchHistory.query.filter_by(patient_id=session["patient_id"]).order_by(SearchHistory.id.desc()).limit(5).all()
+
+        return render_template('doctor_finding.html', doctors=all_doctors_list, recent_searches=recent_searches, 
+                               datetime=datetime, disease_query="",
+                               location_query="")
+
     @app.route("/dashboard")
     @login_required
     def dashboard():
@@ -127,14 +203,20 @@ def setup_routes(app):
         all_appointments = Appointment.query.filter_by(user_id=patient_id).all()
         total_appointments = len(all_appointments) 
         pending_appointments_count = sum(1 for a in all_appointments if a.status == 'Pending')
-        completed_appointments_count = sum(1 for a in all_appointments if a.status == 'Completed')
+        confirmed_appointments_count = sum(1 for a in all_appointments if a.status == 'Confirmed')
         
-        # Count unique doctors consulted
-        consulted_doctor_ids = {a.doctor_id for a in all_appointments if a.status in ['Confirmed', 'Completed']}
-        doctors_consulted_count = len(consulted_doctor_ids)
+        # Count unique doctors for completed consultations
+        consultations_completed_count = len({a.doctor_id for a in all_appointments if a.status == 'Completed'})
 
         # Fetch reviews given by the patient
-        reviews_given_count = Review.query.filter_by(patient_id=patient_id).count()
+        reviews_given = Review.query.filter_by(patient_id=patient_id).order_by(Review.timestamp.desc()).all()
+
+        # --- New: Count unique conversations ---
+        # A conversation exists if there's an appointment or a message.
+        conversation_doctor_ids = {app.doctor_id for app in all_appointments}
+        messages_with_doctors = Message.query.filter_by(patient_id=patient_id).all()
+        conversation_doctor_ids.update({msg.doctor_id for msg in messages_with_doctors})
+        total_conversations_count = len(conversation_doctor_ids)
 
         recent_searches = SearchHistory.query.filter_by(patient_id=patient_id).order_by(SearchHistory.timestamp.desc()).limit(5).all()
         upcoming_appointments = Appointment.query.filter(
@@ -145,23 +227,31 @@ def setup_routes(app):
         
         return render_template("user_dashboard.html", recent_searches=recent_searches, upcoming_appointments=upcoming_appointments, 
                                total_appointments=total_appointments, pending_appointments_count=pending_appointments_count, 
-                               doctors_consulted_count=doctors_consulted_count, reviews_given_count=reviews_given_count,
-                               completed_appointments_count=completed_appointments_count)
+                               confirmed_appointments_count=confirmed_appointments_count, consultations_completed_count=consultations_completed_count,
+                               reviews_given=reviews_given, total_conversations_count=total_conversations_count)
 
     @app.route("/my_appointments")
     @login_required
     def my_appointments():
         patient_id = session['patient_id']
+        status_filter = request.args.get('status')
+        view_filter = request.args.get('view')
         
         # Fetch all appointments for the patient
-        appointments = Appointment.query.filter_by(user_id=patient_id).order_by(Appointment.appointment_date.desc()).all()
+        appointments_query = Appointment.query.filter_by(user_id=patient_id)
+        if status_filter and status_filter in ['Pending', 'Confirmed', 'Completed', 'Cancelled']:
+            appointments_query = appointments_query.filter_by(status=status_filter)
+
+        appointments = appointments_query.order_by(Appointment.appointment_date.desc()).all()
         
         # Get a set of doctor IDs the patient has already reviewed
         reviewed_doctor_ids = {review.doctor_id for review in Review.query.filter_by(patient_id=patient_id).all()}
 
         # --- Start: Logic to get all doctors for conversations ---
         # Find all unique doctors the patient has interacted with
-        doctor_ids = {app.doctor_id for app in appointments}
+        # Use all appointments to build the conversation list, not just the filtered ones
+        all_patient_appointments = Appointment.query.filter_by(user_id=patient_id).all()
+        doctor_ids = {app.doctor_id for app in all_patient_appointments}
         messages_with_doctors = Message.query.filter_by(patient_id=patient_id).all()
         doctor_ids.update({msg.doctor_id for msg in messages_with_doctors})
 
@@ -202,85 +292,123 @@ def setup_routes(app):
             conversations.sort(key=lambda x: x['last_message'].timestamp if x['last_message'] else datetime.min, reverse=True)
         # --- End: Logic to get all doctors for conversations ---
 
-        return render_template('my_appointments.html', appointments=appointments, reviewed_doctor_ids=reviewed_doctor_ids, conversations=conversations)
+        return render_template('my_appointments.html', appointments=appointments, reviewed_doctor_ids=reviewed_doctor_ids, conversations=conversations, status_filter=status_filter, view_filter=view_filter)
+
+    @app.route('/submit_review/<int:doctor_id>', methods=['POST'])
+    @login_required
+    def submit_review(doctor_id):
+        patient_id = session['patient_id']
+        rating = request.form.get('rating')
+        comment = request.form.get('comment')
+        appointment_id = request.form.get('appointment_id')
+
+        if not rating or not comment:
+            flash('Rating and comment are required.', 'danger')
+            return redirect(request.referrer or url_for('my_appointments'))
+
+        # Check if a review for this doctor by this patient already exists
+        existing_review = Review.query.filter_by(patient_id=patient_id, doctor_id=doctor_id).first()
+        if existing_review:
+            flash('You have already reviewed this doctor.', 'warning')
+            return redirect(url_for('my_appointments'))
+
+        review = Review(
+            patient_id=patient_id,
+            doctor_id=doctor_id,
+            appointment_id=appointment_id,
+            rating=int(rating),
+            comment=comment
+        )
+        db.session.add(review)
+
+        # Update doctor's average rating
+        doctor = Doctor.query.get(doctor_id)
+        if doctor:
+            all_reviews = Review.query.filter_by(doctor_id=doctor_id).all()
+            new_rating = sum(r.rating for r in all_reviews) / len(all_reviews)
+            doctor.rating = round(new_rating, 1)
+        
+        db.session.commit()
+        flash('Thank you for your review!', 'success')
+        return redirect(url_for('my_appointments'))
 
     @app.route("/repeat_search", defaults={"search_id": None})
     @app.route("/repeat_search/<int:search_id>", methods = ["GET","POST"])
     @login_required
     def repeat_search(search_id):
         if "patient_id" not in session:
+            flash("Please log in to view your search history.", "warning")
             return redirect(url_for("login"))
         search = SearchHistory.query.get(search_id)
         if not search or search.patient_id != session["patient_id"]:
-            return "Unauthorized or invalid search"
-        nearby_locations = get_nearby_locations(search.location)
-        specialist = map_disease_to_specialist(search.disease)
-        results = find_doctors(nearby_locations, specialist)
-        recent_searches = SearchHistory.query.filter_by(patient_id=session["patient_id"]).order_by(SearchHistory.timestamp.desc()).limit(5).all()
-        return render_template("index.html", results=results, recent_searches=recent_searches)
+            flash("Unauthorized or invalid search.", "danger")
+            return redirect(url_for('dashboard'))
+
+        location_query = search.location
+        disease_query = search.disease
+
+        specialist_mapping = map_disease_to_specialist(disease_query)
+        specialist = specialist_mapping.split(" - ")[1]
+        nearby_locations = get_nearby_locations(location_query.strip().lower())
+        results = Doctor.query.filter(
+            Doctor.location.in_(nearby_locations),
+            Doctor.specialization == specialist
+        ).all()
+
+        # Filter out booked slots and past slots (same logic as find_doctor)
+        _filter_doctor_slots(results)
+
+        recent_searches = SearchHistory.query.filter_by(patient_id=session["patient_id"]).order_by(SearchHistory.id.desc()).limit(5).all()
+        return render_template('doctor_finding.html', doctors=results, recent_searches=recent_searches, datetime=datetime,
+                               disease_query=disease_query, location_query=location_query)
 
     @app.route('/find_doctor', methods=['GET', 'POST'])
-    @login_required
     def find_doctor():
+        # This route is now public. Login is required for booking, not for searching.
         results = []
-        recent_searchs = []
+        recent_searches = []
+        location_query = ""
+        disease_query = ""
+
         if request.method == "POST":
-            location = request.form.get("location", "")
-            disease = request.form.get("disease")
+            location_query = request.form.get("location", "")
+            disease_query = request.form.get("disease")
             # 🔹 Map layman term OR specialist to professional mapping
-            specialist_mapping = map_disease_to_specialist(disease)
+            # Save search to database for POST requests if user is logged in
+            if location_query and disease_query and 'patient_id' in session:
+                search = SearchHistory(patient_id=session["patient_id"],
+                                       location=location_query,
+                                       disease=disease_query)
+                db.session.add(search)
+                db.session.commit()
+        
+        elif request.method == "GET" and 'disease' in request.args:
+            disease_query = request.args.get('disease')
+            # For GET, we can default to the user's location if they are logged in
+            if 'patient_id' in session:
+                patient = Patient.query.get(session['patient_id'])
+                location_query = patient.location if patient else ""
+                if not location_query:
+                    flash("To browse by specialty, please set a location in your profile or use the search bar.", "info")
+
+        if disease_query and location_query:
+            specialist_mapping = map_disease_to_specialist(disease_query)
             specialist = specialist_mapping.split(" - ")[1]
-            # Save search to database
-            search = SearchHistory(patient_id=session["patient_id"],
-                                   location=location,
-                                   disease=disease)
-            db.session.add(search)
-            db.session.commit()
             ## Doctor search logic
-            nearby_locations = get_nearby_locations(location.strip().lower())
+            nearby_locations = get_nearby_locations(location_query.strip().lower())
             results = Doctor.query.filter(
                 Doctor.location.in_(nearby_locations),
                 Doctor.specialization == specialist
             ).all()
 
             # Filter out booked slots and past slots
-            today = date.today()
-            now = datetime.now()
+            _filter_doctor_slots(results)
 
-            for doctor in results:
-                if doctor.available_slots:
-                    # Create a new dictionary for valid, upcoming slots
-                    valid_slots = {}
-                    # Get all appointments for this doctor on their available dates
-                    appointments = Appointment.query.filter(
-                        Appointment.doctor_id == doctor.id,
-                        Appointment.appointment_date.cast(db.Date).in_(doctor.available_slots.keys()),
-                        Appointment.status.in_(['Pending', 'Confirmed'])
-                    ).all()
-                    booked_slot_times = {f"{appt.appointment_date.strftime('%Y-%m-%d')}_{appt.appointment_date.strftime('%H:%M')}" for appt in appointments}
-
-                    for slot_date_str, times in doctor.available_slots.items():
-                        # Add a check to ensure the key is a valid date format before processing
-                        try:
-                            slot_date = datetime.strptime(slot_date_str, '%Y-%m-%d').date()
-                            if slot_date >= today:
-                                available_times = []
-                                for time_str in times:
-                                    slot_datetime = datetime.strptime(f"{slot_date_str} {time_str}", '%Y-%m-%d %H:%M')
-                                    if slot_datetime > now and f"{slot_date_str}_{time_str}" not in booked_slot_times:
-                                        available_times.append(time_str)
-                                if available_times:
-                                    valid_slots[slot_date_str] = available_times
-                        except ValueError:
-                            continue # Safely skip keys that are not dates (like 'slots')
-                    doctor.available_slots = valid_slots
-
-            recent_searches = (
-                SearchHistory.query.filter_by(patient_id=session["patient_id"])
-                .order_by(SearchHistory.id.desc())
-                .limit(5)
-                .all())
-        return render_template('doctor_finding.html', doctors=results, recent_searches=recent_searchs, datetime=datetime)
+        if 'patient_id' in session:
+            recent_searches = SearchHistory.query.filter_by(patient_id=session["patient_id"]).order_by(SearchHistory.id.desc()).limit(5).all()
+        
+        return render_template('doctor_finding.html', doctors=results, recent_searches=recent_searches, datetime=datetime,
+                               disease_query=disease_query, location_query=location_query)
     
     @app.route("/about")
     def about():
@@ -358,6 +486,7 @@ def setup_routes(app):
     def conversation(doctor_id):
         patient_id = session['patient_id']
         doctor = Doctor.query.get_or_404(doctor_id)
+        back_url = request.args.get('back_url') or url_for('my_appointments')
 
         if request.method == 'POST':
             content = request.form.get('content')
@@ -365,7 +494,7 @@ def setup_routes(app):
                 message = Message(patient_id=patient_id, doctor_id=doctor_id, sender_type='patient', content=content)
                 db.session.add(message)
                 db.session.commit()
-            return redirect(url_for('conversation', doctor_id=doctor_id))
+            return redirect(url_for('conversation', doctor_id=doctor_id, back_url=back_url))
 
         # Mark messages from this doctor as read upon opening the chat
         Message.query.filter_by(
@@ -377,7 +506,7 @@ def setup_routes(app):
         db.session.commit()
 
         messages = Message.query.filter_by(patient_id=patient_id, doctor_id=doctor_id).order_by(Message.timestamp.asc()).all()
-        return render_template('conversation.html', doctor=doctor, messages=messages)
+        return render_template('conversation.html', doctor=doctor, messages=messages, back_url=back_url)
 
     # Doctor-side Messaging
     @app.route('/doctor/messages')
@@ -466,10 +595,14 @@ def setup_routes(app):
         if request.method == "POST":
             # Update text fields
             patient.name = request.form.get("name", patient.name)
-            patient.mobile = request.form.get("mobile", patient.mobile)
-            patient.email = request.form.get("email", patient.email)
             patient.location = request.form.get("location", patient.location)
             patient.bio = request.form.get("bio", patient.bio)
+
+            # Only update email/mobile if they are not verified
+            if not (hasattr(patient, 'email_verified') and patient.email_verified):
+                patient.email = request.form.get("email", patient.email)
+            if not (hasattr(patient, 'mobile_verified') and patient.mobile_verified):
+                patient.mobile = request.form.get("mobile", patient.mobile)
 
             # Handle profile image upload
             if "image" in request.files:
@@ -484,6 +617,123 @@ def setup_routes(app):
             flash("Profile updated successfully!", "success")
             return redirect(url_for("user_profile"))
         return render_template("user_profile.html", patient=patient)
+
+    @app.route('/send_email_verification')
+    @login_required
+    def send_email_verification():
+        patient = Patient.query.get(session['patient_id'])
+        if not patient.email:
+            flash('Please add an email address to your profile first.', 'warning')
+            return redirect(url_for('user_profile'))
+
+        # Check if the attribute exists and if it's true
+        if hasattr(patient, 'email_verified') and patient.email_verified:
+            flash('Your email is already verified.', 'info')
+            return redirect(url_for('user_profile'))
+
+        s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+        token = s.dumps(patient.email, salt='email-verification-salt')
+        
+        verify_url = url_for('verify_email', token=token, _external=True)
+        msg = MailMessage('Verify Your Email for CareConnect',
+                          sender=app.config['MAIL_USERNAME'],
+                          recipients=[patient.email])
+        msg.body = f'''Please click the following link to verify your email address:
+{verify_url}
+If you did not request this, please ignore this email.
+'''
+        mail.send(msg)
+        flash(f'A verification link has been sent to {patient.email}. Please check your inbox.', 'info')
+        return redirect(url_for('user_profile'))
+
+    @app.route('/verify_email/<token>')
+    @login_required
+    def verify_email(token):
+        s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+        try:
+            email = s.loads(token, salt='email-verification-salt', max_age=3600) # 1 hour expiry
+        except (SignatureExpired, BadTimeSignature):
+            flash('The verification link is invalid or has expired.', 'danger')
+            return redirect(url_for('user_profile'))
+
+        patient = Patient.query.get(session['patient_id'])
+        if patient.email == email:
+            # Check if the attribute exists before trying to set it
+            if hasattr(patient, 'email_verified'):
+                patient.email_verified = True
+                db.session.commit()
+                flash('Your email has been successfully verified!', 'success')
+            else:
+                # This is a fallback if the DB schema is not updated.
+                flash('Email verification feature is not fully configured. Please contact support.', 'warning')
+        else:
+            flash('There was an error verifying your email. Please try again.', 'danger')
+        
+        return redirect(url_for('user_profile'))
+
+    @app.route('/send_mobile_verification')
+    @login_required
+    def send_mobile_verification():
+        patient = Patient.query.get(session['patient_id'])
+        if not patient.mobile:
+            flash('Please add a mobile number to your profile first.', 'warning')
+            return redirect(url_for('user_profile'))
+
+        # Check if the attribute exists and if it's true
+        if hasattr(patient, 'mobile_verified') and patient.mobile_verified:
+            flash('Your mobile number is already verified.', 'info')
+            return redirect(url_for('user_profile'))
+
+        otp = str(random.randint(100000, 999999))
+        session['mobile_verification_otp'] = otp
+        session['mobile_to_verify'] = patient.mobile
+
+        try:
+            client = Client(app.config['TWILIO_ACCOUNT_SID'], app.config['TWILIO_AUTH_TOKEN'])
+            message = client.messages.create(
+                body=f"Your CareConnect verification OTP is: {otp}",
+                from_=app.config['TWILIO_PHONE_NUMBER'],
+                to=patient.mobile # Assuming mobile number is in E.164 format
+            )
+            flash(f"An OTP has been sent to your mobile number.", "info")
+            return redirect(url_for('verify_mobile'))
+        except Exception as e:
+            flash("Failed to send OTP. Please check your mobile number or try again later.", "danger")
+            app.logger.error(f"Twilio failed to send SMS for patient verification: {e}")
+            return redirect(url_for('user_profile'))
+
+    @app.route('/verify_mobile', methods=['GET', 'POST'])
+    @login_required
+    def verify_mobile():
+        if 'mobile_verification_otp' not in session:
+            flash('Verification process has expired. Please try again.', 'warning')
+            return redirect(url_for('user_profile'))
+
+        if request.method == 'POST':
+            submitted_otp = request.form.get('otp')
+            if submitted_otp == session.get('mobile_verification_otp'):
+                patient = Patient.query.get(session['patient_id'])
+                if patient.mobile == session.get('mobile_to_verify'):
+                    # Check if the attribute exists before trying to set it
+                    if hasattr(patient, 'mobile_verified'):
+                        patient.mobile_verified = True
+                        db.session.commit()
+                        flash('Your mobile number has been successfully verified!', 'success')
+                        # Clean up session
+                        session.pop('mobile_verification_otp', None)
+                        session.pop('mobile_to_verify', None)
+                        return redirect(url_for('user_profile'))
+                    else:
+                        # This is a fallback if the DB schema is not updated.
+                        flash('Mobile verification feature is not fully configured. Please contact support.', 'warning')
+                        return redirect(url_for('user_profile'))
+                else:
+                    flash('Mobile number has changed. Please restart verification.', 'danger')
+                    return redirect(url_for('user_profile'))
+            else:
+                flash('Invalid OTP. Please try again.', 'danger')
+        
+        return render_template('patient_verify_mobile.html')
 
     @app.route('/hospital_doctor')
     @login_required

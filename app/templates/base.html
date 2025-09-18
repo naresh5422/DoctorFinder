@@ -3,24 +3,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1"> 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <title>{% block title %}CareConnect{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <style>
-        html, body {
-            height: 100%;
-        }
-        body.d-flex {
-            display: flex;
-            flex-direction: column;
-        }
-        .main-content {
-            flex: 1;
-        }
-        .navbar-brand {
-            font-weight: bold;
-        }
-    </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="d-flex flex-column {% block body_class %}{% endblock %}">
@@ -46,7 +34,6 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarPatientDropdown">
                             <li><a class="dropdown-item" href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('my_appointments') }}">My Appointments</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('user_profile') }}">My Profile</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
@@ -105,10 +92,44 @@
     {% endwith %}
     {% block content %}{% endblock %}
 </main>
-
-<footer class="footer mt-auto py-3">
-    <div class="container text-center">
-        <span class="text-muted">&copy; 2024 CareConnect. All Rights Reserved.</span>
+ 
+<footer class="site-footer mt-auto">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
+                <h5 class="footer-heading">CareConnect</h5>
+                <p class="text-muted">Your trusted partner in finding the best healthcare. We connect patients with top-rated doctors and hospitals, making healthcare access simple and transparent.</p>
+            </div>
+            <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                <h5 class="footer-heading">Quick Links</h5>
+                <ul class="list-unstyled footer-links">
+                    <li><a href="{{ url_for('index') }}">Home</a></li>
+                    <li><a href="{{ url_for('about') }}">About Us</a></li>
+                    <li><a href="{{ url_for('services') }}">Services</a></li>
+                    <li><a href="{{ url_for('contactus') }}">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                <h5 class="footer-heading">Contact Us</h5>
+                <ul class="list-unstyled footer-contact">
+                    <li class="d-flex"><i class="bi bi-geo-alt-fill me-2"></i><span>123 Health St, Wellness City, 12345</span></li>
+                    <li class="d-flex"><i class="bi bi-telephone-fill me-2"></i><span>8179027681</span></li>
+                    <li class="d-flex"><i class="bi bi-envelope-fill me-2"></i><span>t.naresh5422@gmail.com</span></li>
+                </ul>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <h5 class="footer-heading">Follow Us</h5>
+                <div class="footer-social">
+                    <a href="#"><i class="bi bi-twitter"></i></a>
+                    <a href="#"><i class="bi bi-facebook"></i></a>
+                    <a href="#"><i class="bi bi-instagram"></i></a>
+                    <a href="#"><i class="bi bi-linkedin"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom-bar">
+            <p class="text-muted mb-0">&copy; 2024 CareConnect. All Rights Reserved.</p>
+        </div>
     </div>
 </footer>
 
@@ -118,5 +139,6 @@
 </a>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

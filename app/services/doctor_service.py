@@ -28,7 +28,6 @@ def find_doctors(locations, specialization):
 
 
 def find_hospitals(locations):
-    # This function now reads from the database to ensure data consistency.
     # NOTE: Hospital services are randomly generated as they are not stored in the database.
     hospital_services = [
         "24/7 Emergency Care", "ICU", "Cardiology", "Neurology", "Orthopedics",
@@ -36,6 +35,7 @@ def find_hospitals(locations):
         "Ambulance Service", "General Surgery", "Diagnostics Lab"
     ]
 
+    # This function now reads from the database to ensure data consistency.
     # Find distinct hospitals in the given locations from the Doctor table
     hospitals_db = db.session.query(
         Doctor.hospital_name,

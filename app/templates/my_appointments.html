@@ -1,136 +1,177 @@
 {% extends "base.html" %}
 
-{% block title %}My Appointments - CareConnect{% endblock %}
+{% block title %}My Appointments & Conversations{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <h2 class="mb-4">My Doctors & Conversations</h2>
-    {% if conversations %}
-        <div class="list-group mb-5">
-            {% for conv in conversations %}
-                <a href="{{ url_for('conversation', doctor_id=conv.doctor.id) }}" class="list-group-item list-group-item-action p-3 {% if conv.unread_count > 0 %}list-group-item-primary{% endif %}">
-                    <div class="d-flex align-items-center">
-                        <img src="{{ url_for('static', filename=conv.doctor.image or 'images/default-doctor.png') }}" class="rounded-circle me-3" alt="Dr. {{ conv.doctor.doctor_name }}" style="width: 50px; height: 50px; object-fit: cover;">
-                        <div class="flex-grow-1">
+<div class="container py-5">
+    <h1 class="h2 mb-5">
+        {% if view_filter == 'conversations' %}
+            My Doctor Conversations
+        {% elif status_filter %}
+            {{ status_filter }} Appointments
+        {% elif view_filter == 'appointments' %}
+            All Appointments
+        {% else %}
+            My Appointments & Conversations
+        {% endif %}
+    </h1>
+
+    <div class="row g-5">
+        {# --- Define conditions for what to show --- #}
+        {% set show_appointments_only = status_filter or view_filter == 'appointments' %}
+        {% set show_conversations_only = view_filter == 'conversations' %}
+        {% set show_both = not show_appointments_only and not show_conversations_only %}
+
+        <!-- Left Column: Appointments History -->
+        {% if show_appointments_only or show_both %}
+        <div class="{% if show_both %}col-lg-8{% else %}col-lg-12{% endif %}">
+            {% if show_both %}
+            <h3 class="mb-4">Appointment History</h3>
+            {% endif %}
+            {% if appointments %}
+                <div class="list-group">
+                    {% for appt in appointments %}
+                        <div class="list-group-item p-3 mb-3 border rounded">
                             <div class="d-flex w-100 justify-content-between">
-                                <h5 class="mb-1">
-                                    Dr. {{ conv.doctor.doctor_name }}
-                                    {% if conv.unread_count > 0 %}
-                                        <span class="badge bg-danger rounded-pill">{{ conv.unread_count }}</span>
+                                <h5 class="mb-1">Dr. {{ appt.doctor.doctor_name }}</h5>
+                                <small class="text-muted">{{ appt.appointment_date.strftime('%b %d, %Y, %I:%M %p') }}</small>
+                            </div>
+                            <p class="mb-1 text-muted">Specialty: {{ appt.doctor.specialization }}</p>
+                            <p class="mb-2">Reason: {{ appt.reason or 'Not specified' }}</p>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small>Status: 
+                                    {% if appt.status == 'Pending' %}
+                                        <span class="badge bg-warning text-dark">{{ appt.status }}</span>
+                                    {% elif appt.status == 'Confirmed' %}
+                                        <span class="badge bg-success">{{ appt.status }}</span>
+                                    {% elif appt.status == 'Cancelled' %}
+                                        <span class="badge bg-danger">{{ appt.status }}</span>
+                                    {% elif appt.status == 'Completed' %}
+                                        <span class="badge bg-secondary">{{ appt.status }}</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark">{{ appt.status }}</span>
                                     {% endif %}
-                                </h5>
-                                {% if conv.last_message %}
-                                    <small class="text-muted">{{ conv.last_message.timestamp.strftime('%b %d') }}</small>
+                                </small>
+                                
+                                {% if appt.status == 'Confirmed' %}
+                                    <a href="{{ url_for('conversation', doctor_id=appt.doctor.id, back_url=request.url) }}" class="btn btn-outline-success btn-sm">
+                                        <i class="bi bi-chat-dots-fill me-1"></i> Message Doctor
+                                    </a>
+                                {% elif appt.status == 'Completed' %}
+                                    {% if appt.doctor_id not in reviewed_doctor_ids %}
+                                        <a href="#" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#reviewModal-{{ appt.id }}">
+                                            <i class="bi bi-star-fill me-1"></i> Write a Review
+                                        </a>
+                                    {% else %}
+                                        <span class="text-success small"><i class="bi bi-check-circle-fill me-1"></i> Reviewed</span>
+                                    {% endif %}
                                 {% endif %}
                             </div>
-                            <p class="mb-0 text-muted small">
-                                {% if conv.last_message %}
-                                    {% if conv.last_message.sender_type == 'patient' %}<strong>You:</strong> {% endif %}
-                                    {{ conv.last_message.content|truncate(70) }}
-                                {% else %}
-                                    Start a conversation with Dr. {{ conv.doctor.doctor_name }}.
-                                {% endif %}
-                            </p>
                         </div>
-                    </div>
-                </a>
-            {% endfor %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center p-4 border rounded bg-light">
+                    <p class="mb-0 text-muted">You have no appointment history.</p>
+                    <a href="{{ url_for('browse_doctors') }}" class="btn btn-primary btn-sm mt-2">Book an Appointment</a>
+                </div>
+            {% endif %}
         </div>
-    {% else %}
-        <p class="text-muted">You can message doctors after you have an appointment with them.</p>
-    {% endif %}
+        {% endif %}
 
-    <h2 class="mb-4">Appointment History</h2>
-    {% if appointments %}
-        <div class="list-group">
-            {% for appt in appointments %}
-                <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 shadow-sm rounded">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1">Dr. {{ appt.doctor.doctor_name }}</h5>
-                        <small class="text-muted">{{ appt.appointment_date.strftime('%b %d, %Y') }}</small>
-                    </div>
-                    <p class="mb-1 text-muted">{{ appt.doctor.specialization }}</p>
-                    <p class="mb-1"><strong>Time:</strong> {{ appt.appointment_date.strftime('%I:%M %p') }}</p>
-                    <p class="mb-1"><strong>Status:</strong>
-                        {% if appt.status == 'Completed' %}
-                            <span class="badge rounded-pill bg-info">Completed</span>
-                        {% elif appt.status == 'Confirmed' %}
-                            <span class="badge rounded-pill bg-success">Ongoing</span>
-                        {% elif appt.status == 'Pending' %}
-                            <span class="badge rounded-pill bg-warning text-dark">Not Confirmed</span>
-                        {% elif appt.status == 'Canceled' %}
-                            <span class="badge rounded-pill bg-danger">Cancelled</span>
-                        {% endif %}
-                    </p> 
-
-                    <div class="mt-3 d-flex flex-wrap align-items-center gap-2">
-                        {% if appt.prescription %}
-                            <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#prescriptionModal-{{ appt.id }}">
-                                <i class="bi bi-file-earmark-medical"></i> View Prescription
-                            </button>
-                        {% endif %}
-                        {% if appt.status == 'Completed' %} {# Only allow review if appointment is Completed #}
-                            {% if appt.doctor.id in reviewed_doctor_ids %}
-                                <span class="text-success"><i class="bi bi-check-circle-fill"></i> Reviewed</span>
-                            {% else %}
-                                <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#reviewForm-{{ appt.id }}" aria-expanded="false">
-                                    <i class="bi bi-star"></i> Leave a Review
-                                </button>
-                            {% endif %}
-                        {% endif %}
-                    </div>
-
-                    {% if appt.status == 'Completed' and appt.doctor.id not in reviewed_doctor_ids %} {# Only show form if Completed and not reviewed #}
-                        <div class="collapse mt-3" id="reviewForm-{{ appt.id }}">
-                            <div class="card card-body">
-                                <form method="POST" action="{{ url_for('doctor_profile', next=url_for('my_appointments')) }}">
-                                    <input type="hidden" name="doctor_id" value="{{ appt.doctor.id }}">
-                                    <div class="mb-2">
-                                        <label class="form-label">Your Rating:</label>
-                                        <div class="rating">
-                                            <input type="radio" id="star5-{{appt.id}}" name="rating" value="5" required/><label for="star5-{{appt.id}}" title="5 stars">★</label>
-                                            <input type="radio" id="star4-{{appt.id}}" name="rating" value="4" /><label for="star4-{{appt.id}}" title="4 stars">★</label>
-                                            <input type="radio" id="star3-{{appt.id}}" name="rating" value="3" /><label for="star3-{{appt.id}}" title="3 stars">★</label>
-                                            <input type="radio" id="star2-{{appt.id}}" name="rating" value="2" /><label for="star2-{{appt.id}}" title="2 stars">★</label>
-                                            <input type="radio" id="star1-{{appt.id}}" name="rating" value="1" /><label for="star1-{{appt.id}}" title="1 star">★</label>
+        <!-- Right Column: Doctor Conversations -->
+        {% if show_conversations_only or show_both %}
+        <div class="{% if show_both %}col-lg-4{% else %}col-lg-8 offset-lg-2{% endif %}">
+            <div {% if show_both %}class="sticky-top" style="top: 2rem;"{% endif %}>
+                {% if show_both %}
+                <h3 class="mb-4">My Doctor Conversations</h3>
+                {% endif %}
+                {% if conversations %}
+                    <div class="conversation-list">
+                        {% for conv in conversations %}
+                            <a href="{{ url_for('conversation', doctor_id=conv.doctor.id, back_url=request.url) }}" class="conversation-card-link">
+                                <div class="card conversation-card mb-3 {% if conv.unread_count > 0 %}has-unread{% endif %}">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <img src="{{ url_for('static', filename=conv.doctor.image or 'images/default-doctor.png') }}" class="rounded-circle" alt="Dr. {{ conv.doctor.doctor_name }}" style="width: 50px; height: 50px; object-fit: cover;">
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <h6 class="mb-0">Dr. {{ conv.doctor.doctor_name }}</h6>
+                                                        <p class="mb-0 small text-muted text-truncate" style="max-width: 250px;">
+                                                            {% if conv.last_message %}
+                                                                {% if conv.last_message.sender_type == 'patient' %}<strong>You:</strong> {% endif %}{{ conv.last_message.content }}
+                                                            {% else %}
+                                                                <span class="fst-italic">No messages yet.</span>
+                                                            {% endif %}
+                                                        </p>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        {% if conv.last_message %}
+                                                            <small class="text-muted">{{ conv.last_message.timestamp.strftime('%b %d') }}</small>
+                                                        {% endif %}
+                                                        {% if conv.unread_count > 0 %}
+                                                            <span class="badge bg-primary rounded-pill mt-1">{{ conv.unread_count }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <textarea name="review_text" class="form-control mb-2" rows="3" placeholder="Share your experience..." required></textarea>
-                                    <button type="submit" class="btn btn-primary">Submit Review</button>
-                                </form>
-                            </div>
                                 </div>
-                    {% endif %}
-
-                    <!-- Prescription Modal -->
-                    {% if appt.prescription %}
-                    <div class="modal fade" id="prescriptionModal-{{ appt.id }}" tabindex="-1" aria-labelledby="prescriptionModalLabel-{{ appt.id }}" aria-hidden="true">
-                      <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                          <div class="modal-header">
-                            <h5 class="modal-title" id="prescriptionModalLabel-{{ appt.id }}">Prescription from Dr. {{ appt.doctor.doctor_name }}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                          </div>
-                          <div class="modal-body">
-                            <p><strong>Appointment Date:</strong> {{ appt.appointment_date.strftime('%b %d, %Y') }}</p>
-                            <hr>
-                            <h6>Medication Details</h6>
-                            <pre style="white-space: pre-wrap; font-family: inherit; font-size: 1rem;">{{ appt.prescription.medication_details }}</pre>
-                            {% if appt.prescription.notes %}<hr><h6>Notes</h6><p>{{ appt.prescription.notes }}</p>{% endif %}
-                          </div>
-                          <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div>
-                        </div>
-                      </div>
+                            </a>
+                        {% endfor %}
                     </div>
-                    {% endif %}
+                {% else %}
+                    <div class="text-center p-4 border rounded bg-light">
+                        <p class="mb-0 text-muted">You have no active conversations.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Review Modals -->
+    {% for appt in appointments %}
+        {% if appt.status == 'Completed' and appt.doctor_id not in reviewed_doctor_ids %}
+            <div class="modal fade" id="reviewModal-{{ appt.id }}" tabindex="-1" aria-labelledby="reviewModalLabel-{{ appt.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="reviewModalLabel-{{ appt.id }}">Review for Dr. {{ appt.doctor.doctor_name }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form action="{{ url_for('submit_review', doctor_id=appt.doctor_id) }}" method="POST">
+                            <div class="modal-body">
+                                <input type="hidden" name="appointment_id" value="{{ appt.id }}">
+                                <div class="mb-3 text-center">
+                                    <label class="form-label">Your Rating</label>
+                                    <div class="rating">
+                                        <input type="radio" id="star5-{{ appt.id }}" name="rating" value="5" /><label for="star5-{{ appt.id }}"><i class="bi bi-star-fill"></i></label>
+                                        <input type="radio" id="star4-{{ appt.id }}" name="rating" value="4" /><label for="star4-{{ appt.id }}"><i class="bi bi-star-fill"></i></label>
+                                        <input type="radio" id="star3-{{ appt.id }}" name="rating" value="3" /><label for="star3-{{ appt.id }}"><i class="bi bi-star-fill"></i></label>
+                                        <input type="radio" id="star2-{{ appt.id }}" name="rating" value="2" /><label for="star2-{{ appt.id }}"><i class="bi bi-star-fill"></i></label>
+                                        <input type="radio" id="star1-{{ appt.id }}" name="rating" value="1" required/><label for="star1-{{ appt.id }}"><i class="bi bi-star-fill"></i></label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="comment-{{ appt.id }}" class="form-label">Comment</label>
+                                    <textarea class="form-control" id="comment-{{ appt.id }}" name="comment" rows="4" placeholder="Share your experience..." required></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary">Submit Review</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="text-center py-5">
-            <p class="lead">You have no appointments yet.</p>
-            <a href="{{ url_for('find_doctor') }}" class="btn btn-primary">Find a Doctor to Book</a>
-        </div>
-    {% endif %}
+            </div>
+        {% endif %}
+    {% endfor %}
 </div>
 {% endblock %}

@@ -1,161 +1,59 @@
 {% extends "base.html" %}
  
-{# Apply the new background class to the body #}
+{# Apply the new background class to the body for homepage-specific styling #}
 {% block body_class %}homepage-body{% endblock %}
 
 {% block title %}Welcome to CareConnect{% endblock %}
 
 {% block content %}
+<!-- Hero Section -->
 <div class="hero-section">
-    <div class="container"> 
-        <div class="row align-items-center g-5">
+    <div class="container">
+        <div class="row align-items-center g-5 py-5">
             <div class="col-lg-6">
-                <h1 class="display-5 fw-bold lh-1 mb-3">Find Care You Can Trust.</h1> 
+                <h1 class="display-5 fw-bold lh-1 mb-3">Take charge of your health.</h1> 
                 <p class="lead">Effortlessly connect with trusted healthcare professionals. Search, compare, and book appointments with confidence.</p>
                 
-                <div class="search-form-container bg-white p-3 rounded shadow-sm">
-                    <ul class="nav nav-pills nav-fill mb-3" id="searchTab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="doctor-tab" data-bs-toggle="tab" data-bs-target="#doctor-search-pane" type="button" role="tab" aria-controls="doctor-search-pane" aria-selected="true"><i class="bi bi-person-fill me-2"></i>Find a Doctor</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="hospital-tab" data-bs-toggle="tab" data-bs-target="#hospital-search-pane" type="button" role="tab" aria-controls="hospital-search-pane" aria-selected="false"><i class="bi bi-hospital-fill me-2"></i>Find a Hospital</button>
-                        </li>
-                    </ul>
-                    <div class="tab-content" id="searchTabContent">
-                        <div class="tab-pane fade show active" id="doctor-search-pane" role="tabpanel" aria-labelledby="doctor-tab">
-                            <form action="{{ url_for('find_doctor') }}" method="POST">
-                                <div class="row g-2">
-                                    <div class="col-md-6 input-with-icon mb-2 mb-md-0">
-                                        <i class="bi bi-search input-icon"></i>
-                                        <input type="text" class="form-control form-control-lg" name="disease" placeholder="Condition, specialty..." required>
-                                    </div>
-                                    <div class="col-md-6 input-with-icon mb-2 mb-md-0">
-                                        <i class="bi bi-geo-alt-fill input-icon"></i>
-                                        <input type="text" class="form-control form-control-lg" name="location" placeholder="City or area..." required>
-                                    </div>
-                                </div>
-                                <div class="d-grid mt-3">
-                                    <button type="submit" class="btn btn-primary btn-lg">Find a Doctor</button>
-                                </div>
-                            </form>
+                <div class="search-form-container">
+                    <form id="unified-search-form" action="{{ url_for('find_doctor') }}" method="POST" class="w-100">
+                        <div class="input-group input-group-lg">
+                            <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false" id="search-type-button">Doctor</button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" data-search-type="doctor">Doctor</a></li>
+                                <li><a class="dropdown-item" href="#" data-search-type="hospital">Hospital</a></li>
+                            </ul>
+                            
+                            <input type="text" class="form-control" name="disease" id="disease-input" placeholder="Condition, specialty..." required>
+                            <input type="text" class="form-control" name="location" id="location-input" placeholder="City or area..." required>
+                            
+                            <button class="btn btn-primary" type="submit" id="search-submit-button"><i class="bi bi-search"></i></button>
                         </div>
-                        <div class="tab-pane fade" id="hospital-search-pane" role="tabpanel" aria-labelledby="hospital-tab">
-                            <form action="{{ url_for('hospital_finder') }}" method="GET">
-                                <input type="text" class="form-control form-control-lg" name="location" placeholder="Enter city or area..." required>
-                                <div class="d-grid mt-3">
-                                    <button type="submit" class="btn btn-primary btn-lg">Find a Hospital</button>
-                                </div>
-                            </form>
-                        </div>
+                    </form>
+                </div>
+                <div class="d-flex justify-content-center justify-content-lg-start mt-4 gap-4">
+                    <div class="trust-badge">
+                        <i class="bi bi-patch-check-fill fs-4"></i>
+                        <span>Verified Doctors</span>
+                    </div>
+                    <div class="trust-badge">
+                        <i class="bi bi-shield-lock-fill fs-4"></i>
+                        <span>Secure Platform</span>
+                    </div>
+                    <div class="trust-badge">
+                        <i class="bi bi-calendar2-check-fill fs-4"></i>
+                        <span>Easy Scheduling</span>
                     </div>
                 </div>
             </div>
             <div class="col-lg-6">
-                <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2070&auto=format&fit=crop" class="d-block mx-lg-auto img-fluid rounded-3 shadow-lg" alt="Doctor with tablet" loading="lazy">
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Featured Doctors Section --> 
-<div class="py-5 featured-doctors-section">
-    <div class="container">
-        <h2 class="section-title">Our Featured Doctors</h2>
-        {% if featured_doctors %}
-            <div class="row g-4">
-                {% for doc in featured_doctors %}
-                <div class="col-md-4">
-                    <div class="card text-center h-100 doctor-card">
-                        <div class="card-body">
-                            {% if doc.image %}
-                                <img src="{{ url_for('static', filename=doc.image) }}" class="rounded-circle mb-3" alt="Dr. {{ doc.doctor_name }}" style="width: 100px; height: 100px; object-fit: cover;">
-                            {% else %}
-                                <img src="https://static.vecteezy.com/system/resources/previews/005/544/718/original/profile-icon-design-free-vector.jpg" class="rounded-circle mb-3" alt="Doctor Photo" style="width: 100px; height: 100px; object-fit: cover;">
-                            {% endif %}
-                            <h5 class="card-title">{{ doc.doctor_name }}</h5>
-                            <h6 class="card-subtitle mb-2 text-muted">{{ doc.specialization }}</h6>
-                            <p class="card-text mt-3">{{ doc.bio or 'An experienced medical professional dedicated to patient care.'|truncate(100) }}</p>
-                            <a href="{{ url_for('book_appointment', doctor_id=doc.id) }}" class="btn btn-outline-primary btn-sm">View Profile & Book</a>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-        <div class="text-center mt-5">
-            <a href="{{ url_for('find_doctor') }}" class="btn btn-primary btn-lg">View All Doctors</a>
-        </div>
-    </div>
-</div>
-
-<!-- Featured Hospitals Section -->
-<div class="py-5" style="background-color: #f8f9fa;">
-    <div class="container">
-        <h2 class="section-title">Our Featured Hospitals</h2>
-        {% if featured_hospitals %}
-            <div class="row g-4">
-                {% for hospital in featured_hospitals %}
-                <div class="col-md-4 d-flex">
-                    <div class="card h-100 hospital-card w-100">
-                        <img src="https://images.unsplash.com/photo-1586773860418-d37222d8fce3?q=80&w=2073&auto=format&fit=crop" class="card-img-top" alt="{{ hospital.name }}" style="height: 200px; object-fit: cover;">
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">{{ hospital.name }}</h5>
-                            <h6 class="card-subtitle mb-2 text-muted"><i class="bi bi-geo-alt-fill"></i> {{ hospital.location }}</h6>
-                            <p class="card-text mt-2">
-                                <small><strong>Services Offered:</strong></small><br>
-                                {% for service in hospital.services[:4] %}
-                                    <span class="badge bg-light text-dark border">{{ service }}</span>
-                                {% endfor %}
-                                {% if hospital.services|length > 4 %}
-                                    <span class="badge bg-light text-dark border">...</span>
-                                {% endif %}
-                            </p>
-                            <div class="mt-auto pt-2">
-                                <a href="{{ url_for('hospital_finder', location=hospital.location) }}" class="btn btn-outline-primary btn-sm">Find More Like This</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-        <div class="text-center mt-5">
-            <a href="{{ url_for('hospital_finder') }}" class="btn btn-primary btn-lg">View All Hospitals</a>
-        </div>
-    </div>
-</div>
-
-<!-- Features Section -->
-<div class="container px-4 py-5">
-    <h2 class="section-title">Why Choose CareConnect?</h2>
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="feature-card">
-                <div class="feature-icon"><i class="bi bi-person-check-fill"></i></div>
-                <h5 class="card-title">Expert Doctors</h5>
-                <p class="card-text text-muted">Access a network of board-certified doctors and specialists, all verified for your peace of mind.</p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="feature-card">
-                <div class="feature-icon"><i class="bi bi-search-heart"></i></div>
-                <h5 class="card-title">Intelligent Search</h5>
-                <p class="card-text text-muted">Our smart search helps you find the right doctor based on your needs, location, and insurance.</p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="feature-card">
-                <div class="feature-icon"><i class="bi bi-calendar2-plus-fill"></i></div>
-                <h5 class="card-title">Instant Booking</h5>
-                <p class="card-text text-muted">Book appointments directly through our platform with just a few clicks.</p>
+                <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2070&auto=format&fit=crop" class="d-block mx-lg-auto img-fluid rounded-3 shadow-lg" alt="Doctor with tablet" width="700" height="500" loading="lazy">
             </div>
         </div>
     </div>
 </div>
 
 <!-- How It Works Section --> 
-<div style="background-color: #f8f9fa;" class="py-5">
+<div class="py-5">
     <div class="container">
         <h2 class="section-title">How It Works</h2>
         <div class="row g-5">
@@ -178,10 +76,149 @@
     </div>
 </div>
 
+<!-- Featured Doctors & Hospitals Section -->
+<div class="py-5 section-bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h2 class="section-title">Featured Doctors & Hospitals</h2>
+                <p class="lead">Meet our top-rated professionals and explore our network of partner hospitals, all in one place.</p>
+            </div>
+        </div>
+
+        <ul class="nav nav-pills justify-content-center mb-5 featured-tab-nav" id="featuredTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="featured-doctors-tab" data-bs-toggle="tab" data-bs-target="#featured-doctors-pane" type="button" role="tab" aria-controls="featured-doctors-pane" aria-selected="true"><i class="bi bi-person-fill me-2"></i>Featured Doctors</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="featured-hospitals-tab" data-bs-toggle="tab" data-bs-target="#featured-hospitals-pane" type="button" role="tab" aria-controls="featured-hospitals-pane" aria-selected="false"><i class="bi bi-hospital-fill me-2"></i>Featured Hospitals</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="featuredTabContent">
+            <div class="tab-pane fade show active" id="featured-doctors-pane" role="tabpanel" aria-labelledby="featured-doctors-tab">
+                {% if featured_doctors %}
+                    <div class="row g-4">
+                        {% for doc in featured_doctors %}
+                        <div class="col-md-4 d-flex">
+                            <div class="card doctor-card h-100 w-100">
+                                <div class="doctor-avatar">
+                                    {% if doc.image %}
+                                        <img src="{{ url_for('static', filename=doc.image) }}" alt="Dr. {{ doc.doctor_name }}">
+                                    {% else %}
+                                        <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" alt="Doctor Photo">
+                                    {% endif %}
+                                </div>
+                                <div class="card-body text-center d-flex flex-column">
+                                    <h5 class="card-title mt-4">{{ doc.doctor_name }}</h5>
+                                    <h6 class="card-subtitle mb-2 text-primary">{{ doc.specialization }}</h6>
+                                    <div class="rating-stars my-2">
+                                        {% for i in range(doc.rating|int) %}<i class="bi bi-star-fill"></i>{% endfor %}{% if doc.rating > doc.rating|int %}<i class="bi bi-star-half"></i>{% endif %}{% for i in range(5 - (doc.rating|int) - (1 if doc.rating > doc.rating|int else 0)) %}<i class="bi bi-star"></i>{% endfor %}
+                                        <span class="ms-1 text-muted small">({{ doc.rating }})</span>
+                                    </div>
+                                    <p class="card-text text-muted small mt-2"><i class="bi bi-hospital me-1"></i> {{ doc.hospital_name }}</p>
+                                    <a href="{{ url_for('book_appointment', doctor_id=doc.id) }}" class="btn btn-outline-primary rounded-pill mt-auto">View Profile & Book</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <div class="text-center mt-5">
+                    <a href="{{ url_for('find_doctor') }}" class="btn btn-primary btn-lg">Find More Doctors</a>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="featured-hospitals-pane" role="tabpanel" aria-labelledby="featured-hospitals-tab">
+                {% if featured_hospitals %}
+                    <div class="row g-4">
+                        {% for hospital in featured_hospitals %}
+                        <div class="col-md-4 d-flex">
+                            <div class="card h-100 w-100 hospital-card">
+                                <div class="card-img-top-wrapper">
+                                    <img src="https://images.unsplash.com/photo-1586773860418-d37222d8fce3?q=80&w=2073&auto=format=fit=crop" class="card-img-top" alt="{{ hospital.name }}">
+                                </div>
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">{{ hospital.name }}</h5>
+                                    <h6 class="card-subtitle mb-2 text-muted"><i class="bi bi-geo-alt-fill"></i> {{ hospital.location }}</h6>
+                                    {% if hospital.services %}
+                                        <p class="card-text mt-2">
+                                            <small><strong>Services Offered:</strong></small><br>
+                                            {% for service in hospital.services[:4] %}
+                                                <span class="badge bg-light text-dark border">{{ service }}</span>
+                                            {% endfor %}
+                                            {% if hospital.services|length > 4 %}
+                                                <span class="badge bg-light text-dark border">...</span>
+                                            {% endif %}
+                                        </p>
+                                    {% endif %}
+                                    <div class="mt-auto pt-2">
+                                        <a href="{{ url_for('hospital_finder', location=hospital.location) }}" class="btn btn-outline-primary btn-sm">Find More Like This</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <div class="text-center mt-5">
+                    <a href="{{ url_for('hospital_finder') }}" class="btn btn-primary btn-lg">View All Hospitals</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Browse by Specialty Section -->
+<div class="py-5">
+    <div class="container">
+        <h2 class="section-title">Browse by Top Specialties</h2>
+        <p class="lead">Find the right specialist for your needs. Explore a wide range of medical fields to get the care you deserve.</p>
+        <div class="row g-3 justify-content-center">
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="{{ url_for('find_doctor', disease='General Physician') }}" class="specialty-card">
+                    <div class="icon"><i class="bi bi-heart-pulse"></i></div>
+                    <h6 class="mb-0">General</h6>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="{{ url_for('find_doctor', disease='Dermatologist') }}" class="specialty-card">
+                    <div class="icon"><i class="bi bi-bandaid"></i></div>
+                    <h6 class="mb-0">Dermatology</h6>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="{{ url_for('find_doctor', disease='Dentist') }}" class="specialty-card">
+                    <div class="icon"><i class="bi bi-emoji-smile"></i></div>
+                    <h6 class="mb-0">Dentistry</h6>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="{{ url_for('find_doctor', disease='Pediatrician') }}" class="specialty-card">
+                    <div class="icon"><i class="bi bi-person-arms-up"></i></div>
+                    <h6 class="mb-0">Pediatrics</h6>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="{{ url_for('find_doctor', disease='Cardiologist') }}" class="specialty-card">
+                    <div class="icon"><i class="bi bi-activity"></i></div>
+                    <h6 class="mb-0">Cardiology</h6>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="{{ url_for('find_doctor', disease='Gynecologist') }}" class="specialty-card">
+                    <div class="icon"><i class="bi bi-gender-female"></i></div>
+                    <h6 class="mb-0">Gynecology</h6>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Testimonials Section --> 
-<div style="background-color: #f8f9fa;" class="py-5">
+<div class="py-5">
     <div class="container">
         <h2 class="section-title">What Our Patients Say</h2>
+        <p class="lead">Real stories from real patients. See how CareConnect has made a difference in their healthcare journey.</p>
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="testimonial-card">
@@ -205,34 +242,47 @@
     </div>
 </div>
 
-<!-- AI Startup Contact Section -->
-<div class="container py-5">
-    <div class="row justify-content-center text-center">
-        <div class="col-lg-9">
-            <h2 class="section-title">Powered by an AI Health Startup</h2>
-            <p class="lead text-muted mb-4">CareConnect is a project by a passionate team dedicated to revolutionizing healthcare access through technology. Have questions, feedback, or want to collaborate? Get in touch!</p>
-            <div class="row justify-content-center">
-                <div class="col-md-auto mb-3 mb-md-0">
-                    <div class="d-flex align-items-center justify-content-center">
-                        <i class="bi bi-envelope-fill fs-4 text-primary me-2"></i>
-                        <a href="mailto:t.naresh5422@gmail.com" class="text-decoration-none text-dark">t.naresh5422@gmail.com</a>
-                    </div>
-                </div>
-                <div class="col-md-auto mb-3 mb-md-0">
-                    <div class="d-flex align-items-center justify-content-center">
-                        <i class="bi bi-telephone-fill fs-4 text-primary me-2"></i>
-                        <a href="tel:+918179027681" class="text-decoration-none text-dark">8179027681</a>
-                    </div>
-                </div>
-                <div class="col-md-auto">
-                    <div class="d-flex align-items-center justify-content-center">
-                        <i class="bi bi-geo-alt-fill fs-4 text-primary me-2"></i>
-                        <span>Kadapa, AP, India</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+{% endblock %}
 
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchForm = document.getElementById('unified-search-form');
+    const searchTypeButton = document.getElementById('search-type-button');
+    const dropdownItems = document.querySelectorAll('.dropdown-menu a[data-search-type]');
+    const diseaseInput = document.getElementById('disease-input');
+    const locationInput = document.getElementById('location-input');
+
+    function updateForm(searchType) {
+        if (searchType === 'doctor') {
+            searchTypeButton.textContent = 'Doctor';
+            diseaseInput.style.display = ''; // Show disease input
+            diseaseInput.disabled = false; // Enable for submission
+            diseaseInput.setAttribute('required', 'required');
+            locationInput.setAttribute('placeholder', 'City or area...');
+            searchForm.action = "{{ url_for('find_doctor') }}";
+            searchForm.method = 'POST';
+        } else if (searchType === 'hospital') {
+            searchTypeButton.textContent = 'Hospital';
+            diseaseInput.style.display = 'none'; // Hide disease input
+            diseaseInput.disabled = true; // Disable from submission
+            diseaseInput.removeAttribute('required');
+            locationInput.setAttribute('placeholder', 'Enter city to find hospitals...');
+            searchForm.action = "{{ url_for('hospital_finder') }}";
+            searchForm.method = 'GET';
+        }
+    }
+
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const searchType = this.getAttribute('data-search-type');
+            updateForm(searchType);
+        });
+    });
+
+    // Initialize form for 'doctor' search on page load
+    updateForm('doctor');
+});
+</script>
 {% endblock %}

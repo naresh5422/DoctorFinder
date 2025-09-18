@@ -3,67 +3,109 @@
 {% block title %}My Profile{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-lg-4">
-            <div class="card shadow-sm mb-4">
-                <div class="card-body text-center">
-                    {% if patient.image %}
-                        <img src="{{ url_for('static', filename=patient.image) }}" alt="Patient Avatar" class="rounded-circle img-fluid" style="max-width: 150px; aspect-ratio: 1 / 1; object-fit: cover;">
-                    {% else %}
-                        <img src="https://static.vecteezy.com/system/resources/previews/005/544/718/original/profile-icon-design-free-vector.jpg" alt="Default Avatar" class="rounded-circle img-fluid" style="width: 150px;">
-                    {% endif %}
-                    <h4 class="my-3">{{ patient.name }}</h4>
-                    <p class="text-muted mb-1">{{ patient.email or 'No email provided' }}</p>
-                    <p class="text-muted mb-4">{{ patient.location }}</p>
+<div class="container py-5">
+    <h1 class="h2 mb-4">My Profile</h1>
+    <form method="POST" enctype="multipart/form-data">
+        <div class="row g-4">
+            <!-- Left Column: Profile Picture -->
+            <div class="col-lg-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <img id="profile-pic-preview" src="{{ url_for('static', filename=patient.image or 'images/default-patient.png') }}" alt="Profile Picture" class="rounded-circle img-fluid mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                        <h5 class="card-title">{{ patient.name }}</h5>
+                        <p class="text-muted">{{ patient.email or 'No email provided' }}</p>
+                        <div class="mb-3">
+                            <label for="image" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-upload me-2"></i>Change Picture
+                            </label>
+                            <input type="file" class="form-control d-none" id="image" name="image" accept="image/*">
+                        </div>
+                        <small id="fileName" class="text-muted"></small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Profile Details -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Profile Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <label for="name" class="col-sm-3 col-form-label">Full Name</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" id="name" name="name" value="{{ patient.name }}" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="email" class="col-sm-3 col-form-label">Email</label>
+                            <div class="col-sm-9">
+                                <div class="input-group">
+                                    <input type="email" class="form-control" id="email" name="email" value="{{ patient.email or '' }}" placeholder="your.email@example.com" {% if patient.email_verified %}readonly{% endif %}>
+                                    {% if patient.email_verified %}
+                                        <span class="btn btn-success disabled"><i class="bi bi-check-circle-fill me-1"></i>Verified</span>
+                                    {% else %}
+                                        <a href="{{ url_for('send_email_verification') }}" class="btn btn-outline-secondary">Verify</a>
+                                    {% endif %}
+                                </div>
+                                <small class="form-text text-muted">Verify your email. Once verified, it cannot be changed.</small>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="mobile" class="col-sm-3 col-form-label">Mobile</label>
+                            <div class="col-sm-9">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="mobile" name="mobile" value="{{ patient.mobile }}" required {% if patient.mobile_verified %}readonly{% endif %}>
+                                    {% if patient.mobile_verified %}
+                                        <span class="btn btn-success disabled"><i class="bi bi-check-circle-fill me-1"></i>Verified</span>
+                                    {% else %}
+                                        <a href="{{ url_for('send_mobile_verification') }}" class="btn btn-outline-secondary">Verify</a>
+                                    {% endif %}
+                                </div>
+                                <small class="form-text text-muted">Verify your mobile number for OTP and SMS notifications. Once verified, it cannot be changed.</small>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="location" class="col-sm-3 col-form-label">Location</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" id="location" name="location" value="{{ patient.location }}" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="bio" class="col-sm-3 col-form-label">Bio</label>
+                            <div class="col-sm-9">
+                                <textarea class="form-control" id="bio" name="bio" rows="4" placeholder="Tell us a little about yourself...">{{ patient.bio or '' }}</textarea>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-9 offset-sm-3">
+                                <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i>Save Changes</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-8">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Edit Your Profile</h5>
-                </div>
-                <div class="card-body">
-                    <form method="POST" enctype="multipart/form-data">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="name" class="form-label">Full Name</label>
-                                <input type="text" class="form-control" id="name" name="name" value="{{ patient.name }}">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="username" class="form-label">Username</label>
-                                <input type="text" class="form-control" id="username" name="username" value="{{ patient.username }}" disabled readonly>
-                                <div class="form-text">Username cannot be changed.</div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="email" class="form-label">Email Address</label>
-                                <input type="email" class="form-control" id="email" name="email" value="{{ patient.email or '' }}">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="mobile" class="form-label">Mobile Number</label>
-                                <input type="text" class="form-control" id="mobile" name="mobile" value="{{ patient.mobile }}">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="location" class="form-label">Location</label>
-                            <input type="text" class="form-control" id="location" name="location" value="{{ patient.location }}">
-                        </div>
-                        <div class="mb-3">
-                            <label for="bio" class="form-label">Bio (Optional)</label>
-                            <textarea class="form-control" id="bio" name="bio" rows="3">{{ patient.bio or '' }}</textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="image" class="form-label">Profile Image</label>
-                            <input class="form-control" type="file" id="image" name="image">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+    </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('image').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // Display file name
+        document.getElementById('fileName').textContent = file.name;
+        
+        // Display image preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('profile-pic-preview').src = e.target.result;
+        }
+        reader.readAsDataURL(file);
+    }
+});
+</script>
 {% endblock %}

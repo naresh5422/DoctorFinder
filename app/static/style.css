@@ -1,25 +1,66 @@
+html, body {
+    height: 100%;
+}
+
 body {
-    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Poppins', sans-serif;
     margin: 0;
     background-color: #f8f9fa;
     color: #495057;
+    position: relative; /* Establish stacking context for watermark */
+    z-index: 0;
+}
+
+body::after {
+    content: "CareConnect";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    font-size: 10vw;
+    font-weight: bold;
+    color: rgba(44, 62, 80, 0.05); /* Use a subtle color from the theme */
+    pointer-events: none;
+    z-index: -1; /* Place it behind all content */
+    white-space: nowrap;
+    user-select: none; /* Prevent text selection */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+body.d-flex {
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content {
+    flex: 1;
+}
+
+.navbar-brand {
+    font-weight: bold;
 }
 
 /* --- New Homepage Theme --- */
 .homepage-body {
-    background-color: #FFFFFF; /* A crisp white background */
+    background-color: #FFFFFF; /* A crisp white background for the homepage */
 }
 
 .hero-section {
-    background-color: #f0f7ff; /* A very light, professional blue */
-    padding: 5rem 0;
+    background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
+    padding: 6rem 0;
 }
 
 .hero-section h1 {
     font-size: 3.2rem;
     font-weight: 700;
     margin-bottom: 1rem;
-    color: #2c3e50; /* A deep, professional blue-gray */
+    /* Use a gradient for a more modern look */
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .hero-section p {
@@ -30,26 +71,30 @@ body {
 
 .search-form-container {
     background-color: #ffffff; 
-    padding: 1.5rem;
-    border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    /* padding: 1.5rem; */ /* Removed for unified bar */
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(44, 62, 80, 0.1);
+    overflow: hidden; /* To apply border-radius to the input-group */
 }
 
-.input-with-icon {
+.search-form-container .input-group .form-control {
+    border-width: 0; /* Remove default borders */
+}
+
+.search-form-container .input-group .form-control:focus {
+    box-shadow: none; /* Remove focus glow */
     position: relative;
+    z-index: 2; /* Bring to front on focus */
 }
 
-.input-with-icon .form-control {
-    padding-left: 2.5rem; /* Make space for the icon */
+.search-form-container .input-group > :not(:last-child) {
+    border-right: 1px solid #e9ecef; /* Add subtle vertical separators */
 }
 
-.input-with-icon .input-icon {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #6c757d; /* Muted icon color */
-    font-size: 1.1rem;
+.search-form-container .input-group .dropdown-toggle {
+    border-width: 0;
+    color: #007bff;
+    font-weight: 500;
 }
 
 .section-title {
@@ -59,34 +104,45 @@ body {
     color: #343a40; 
 }
 
-.feature-card {
-    background-color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 2rem;
+.section-title + .lead {
     text-align: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    height: 100%;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: -2rem;
+    margin-bottom: 3rem;
+    color: #6c757d;
 }
 
-.feature-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 15px 30px rgba(0, 123, 255, 0.1);
+.trust-badge {
+    display: flex;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.7);
+    border: 1px solid #dee2e6;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    backdrop-filter: blur(5px);
 }
 
-.feature-icon {
-    font-size: 3rem;
-    color: #007bff; /* A brighter blue */
-    margin-bottom: 1rem;
+.trust-badge i {
+    color: #007bff;
+    margin-right: 0.5rem;
 }
 
 .how-it-works-step {
     text-align: center;
+    position: relative;
+}
+
+/* Dashed lines connecting the steps */
+.how-it-works-step:not(:first-child)::before {
+    content: none; /* Removed dashed line for a cleaner look */
 }
 
 .how-it-works-step .step-number {
-    background-color: #007bff; 
-    color: white;
+    background-color: #e7f1ff; /* Lighter, modern blue */
+    color: #007bff;
     width: 50px;
     height: 50px;
     border-radius: 50%;
@@ -96,45 +152,276 @@ body {
     font-size: 1.5rem;
     font-weight: bold;
     margin-bottom: 1rem;
+    transition: all 0.3s ease;
 }
 
+.how-it-works-step:hover .step-number {
+    transform: scale(1.1);
+    background-color: #007bff;
+    color: #fff;
+}
+
+.featured-tab-nav .nav-link {
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    color: #5a6a7b;
+    border: 1px solid #dee2e6;
+    border-radius: 50px; /* Pill shape */
+    margin: 0 0.5rem;
+    background-color: #fff;
+}
+
+.featured-tab-nav .nav-link.active {
+    background-color: #007bff;
+    color: #fff;
+    border-color: #007bff;
+}
+
+.featured-tab-nav .nav-link:not(.active):hover {
+    color: #007bff;
+}
 .testimonial-card {
     background-color: #ffffff;
-    border-left: 5px solid #007bff;
+    border: 1px solid #e9ecef;
     padding: 2rem;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    border-radius: 10px;
+    box-shadow: none;
+    transition: all 0.3s ease;
     position: relative;
-    font-style: italic;
+    padding-top: 3.5rem;
+}
+
+.testimonial-card::before {
+    content: '\F6B0'; /* Bootstrap Icons quote */
+    font-family: 'bootstrap-icons';
+    position: absolute;
+    top: 1.5rem;
+    left: 1.5rem;
+    font-size: 2.5rem;
+    color: #007bff;
+    opacity: 0.15;
 }
 
 .testimonial-card p {
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-style: italic;
+    color: #495057;
 }
 /* --- End Homepage Theme --- */
 
+.testimonial-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.07);
+    border-color: #dee2e6;
+}
+
+/* Generic section background */
+.section-bg-light {
+    background-color: #f8f9fa;
+}
+
 /* --- Featured Doctors Section --- */
 .featured-doctors-section {
-    background-color: #f8f9fa; /* A light gray background to make the section stand out */
 }
 
 .doctor-card {
+    position: relative;
+    padding-top: 50px; /* Space for the avatar */
     border: 1px solid #e9ecef;
     border-radius: 15px;
     transition: all 0.3s ease;
     background-color: #fff;
+    box-shadow: none;
 }
 
 .doctor-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
 }
 
-.doctor-card .card-text {
+.doctor-avatar {
+    position: absolute;
+    top: -50px; /* Half of the avatar height */
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.doctor-avatar img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #fff;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.doctor-card .card-body {
+    padding: 1.5rem 1rem;
+}
+
+.doctor-card .rating-stars {
+    color: #ffc107;
+}
+/* --- Doctor Search Results Page --- */
+.doctor-result-card {
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.doctor-result-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.doctor-result-card .img-fluid {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+}
+
+.doctor-result-card .card-title {
+    font-weight: 600;
+}
+
+.doctor-result-card .border-start {
+    background-color: #f8f9fa;
+}
+
+.search-results-bar {
+    background-color: #ffffff;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    border-radius: 12px;
+}
+
+/* --- Dashboard Stats Cards --- */
+.stat-card {
+    border: 1px solid #e9ecef;
+    border-top-width: 4px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.07);
+}
+
+.stat-card .card-title {
     font-size: 0.9rem;
-    color: #6c757d;
+    font-weight: 500;
+}
+
+.stat-card .stat-number {
+    font-size: 2.2rem; /* Reduced size */
+    font-weight: 700;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    display: inline-block;
+    margin-top: 0.5rem;
+}
+.stat-card.border-top-primary { border-top-color: #007bff; }
+.stat-card.border-top-primary .stat-number {
+    background-color: rgba(0, 123, 255, 0.1);
+    color: #0056b3;
+}
+.stat-card.border-top-warning { border-top-color: #ffc107; }
+.stat-card.border-top-warning .stat-number {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #b38600;
+}
+.stat-card.border-top-success { border-top-color: #198754; }
+.stat-card.border-top-success .stat-number {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: #0f5132;
+}
+.stat-card.border-top-info { border-top-color: #0dcaf0; }
+.stat-card.border-top-info .stat-number {
+    background-color: rgba(13, 202, 240, 0.15);
+    color: #087990;
+}
+.stat-card.border-top-secondary { border-top-color: #6f42c1; } /* Bootstrap purple */
+.stat-card.border-top-secondary .stat-number {
+    background-color: rgba(111, 66, 193, 0.1);
+    color: #4b2d83;
 }
 /* --- End Featured Doctors Section --- */
+
+/* --- Featured Hospitals Section --- */
+.featured-hospitals-section {
+}
+
+.hospital-card {
+    border: none;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    background-color: #fff;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.hospital-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 25px rgba(0, 123, 255, 0.12);
+}
+
+.hospital-card .card-img-top-wrapper {
+    height: 200px;
+    overflow: hidden;
+}
+
+.hospital-card .card-img-top {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.hospital-card:hover .card-img-top {
+    transform: scale(1.05);
+}
+/* --- Specialty Browser Section --- */
+.specialty-card {
+    display: block;
+    text-decoration: none;
+    color: #495057;
+    background-color: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.specialty-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0, 123, 255, 0.08);
+    border-color: #007bff;
+    background-color: #fff;
+}
+
+.specialty-card .icon {
+    font-size: 2.5rem;
+    color: #007bff;
+    margin-bottom: 1rem;
+    background-color: #e7f1ff;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.specialty-card:hover .icon {
+    background-color: #007bff;
+    color: #fff;
+}
 
 /* --- Floating Emergency Button --- */
 .emergency-fab {
@@ -226,60 +513,6 @@ body {
 }
 /* --- End Chat Interface --- */
 
-nav {
-    background-color: #007BFF;
-    color: white;
-    padding: 10px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-nav a {
-    color: white;
-    margin-left: 15px;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-.sidebar {
-    width: 200px;
-    background-color: #f4f4f4;
-    padding: 15px;
-    float: left;
-    height: 100vh;
-}
-
-.sidebar h3 {
-    margin-top: 0;
-}
-
-.sidebar ul {
-    list-style: none;
-    padding: 0;
-}
-
-.sidebar ul li {
-    margin-bottom: 10px;
-}
-
-.sidebar ul li a {
-    text-decoration: none;
-    color: #007BFF;
-}
-
-.content {
-    margin-left: 220px;
-    padding: 20px;
-}
-
-form input, form button {
-    margin: 10px 0;
-    padding: 8px;
-    width: 100%;
-    max-width: 400px;
-}
-
 .navbar .btn-primary {
     --bs-btn-bg: #007bff;
     --bs-btn-border-color: #007bff;
@@ -304,5 +537,154 @@ form input, form button {
 .rating:not(:checked) > label:hover,
 .rating:not(:checked) > label:hover ~ label {
     color: #ffc107; /* Selected star color (Bootstrap warning yellow) */
+}
+
+.footer {
+    background-color: #f8f9fa;
+    color: #6c757d;
+}
+
+/* --- Footer --- */
+.site-footer {
+    background-color: #ffffff;
+    padding: 4rem 0 0;
+    font-size: 0.9rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.footer-heading {
+    font-weight: 600;
+    color: #343a40;
+    margin-bottom: 1.5rem;
+}
+
+.footer-links li, .footer-contact li {
+    margin-bottom: 0.75rem;
+}
+
+.footer-links a {
+    color: #6c757d;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: #007bff;
+}
+
+.footer-contact i {
+    color: #007bff;
+    padding-top: 4px;
+}
+
+.footer-social a {
+    display: inline-flex;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #e7f1ff;
+    color: #007bff;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    margin-right: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.footer-social a:hover {
+    background-color: #007bff;
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.footer-bottom-bar {
+    border-top: 1px solid #e9ecef;
+    padding: 1.5rem 0;
+    margin-top: 3rem;
+    text-align: center;
+}
+.feature-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 4rem;
+    width: 4rem;
+    font-size: 2rem;
+}
+
+/* --- Manage Slots Page --- */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+}
+
+.calendar-header {
+    text-align: center;
+    font-weight: 600;
+    color: #6c757d;
+    padding-bottom: 10px;
+}
+
+.calendar-day {
+    text-align: center;
+    padding: 1rem 0;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.calendar-day.empty {
+    background-color: #f8f9fa;
+    cursor: default;
+}
+
+.calendar-day:not(.empty):hover {
+    background-color: #e7f1ff;
+    border-color: #007bff;
+}
+
+.calendar-day.has-slots {
+    background-color: #d1e7dd; /* Bootstrap success light */
+    font-weight: bold;
+    color: #0f5132;
+}
+
+.calendar-day.selected {
+    background-color: #007bff;
+    color: #fff;
+    border-color: #007bff;
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+}
+
+#slot-editor {
+    background-color: #f8f9fa;
+    height: 100%;
+}
+
+.slot-pill {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+}
+
+#quick-add-slots {
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 1rem;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: .5rem;
+}
+
+#quick-add-slots .btn {
+    width: 120px; /* Consistent button width */
 }
 }

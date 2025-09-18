@@ -1,50 +1,83 @@
 {% extends "base.html" %}
 
-{% block title %}Welcome - Doctor Finder{% endblock %}
+{% block title %}Home - {{ patient.name }}{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="text-center mb-5">
-        <h1 class="display-5">Welcome, {{ patient.name }}!</h1>
-        <p class="lead text-muted">Your health journey starts here. What would you like to do today?</p>
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2 text-center">
+            <h1 class="h3 fw-bold">Welcome back, {{ patient.name }}!</h1>
+            <p class="lead text-muted">What would you like to do today?</p>
+        </div>
     </div>
 
-    <div class="row">
-        <!-- Card: Find a Doctor -->
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm border-primary">
-                <div class="card-body text-center">
-                    <i class="bi bi-search-heart-fill fs-1 text-primary"></i>
-                    <h5 class="card-title mt-3">Find a Doctor</h5>
-                    <p class="card-text">Search for specialists by location and symptoms to find the right care for you.</p>
-                    <a href="{{ url_for('find_doctor') }}" class="btn btn-primary">Start Searching</a>
+    <!-- Action Cards -->
+    <div class="row g-4 mt-4 text-center">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body p-4 p-lg-5">
+                    <div class="feature-icon bg-primary bg-gradient text-white rounded-3 mb-4"><i class="bi bi-search"></i></div>
+                    <h2 class="fs-4 fw-bold">Start Searching</h2>
+                    <p class="mb-4">Browse our full list of verified doctors to find the care you need.</p>
+                    <a href="{{ url_for('browse_doctors') }}" class="btn btn-primary">Browse Doctors</a>
                 </div>
             </div>
         </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body p-4 p-lg-5">
+                    <div class="feature-icon bg-info bg-gradient text-white rounded-3 mb-4"><i class="bi bi-grid-1x2-fill"></i></div>
+                    <h2 class="fs-4 fw-bold">Go to Dashboard</h2>
+                    <p class="mb-4">View your upcoming appointments, messages, and search history.</p>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-info">My Dashboard</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body p-4 p-lg-5">
+                    <div class="feature-icon bg-secondary bg-gradient text-white rounded-3 mb-4"><i class="bi bi-person-fill-gear"></i></div>
+                    <h2 class="fs-4 fw-bold">Update Profile</h2>
+                    <p class="mb-4">Keep your personal information and preferences up to date.</p>
+                    <a href="{{ url_for('user_profile') }}" class="btn btn-secondary">Edit Profile</a>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <!-- Card: Go to Dashboard -->
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm border-success">
-                <div class="card-body text-center">
-                    <i class="bi bi-layout-text-window-reverse fs-1 text-success"></i>
-                    <h5 class="card-title mt-3">View Dashboard</h5>
-                    <p class="card-text">See your upcoming appointments, review history, and recent activity.</p>
-                    <a href="{{ url_for('dashboard') }}" class="btn btn-success">Go to Dashboard</a>
+    <!-- Top Rated Doctors Section -->
+    <div class="mt-5 pt-5">
+        <h2 class="section-title">Our Top Rated Doctors</h2>
+        <p class="lead">Here are some of the top-rated professionals on our platform, recommended by patients like you.</p>
+        {% if top_doctors %}
+            <div class="row g-4">
+                {% for doc in top_doctors %}
+                <div class="col-md-4 d-flex">
+                    <div class="card doctor-card h-100 w-100">
+                        <div class="doctor-avatar">
+                            {% if doc.image %}
+                                <img src="{{ url_for('static', filename=doc.image) }}" alt="Dr. {{ doc.doctor_name }}">
+                            {% else %}
+                                <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" alt="Doctor Photo">
+                            {% endif %}
+                        </div>
+                        <div class="card-body text-center d-flex flex-column">
+                            <h5 class="card-title mt-4">{{ doc.doctor_name }}</h5>
+                            <h6 class="card-subtitle mb-2 text-primary">{{ doc.specialization }}</h6>
+                            <div class="rating-stars my-2">
+                                {% for i in range(doc.rating|int) %}<i class="bi bi-star-fill"></i>{% endfor %}{% if doc.rating > doc.rating|int %}<i class="bi bi-star-half"></i>{% endif %}{% for i in range(5 - (doc.rating|int) - (1 if doc.rating > doc.rating|int else 0)) %}<i class="bi bi-star"></i>{% endfor %}
+                                <span class="ms-1 text-muted small">({{ doc.rating }})</span>
+                            </div>
+                            <p class="card-text text-muted small mt-2"><i class="bi bi-hospital me-1"></i> {{ doc.hospital_name }}</p>
+                            <a href="{{ url_for('book_appointment', doctor_id=doc.id) }}" class="btn btn-outline-primary rounded-pill mt-auto">View Profile & Book</a>
+                        </div>
+                    </div>
                 </div>
+                {% endfor %}
             </div>
-        </div>
-
-        <!-- Card: Manage Profile -->
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm border-info">
-                <div class="card-body text-center">
-                    <i class="bi bi-person-circle fs-1 text-info"></i>
-                    <h5 class="card-title mt-3">Manage Your Profile</h5>
-                    <p class="card-text">Keep your personal information and contact details up to date.</p>
-                    <a href="{{ url_for('user_profile') }}" class="btn btn-info">Edit Profile</a>
-                </div>
-            </div>
-        </div>
+        {% else %}
+            <p class="text-center text-muted">No doctors available at the moment.</p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
