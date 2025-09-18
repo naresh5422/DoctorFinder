@@ -67,7 +67,7 @@ def setup_routes(app):
     @app.route("/login", methods=["GET", "POST"])
     def login():
         if request.method == "GET":
-            # If login_required redirected here, it will have a 'next' parameter.
+            # If a 'next' parameter is in the URL, store it in the session
             # We store that in the session to use after successful login.
             next_page = request.args.get('next')
             if next_page:
@@ -756,6 +756,11 @@ If you did not request this, please ignore this email.
         # --- START: Filter out booked and past slots ---
         today = date.today()
         now = datetime.now()
+
+        # Ensure available_slots is a dictionary before processing.
+        if not isinstance(doctor.available_slots, dict):
+            doctor.available_slots = {}
+
         if doctor.available_slots:
             valid_slots = {}
             # Get all appointments for this doctor on their available dates

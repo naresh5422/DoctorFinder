@@ -3,7 +3,7 @@ import os
 from flask import Flask
 from flask_mail import Mail
 from functools import wraps
-from flask import session, redirect, url_for, flash
+from flask import session, redirect, url_for, flash, request
 
 db = SQLAlchemy()
 mail = Mail()
@@ -18,7 +18,7 @@ def login_required(f):
     def decorated_function(*args, **kwargs):
         if 'patient_id' not in session:
             flash("Please log in to continue.", "warning")
-            return redirect(url_for('login'))
+            return redirect(url_for('login', next=request.url))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -27,6 +27,6 @@ def doctor_login_required(f):
     def decorated_function(*args, **kwargs):
         if 'doctor_id' not in session:
             flash("Please log in as a doctor to continue.", "warning")
-            return redirect(url_for('doctor_login')) # Assumes 'doctor_login' route exists
+            return redirect(url_for('doctor_login', next=request.url))
         return f(*args, **kwargs)
     return decorated_function

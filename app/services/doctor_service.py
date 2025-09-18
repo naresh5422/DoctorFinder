@@ -185,6 +185,8 @@ DISEASE_SPECIALIST_MAP = {"diabetes": "Endocrinologist",
     }
 
 SPECIALIST_SET = set(DISEASE_SPECIALIST_MAP.values())
+LOWERCASE_SPECIALIST_MAP = {spec.lower(): spec for spec in SPECIALIST_SET}
+
 def map_disease_to_specialist(disease: str)->str:
     """
     Maps user input (either layman disease or specialist name) 
@@ -197,10 +199,8 @@ def map_disease_to_specialist(disease: str)->str:
         specialist = DISEASE_SPECIALIST_MAP[term]
         return f"{term.title()} - {specialist}"
     # Case 2: Input is already a specialist
-    for spec in SPECIALIST_SET:
-        if term == spec.lower():
-            return f"{spec} - {spec}"
+    if term in LOWERCASE_SPECIALIST_MAP:
+        specialist = LOWERCASE_SPECIALIST_MAP[term]
+        return f"{specialist} - {specialist}"
     # Default fallback
     return f"{term.title()} - General Physician"
-
-# print(map_disease_to_specialist('Skin Rash'))
