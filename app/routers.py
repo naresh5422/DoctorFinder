@@ -1,12 +1,12 @@
-from flask import render_template, request, session, redirect, url_for, flash
-from app.services.doctor_service import find_doctors, get_nearby_locations, map_disease_to_specialist, find_hospitals, get_featured_hospitals
+from flask import render_template, request, session, redirect, url_for, flash, jsonify
+from app.services.doctor_service import find_doctors, get_nearby_locations, map_disease_to_specialist, find_hospitals, get_featured_hospitals, extract_entities_from_query, get_autocomplete_suggestions, get_location_suggestions
 from app.models import SearchHistory, Patient, Doctor, Appointment, Review, Message
 import os
 import random
 from werkzeug.utils import secure_filename
 from app.extension import db, mail, login_required, doctor_login_required
 from datetime import datetime, date
-from sqlalchemy import func
+from sqlalchemy import func, case, and_
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 from flask_mail import Message as MailMessage # Alias to avoid name conflict with model
 from twilio.rest import Client
@@ -15,23 +15,49 @@ from twilio.rest import Client
 def _filter_doctor_slots(doctors_list):
     """
     A helper function to filter a list of doctors' available_slots.
-    It removes past slots and already booked slots.
+    It removes past slots and already booked slots. This version is optimized
+    to avoid making a separate database query for each doctor (N+1 problem).
     """
+    if not doctors_list:
+        return doctors_list
+
     today = date.today()
     now = datetime.now()
+
+    doctor_ids = [doc.id for doc in doctors_list]
+    all_slot_dates = set()
+    for doc in doctors_list:
+        if isinstance(doc.available_slots, dict):
+            all_slot_dates.update(doc.available_slots.keys())
+
+    # If no doctors have any slots defined, we can just clear them and return.
+    if not all_slot_dates:
+        for doc in doctors_list:
+            doc.available_slots = {}
+        return doctors_list
+
+    # --- Optimized Appointment Fetching ---
+    # Fetch all relevant appointments for all doctors in the list in a single query.
+    all_appointments = Appointment.query.filter(
+        Appointment.doctor_id.in_(doctor_ids),
+        Appointment.appointment_date.cast(db.Date).in_(all_slot_dates),
+        Appointment.status.in_(['Pending', 'Confirmed'])
+    ).all()
+
+    # Create a lookup map for booked slots: {doctor_id: {booked_slot_key, ...}}
+    booked_slots_by_doctor = {}
+    for appt in all_appointments:
+        slot_key = f"{appt.appointment_date.strftime('%Y-%m-%d')}_{appt.appointment_date.strftime('%H:%M')}"
+        booked_slots_by_doctor.setdefault(appt.doctor_id, set()).add(slot_key)
+    # --- End Optimization ---
+
     for doctor in doctors_list:
         if not isinstance(doctor.available_slots, dict):
             doctor.available_slots = {}
             continue
         
         valid_slots = {}
-        # Get all appointments for this doctor on their available dates
-        appointments = Appointment.query.filter(
-            Appointment.doctor_id == doctor.id,
-            Appointment.appointment_date.cast(db.Date).in_(doctor.available_slots.keys()),
-            Appointment.status.in_(['Pending', 'Confirmed'])
-        ).all()
-        booked_slot_times = {f"{appt.appointment_date.strftime('%Y-%m-%d')}_{appt.appointment_date.strftime('%H:%M')}" for appt in appointments}
+        booked_slot_times = booked_slots_by_doctor.get(doctor.id, set())
 
         for slot_date_str, times in doctor.available_slots.items():
             try:
@@ -161,10 +187,10 @@ def setup_routes(app):
     @app.route("/")
     def index():
         # Fetch 3 doctors to display on the homepage.
-        # In the future, you could order this by rating: .order_by(Doctor.rating.desc())
-        featured_doctors = Doctor.query.limit(3).all()
-        featured_hospitals = get_featured_hospitals(limit=3)
-        return render_template("index.html", featured_doctors=featured_doctors, featured_hospitals=featured_hospitals)
+        # Order by rating to show top-rated doctors.
+        featured_doctors = Doctor.query.order_by(Doctor.rating.desc()).limit(3).all()
+        _filter_doctor_slots(featured_doctors) # Ensure slots shown are valid
+        return render_template("index.html", featured_doctors=featured_doctors)
 
     @app.route("/home")
     @login_required
@@ -176,23 +202,52 @@ def setup_routes(app):
         return render_template("patient_home.html", patient=patient, top_doctors=top_doctors)
     
     @app.route('/browse_doctors')
-    @login_required
     def browse_doctors():
-        """Displays all doctors, sorted by rating."""
-        # Fetch all doctors, sorted by rating (high priority)
-        all_doctors_list = Doctor.query.order_by(Doctor.rating.desc()).all()
+        """
+        Displays all doctors, paginated and sorted by availability, review count, and rating.
+        This page is now public and does not require login.
+        """
+        page = request.args.get('page', 1, type=int)
+
+        # Subquery to get the review count for each doctor, which we'll use for sorting.
+        review_count_subq = db.session.query(
+            Review.doctor_id,
+            func.count(Review.id).label('review_count')
+        ).group_by(Review.doctor_id).subquery()
+
+        # Create a CASE statement to prioritize doctors with available slots.
+        # This is a simple check: if the `available_slots` field is not NULL and not an empty JSON object '{}'.
+        # Doctors with slots get priority 0, others get 1.
+        has_slots_case = case(
+            (and_(Doctor.available_slots != None, Doctor.available_slots != {}), 0),
+            else_=1
+        )
+
+        # Query to fetch doctors, joining with review counts.
+        # We sort by availability first, then by review count and rating.
+        all_doctors_query = Doctor.query.outerjoin(
+            review_count_subq, Doctor.id == review_count_subq.c.doctor_id
+        ).order_by(
+            has_slots_case.asc(), # Doctors with slots (priority 0) come first.
+            func.coalesce(review_count_subq.c.review_count, 0).desc(),
+            Doctor.rating.desc()
+        )
+
+        # Paginate the results, showing 10 doctors per page.
+        pagination = all_doctors_query.paginate(page=page, per_page=10, error_out=False)
+        all_doctors_list = pagination.items
 
         # Filter slots to show only valid, available ones
         _filter_doctor_slots(all_doctors_list)
 
-        # Fetch recent searches for the sidebar
+        # Fetch recent searches for the sidebar (only if a user is logged in)
         recent_searches = []
         if 'patient_id' in session:
             recent_searches = SearchHistory.query.filter_by(patient_id=session["patient_id"]).order_by(SearchHistory.id.desc()).limit(5).all()
 
         return render_template('doctor_finding.html', doctors=all_doctors_list, recent_searches=recent_searches, 
-                               datetime=datetime, disease_query="",
-                               location_query="")
+                               datetime=datetime, disease_query="", location_query="",
+                               pagination=pagination, page_title="Browse All Doctors")
 
     @app.route("/dashboard")
     @login_required
@@ -344,16 +399,36 @@ def setup_routes(app):
             flash("Unauthorized or invalid search.", "danger")
             return redirect(url_for('dashboard'))
 
-        location_query = search.location
         disease_query = search.disease
+        location_query = search.location
 
-        specialist_mapping = map_disease_to_specialist(disease_query)
-        specialist = specialist_mapping.split(" - ")[1]
-        nearby_locations = get_nearby_locations(location_query.strip().lower())
-        results = Doctor.query.filter(
-            Doctor.location.in_(nearby_locations),
-            Doctor.specialization == specialist
-        ).all()
+        # The main search bar should show the original query.
+        # The location bar is not used on the results page for repeated searches.
+        location_query = "" # Clear this to avoid it being appended in the template
+
+        mapping_result = map_disease_to_specialist(disease_query)
+        specialist = mapping_result["specialist"]
+        results = []
+
+        if specialist:
+            all_nearby_locations = set()
+            # The saved location can be a comma-separated string of multiple locations
+            search_locations = [loc.strip() for loc in search.location.split(',')]
+            for loc in search_locations:
+                if loc:
+                    nearby = get_nearby_locations(loc)
+                    all_nearby_locations.update(nearby)
+
+            query = Doctor.query.filter(Doctor.specialization == specialist)
+            if all_nearby_locations:
+                query = query.filter(Doctor.location.in_(list(all_nearby_locations)))
+            
+            results = query.order_by(Doctor.rating.desc()).all()
+
+            if not results:
+                flash(f"We understood you're looking for a '{specialist}', but we couldn't find any in '{search.location}' or nearby areas. You could try a new search.", "info")
+        else:
+            flash(f"We couldn't identify a specialty for '{disease_query}'. Please try another search.", "warning")
 
         # Filter out booked slots and past slots (same logic as find_doctor)
         _filter_doctor_slots(results)
@@ -369,39 +444,106 @@ def setup_routes(app):
         recent_searches = []
         location_query = ""
         disease_query = ""
+        final_locations = []
+        final_symptom = ""
+
+        # If the find_doctor page is accessed directly via GET without any search parameters,
+        # it's likely the user wants to browse all doctors. Redirect them to the correct page.
+        if request.method == "GET" and not request.args:
+            return redirect(url_for('browse_doctors'))
 
         if request.method == "POST":
-            location_query = request.form.get("location", "")
-            disease_query = request.form.get("disease")
-            # 🔹 Map layman term OR specialist to professional mapping
+            location_input = request.form.get("location", "").strip()
+            disease_input = request.form.get("disease", "").strip()
+
+            # --- AI-powered Query Processing ---
+            # 1. Use NER on the disease/symptom field to see if it contains a location.
+            # This handles queries like "heart pain in Kurnool" in a single input box.
+            entities = extract_entities_from_query(disease_input)
+            
+            final_symptom = entities['symptom']
+            extracted_locations = entities['locations']
+
+            # 2. Decide on the final locations. Combine dedicated input and extracted locations.
+            final_locations = []
+            if location_input:
+                # A user might enter "Hyderabad, Tirupati" in the location box
+                final_locations.extend([loc.strip() for loc in location_input.split(',')])
+            if extracted_locations:
+                final_locations.extend(extracted_locations)
+            
+            # Remove duplicates and empty strings, preserving order
+            final_locations = list(dict.fromkeys(filter(None, final_locations)))
+            
+            # Set variables for displaying in the search bars on the results page.
+            disease_query = disease_input
+            location_query = location_input
+
             # Save search to database for POST requests if user is logged in
-            if location_query and disease_query and 'patient_id' in session:
+            if final_locations and disease_input and 'patient_id' in session:
                 search = SearchHistory(patient_id=session["patient_id"],
-                                       location=location_query,
-                                       disease=disease_query)
+                                       location=", ".join(final_locations), # Store as comma-separated string
+                                       disease=disease_input) # Save original query for history
                 db.session.add(search)
                 db.session.commit()
         
         elif request.method == "GET" and 'disease' in request.args:
-            disease_query = request.args.get('disease')
-            # For GET, we can default to the user's location if they are logged in
-            if 'patient_id' in session:
-                patient = Patient.query.get(session['patient_id'])
-                location_query = patient.location if patient else ""
-                if not location_query:
-                    flash("To browse by specialty, please set a location in your profile or use the search bar.", "info")
+            # This handles clicks on specialty cards, e.g., /find_doctor?disease=Cardiologist
+            final_symptom = request.args.get('disease')
+            disease_query = final_symptom
+            # Location is not provided by default when browsing by specialty.
+            final_locations = []
+            location_query = ""
+            # The flash message is removed as we now support specialty-only searches.
 
-        if disease_query and location_query:
-            specialist_mapping = map_disease_to_specialist(disease_query)
-            specialist = specialist_mapping.split(" - ")[1]
-            ## Doctor search logic
-            nearby_locations = get_nearby_locations(location_query.strip().lower())
-            results = Doctor.query.filter(
-                Doctor.location.in_(nearby_locations),
-                Doctor.specialization == specialist
-            ).all()
+        # --- Flexible Search Logic ---
+        # This logic handles searches by symptom, location, or both.
+        query = Doctor.query
+        specialist = None
+        
+        # Only proceed with a search if there's something to search for.
+        if not final_symptom and not final_locations:
+            if request.method == "POST":
+                flash("Please enter a symptom, specialty, or location to search.", "info")
+        else:
+            # 1. Filter by symptom/specialty if provided
+            if final_symptom:
+                mapping_result = map_disease_to_specialist(final_symptom)
+                specialist = mapping_result["specialist"]
+                did_you_mean = mapping_result["did_you_mean"]
 
-            # Filter out booked slots and past slots
+                if did_you_mean:
+                    flash(f"Showing results for '{did_you_mean}', as no exact match was found for '{disease_query}'.", "info")
+
+                if specialist:
+                    query = query.filter(Doctor.specialization == specialist)
+                else:
+                    # If a symptom was provided but no specialty was found, return no results.
+                    flash(f"We couldn't identify a specific medical specialty for '{final_symptom}'. Please try rephrasing your search.", "warning")
+                    query = query.filter(False) # Effectively returns no results
+
+            # 2. Filter by location if provided
+            if final_locations:
+                all_nearby_locations = set()
+                for loc in final_locations:
+                    nearby = get_nearby_locations(loc.strip())
+                    all_nearby_locations.update(nearby)
+                
+                if all_nearby_locations:
+                    query = query.filter(Doctor.location.in_(list(all_nearby_locations)))
+            
+            # 3. Execute the query and get results
+            results = query.order_by(Doctor.rating.desc()).all()
+            
+            # 4. Provide feedback if no results were found
+            if not results and (final_symptom or final_locations):
+                feedback_parts = []
+                if specialist: feedback_parts.append(f"a '{specialist}'")
+                elif final_symptom: feedback_parts.append(f"'{final_symptom}'")
+                if final_locations: feedback_parts.append(f"in '{', '.join(final_locations)}' or nearby areas")
+                if feedback_parts:
+                    flash(f"We couldn't find any doctors for {' and '.join(feedback_parts)}. You could try a new search.", "info")
+
             _filter_doctor_slots(results)
 
         if 'patient_id' in session:
@@ -410,6 +552,30 @@ def setup_routes(app):
         return render_template('doctor_finding.html', doctors=results, recent_searches=recent_searches, datetime=datetime,
                                disease_query=disease_query, location_query=location_query)
     
+    @app.route('/autocomplete')
+    def autocomplete():
+        """
+        Provides real-time search suggestions for the main search bar.
+        """
+        query = request.args.get('q', '').strip()
+        # Don't return suggestions for very short queries to avoid too much noise.
+        if len(query) < 2:
+            return jsonify([])
+        suggestions = get_autocomplete_suggestions(query)
+        return jsonify(suggestions)
+
+    @app.route('/autocomplete/location')
+    def autocomplete_location():
+        """
+        Provides real-time search suggestions for location input fields.
+        """
+        query = request.args.get('q', '').strip()
+        # Allow shorter queries for location aliases like 'hyd'
+        if len(query) < 1:
+            return jsonify([])
+        suggestions = get_location_suggestions(query)
+        return jsonify(suggestions)
+
     @app.route("/about")
     def about():
         return render_template("about.html")

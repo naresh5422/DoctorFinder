@@ -3,7 +3,7 @@ html, body {
 }
 
 body {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Lato', sans-serif;
     margin: 0;
     background-color: #f8f9fa;
     color: #495057;
@@ -47,8 +47,17 @@ body.d-flex {
     background-color: #FFFFFF; /* A crisp white background for the homepage */
 }
 
+@keyframes gradientAnimation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
 .hero-section {
-    background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
+    /* New animated gradient background */
+    background: linear-gradient(-45deg, #e9f9f5, #f8f9fa, #d4f3e9, #ffffff);
+    background-size: 400% 400%;
+    animation: gradientAnimation 15s ease infinite;
     padding: 6rem 0;
 }
 
@@ -56,8 +65,8 @@ body.d-flex {
     font-size: 3.2rem;
     font-weight: 700;
     margin-bottom: 1rem;
-    /* Use a gradient for a more modern look */
-    background: linear-gradient(45deg, #007bff, #0056b3);
+    /* New gradient with the teal color scheme */
+    background: linear-gradient(45deg, #20c997, #1a9875);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -71,7 +80,6 @@ body.d-flex {
 
 .search-form-container {
     background-color: #ffffff; 
-    /* padding: 1.5rem; */ /* Removed for unified bar */
     border-radius: 12px;
     box-shadow: 0 8px 25px rgba(44, 62, 80, 0.1);
     overflow: hidden; /* To apply border-radius to the input-group */
@@ -88,13 +96,7 @@ body.d-flex {
 }
 
 .search-form-container .input-group > :not(:last-child) {
-    border-right: 1px solid #e9ecef; /* Add subtle vertical separators */
-}
-
-.search-form-container .input-group .dropdown-toggle {
-    border-width: 0;
-    color: #007bff;
-    font-weight: 500;
+    border-right: none; /* Remove vertical separators for unified look */
 }
 
 .section-title {
@@ -126,9 +128,26 @@ body.d-flex {
 }
 
 .trust-badge i {
-    color: #007bff;
+    color: #20c997;
     margin-right: 0.5rem;
 }
+
+.how-it-works-section {
+    position: relative;
+    overflow: hidden; /* Hide parts of the circles that go off-screen */
+}
+
+/* Decorative background circles for the "How It Works" section */
+.how-it-works-section::before, .how-it-works-section::after {
+    content: '';
+    position: absolute;
+    background-color: #e9f9f5; /* Light teal */
+    border-radius: 50%;
+    opacity: 0.6;
+    z-index: -1;
+}
+.how-it-works-section::before { top: -50px; left: -50px; width: 200px; height: 200px; }
+.how-it-works-section::after { bottom: -80px; right: -80px; width: 250px; height: 250px; }
 
 .how-it-works-step {
     text-align: center;
@@ -141,8 +160,8 @@ body.d-flex {
 }
 
 .how-it-works-step .step-number {
-    background-color: #e7f1ff; /* Lighter, modern blue */
-    color: #007bff;
+    background-color: #e9f9f5; /* Light teal */
+    color: #20c997;
     width: 50px;
     height: 50px;
     border-radius: 50%;
@@ -157,28 +176,8 @@ body.d-flex {
 
 .how-it-works-step:hover .step-number {
     transform: scale(1.1);
-    background-color: #007bff;
+    background-color: #20c997;
     color: #fff;
-}
-
-.featured-tab-nav .nav-link {
-    padding: 0.75rem 1.5rem;
-    font-weight: 500;
-    color: #5a6a7b;
-    border: 1px solid #dee2e6;
-    border-radius: 50px; /* Pill shape */
-    margin: 0 0.5rem;
-    background-color: #fff;
-}
-
-.featured-tab-nav .nav-link.active {
-    background-color: #007bff;
-    color: #fff;
-    border-color: #007bff;
-}
-
-.featured-tab-nav .nav-link:not(.active):hover {
-    color: #007bff;
 }
 .testimonial-card {
     background-color: #ffffff;
@@ -198,7 +197,7 @@ body.d-flex {
     top: 1.5rem;
     left: 1.5rem;
     font-size: 2.5rem;
-    color: #007bff;
+    color: #20c997;
     opacity: 0.15;
 }
 
@@ -323,10 +322,10 @@ body.d-flex {
     display: inline-block;
     margin-top: 0.5rem;
 }
-.stat-card.border-top-primary { border-top-color: #007bff; }
+.stat-card.border-top-primary { border-top-color: #20c997; }
 .stat-card.border-top-primary .stat-number {
-    background-color: rgba(0, 123, 255, 0.1);
-    color: #0056b3;
+    background-color: rgba(32, 201, 151, 0.1);
+    color: #1a9875;
 }
 .stat-card.border-top-warning { border-top-color: #ffc107; }
 .stat-card.border-top-warning .stat-number {
@@ -365,7 +364,7 @@ body.d-flex {
 
 .hospital-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 12px 25px rgba(0, 123, 255, 0.12);
+    box-shadow: 0 12px 25px rgba(32, 201, 151, 0.12);
 }
 
 .hospital-card .card-img-top-wrapper {
@@ -399,16 +398,16 @@ body.d-flex {
 
 .specialty-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 12px 24px rgba(0, 123, 255, 0.08);
-    border-color: #007bff;
+    box-shadow: 0 12px 24px rgba(32, 201, 151, 0.08);
+    border-color: #20c997;
     background-color: #fff;
 }
 
 .specialty-card .icon {
     font-size: 2.5rem;
-    color: #007bff;
+    color: #20c997;
     margin-bottom: 1rem;
-    background-color: #e7f1ff;
+    background-color: #e9f9f5;
     width: 60px;
     height: 60px;
     border-radius: 50%;
@@ -419,9 +418,24 @@ body.d-flex {
 }
 
 .specialty-card:hover .icon {
-    background-color: #007bff;
+    background-color: #20c997;
     color: #fff;
 }
+
+/* Compact specialty card for the hero section */
+.hero-section .specialty-card {
+    padding: 1rem 0.5rem;
+    border: none;
+    background-color: transparent;
+}
+
+.hero-section .specialty-card .icon {
+    font-size: 2rem;
+    width: 50px;
+    height: 50px;
+    margin-bottom: 0.75rem;
+}
+
 
 /* --- Floating Emergency Button --- */
 .emergency-fab {
@@ -491,10 +505,10 @@ body.d-flex {
     justify-content: flex-end;
 }
 .chat-message.sent .message-meta {
-    color: #a1c3ff; /* Lighter text color for meta on dark background */
+    color: #c1f0e4; /* Light teal for meta on dark background */
 }
 .chat-message.sent .message-content {
-    background-color: #007bff;
+    background-color: #20c997;
     color: white;
     border-bottom-right-radius: 0;
 }
@@ -514,9 +528,9 @@ body.d-flex {
 /* --- End Chat Interface --- */
 
 .navbar .btn-primary {
-    --bs-btn-bg: #007bff;
-    --bs-btn-border-color: #007bff;
-    --bs-btn-hover-bg: #0069d9;
+    --bs-btn-bg: #20c997;
+    --bs-btn-border-color: #20c997;
+    --bs-btn-hover-bg: #1a9875;
 }
 
 /* Star Rating Styles */
@@ -569,11 +583,11 @@ body.d-flex {
 }
 
 .footer-links a:hover {
-    color: #007bff;
+    color: #20c997;
 }
 
 .footer-contact i {
-    color: #007bff;
+    color: #20c997;
     padding-top: 4px;
 }
 
@@ -582,8 +596,8 @@ body.d-flex {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background-color: #e7f1ff;
-    color: #007bff;
+    background-color: #e9f9f5;
+    color: #20c997;
     justify-content: center;
     align-items: center;
     text-decoration: none;
@@ -592,7 +606,7 @@ body.d-flex {
 }
 
 .footer-social a:hover {
-    background-color: #007bff;
+    background-color: #20c997;
     color: #fff;
     transform: translateY(-2px);
 }
@@ -641,8 +655,8 @@ body.d-flex {
 }
 
 .calendar-day:not(.empty):hover {
-    background-color: #e7f1ff;
-    border-color: #007bff;
+    background-color: #e9f9f5;
+    border-color: #20c997;
 }
 
 .calendar-day.has-slots {
@@ -652,11 +666,11 @@ body.d-flex {
 }
 
 .calendar-day.selected {
-    background-color: #007bff;
+    background-color: #20c997;
     color: #fff;
-    border-color: #007bff;
+    border-color: #20c997;
     transform: scale(1.05);
-    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+    box-shadow: 0 4px 10px rgba(32, 201, 151, 0.3);
 }
 
 #slot-editor {

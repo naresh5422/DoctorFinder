@@ -571,13 +571,19 @@ If you did not make this request then simply ignore this email and no changes wi
         prescription = appointment.prescription # Using the backref
     
         if request.method == 'POST':
-            medication_details = request.form.get('medication_details')
+            medication_details = request.form.get('medication_details') # This will be the JSON string
             notes = request.form.get('notes')
     
-            if not medication_details:
-                flash("Medication details are required.", "danger")
+            # Basic validation: ensure we have some medication data.
+            try:
+                meds = json.loads(medication_details)
+                if not isinstance(meds, list) or not meds:
+                    flash("At least one medication is required.", "danger")
+                    return render_template('write_prescription.html', appointment=appointment, prescription=prescription)
+            except (json.JSONDecodeError, TypeError):
+                flash("Invalid medication data format. Please try again.", "danger")
                 return render_template('write_prescription.html', appointment=appointment, prescription=prescription)
-    
+
             if prescription:
                 # Update existing prescription
                 prescription.medication_details = medication_details
@@ -585,7 +591,13 @@ If you did not make this request then simply ignore this email and no changes wi
                 flash("Prescription updated successfully.", "success")
             else:
                 # Create new prescription
-                new_prescription = Prescription(appointment_id=appointment.id, doctor_id=appointment.doctor_id, patient_id=appointment.user_id, medication_details=medication_details, notes=notes)
+                new_prescription = Prescription(
+                    appointment_id=appointment.id, 
+                    doctor_id=appointment.doctor_id, 
+                    patient_id=appointment.user_id, 
+                    medication_details=medication_details, 
+                    notes=notes
+                )
                 db.session.add(new_prescription)
                 flash("Prescription created successfully.", "success")
             

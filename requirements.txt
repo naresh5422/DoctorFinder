@@ -1,6 +1,18 @@
+# Flask and extensions
 Flask==2.3.2
-flask 
-flask_sqlalchemy 
-mysql-connector-python
-Flask-Mail
-twilio
+Flask-SQLAlchemy==3.1.0
+Flask-Mail==0.10.0
+Werkzeug==3.0.3
+itsdangerous==2.2.0
+
+# Database
+mysql-connector-python==8.4.0
+
+# APIs
+twilio==9.1.0
+
+# AI / ML
+sentence-transformers==3.0.1
+spacy==3.7.5
+torch==2.3.1
+numpy==1.26.4

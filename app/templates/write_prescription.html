@@ -1,42 +1,338 @@
 {% extends "base.html" %}
 
-{% block title %}Write Prescription{% endblock %}
+{% block title %}
+{% if prescription %}Edit Prescription{% else %}Write Prescription{% endif %}
+{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="d-flex align-items-center mb-4">
-        <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
-        <h1 class="mb-0">{% if prescription %}Edit{% else %}Write{% endif %} Prescription</h1>
-    </div>
-
-    <div class="card">
-        <div class="card-header">
-            <h5>Appointment Details</h5>
-        </div>
-        <div class="card-body">
-            <p><strong>Patient:</strong> {{ appointment.patient.name }}</p>
-            <p><strong>Appointment Date:</strong> {{ appointment.appointment_date.strftime('%b %d, %Y at %I:%M %p') }}</p>
-            <p><strong>Reason for Visit:</strong> {{ appointment.reason or 'N/A' }}</p>
-        </div>
-    </div>
-
-    <div class="card mt-4">
-        <div class="card-header">
-            <h5>Prescription Form</h5>
-        </div>
-        <div class="card-body">
-            <form method="POST">
-                <div class="mb-3">
-                    <label for="medication_details" class="form-label">Medication & Dosage</label>
-                    <textarea class="form-control" id="medication_details" name="medication_details" rows="8" placeholder="e.g.,&#10;1. Paracetamol 500mg - 1 tablet after food, twice a day for 3 days.&#10;2. Amoxicillin 250mg - 1 capsule, three times a day for 5 days." required>{{ prescription.medication_details if prescription }}</textarea>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-11">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        {% if prescription %}Edit Prescription{% else %}Write Prescription{% endif %}
+                    </h4>
                 </div>
-                <div class="mb-3">
-                    <label for="notes" class="form-label">Additional Notes (Optional)</label>
-                    <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="e.g., Drink plenty of water. Avoid spicy food.">{{ prescription.notes if prescription }}</textarea>
+                <div class="card-body p-4">
+                    <!-- Patient Info -->
+                    <div class="row mb-4 border-bottom pb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Patient:</strong> {{ appointment.patient.name }}</p>
+                            <p class="mb-0"><strong>Appointment Date:</strong> {{ appointment.appointment_date.strftime('%b %d, %Y at %I:%M %p') }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Reason for Visit:</strong> {{ appointment.reason }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Left Column: Medication Form -->
+                        <div class="col-md-7">
+                            <h5 class="mb-3">Add Medication</h5>
+                            <div id="medication-adder-form" class="p-3 border rounded bg-light">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label for="med-type" class="form-label">Type</label>
+                                        <select id="med-type" class="form-select">
+                                            <option value="" selected disabled>-- Select Type --</option>
+                                            <option value="Medicine">Medicine (Tablet/Capsule)</option>
+                                            <option value="Syrup">Syrup</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Conditional Fields -->
+                                    <div class="col-12" id="medicine-select-div" style="display: none;">
+                                        <label for="medicine-name" class="form-label">Medicine</label>
+                                        <select id="medicine-name" class="form-select">
+                                            <!-- Options populated by JS -->
+                                        </select>
+                                    </div>
+                                    <div class="col-12" id="syrup-select-div" style="display: none;">
+                                        <label for="syrup-name" class="form-label">Syrup</label>
+                                        <select id="syrup-name" class="form-select">
+                                            <!-- Options populated by JS -->
+                                        </select>
+                                    </div>
+
+                                    <div class="col-12" id="quantity-div" style="display: none;">
+                                        <label for="medicine-quantity" class="form-label">Quantity / Numbers</label>
+                                        <input type="text" id="medicine-quantity" class="form-control" placeholder="e.g., 1 tablet, 2 capsules" disabled>
+                                    </div>
+                                    <div class="col-12" id="dosage-div" style="display: none;">
+                                        <label for="syrup-dosage" class="form-label">Dosage</label>
+                                        <input type="text" id="syrup-dosage" class="form-control" placeholder="e.g., 5ml, 1 teaspoon" disabled>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label d-block">When to Use</label>
+                                        <div id="timing-checkboxes">
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input medication-timing" type="checkbox" value="Morning" id="timing-morning" disabled>
+                                                <label class="form-check-label" for="timing-morning">Morning</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input medication-timing" type="checkbox" value="Afternoon" id="timing-afternoon" disabled>
+                                                <label class="form-check-label" for="timing-afternoon">Afternoon</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input medication-timing" type="checkbox" value="Night" id="timing-night" disabled>
+                                                <label class="form-check-label" for="timing-night">Night</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-12">
+                                        <label for="med-instruction" class="form-label">Instruction</label>
+                                        <input type="text" id="med-instruction" class="form-control" placeholder="e.g., After Food, Before Sleep">
+                                    </div>
+
+                                    <div class="col-12 text-end">
+                                        <button type="button" id="add-to-prescription-btn" class="btn btn-success">
+                                            <i class="bi bi-plus-lg"></i> Add to Prescription
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Prescription Summary -->
+                        <div class="col-md-5">
+                            <h5 class="mb-3">Current Prescription</h5>
+                            <div id="prescription-summary" class="p-3 border rounded" style="min-height: 300px;">
+                                <!-- Items will be added here -->
+                                <p class="text-muted text-center" id="empty-prescription-msg">No medications added yet.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Final Form Submission -->
+                    <form id="prescription-form" method="POST">
+                        <input type="hidden" name="medication_details" id="medication_details_hidden">
+                        
+                        <div class="mb-3">
+                            <label for="notes" class="form-label"><strong>General Notes / Advice (Optional)</strong></label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="e.g., Drink plenty of water, take rest for 3 days.">{{ prescription.notes if prescription else '' }}</textarea>
+                        </div>
+
+                        <div class="text-end mt-4">
+                            <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if prescription %}Update Prescription{% else %}Save Prescription{% endif %}
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <button type="submit" class="btn btn-primary">{% if prescription %}Update{% else %}Save{% endif %} Prescription</button>
-            </form>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Template for a summary item -->
+<template id="summary-item-template">
+    <div class="card mb-2 shadow-sm summary-item">
+        <div class="card-body p-2">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="card-title mb-1 item-name"></h6>
+                    <p class="card-text small text-muted mb-1">
+                        <span class="item-dosage"></span> | <span class="item-timing"></span>
+                    </p>
+                    <p class="card-text small text-muted mb-0 fst-italic item-instruction"></p>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-item-btn"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+    </div>
+</template>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- DATA ---
+    const MEDICINES = ['Paracetamol 500mg', 'Ibuprofen 200mg', 'Aspirin 75mg', 'Amoxicillin 250mg', 'Cetirizine 10mg', 'Metformin 500mg', 'Atorvastatin 20mg'];
+    const SYRUPS = ['Cough Syrup', 'Fever Syrup', 'Vitamin C Syrup', 'Antacid Syrup', 'Iron Syrup'];
+    let prescriptionItems = [];
+
+    // --- FORM ELEMENTS ---
+    const medTypeSelect = document.getElementById('med-type');
+    const medicineSelectDiv = document.getElementById('medicine-select-div');
+    const medicineNameSelect = document.getElementById('medicine-name');
+    const syrupSelectDiv = document.getElementById('syrup-select-div');
+    const syrupNameSelect = document.getElementById('syrup-name');
+    const quantityDiv = document.getElementById('quantity-div');
+    const medicineQuantityInput = document.getElementById('medicine-quantity');
+    const dosageDiv = document.getElementById('dosage-div');
+    const syrupDosageInput = document.getElementById('syrup-dosage');
+    const timingCheckboxes = document.querySelectorAll('.medication-timing');
+    const instructionInput = document.getElementById('med-instruction');
+    const addToPrescriptionBtn = document.getElementById('add-to-prescription-btn');
+
+    // --- SUMMARY ELEMENTS ---
+    const summaryContainer = document.getElementById('prescription-summary');
+    const emptyMsg = document.getElementById('empty-prescription-msg');
+    const summaryTemplate = document.getElementById('summary-item-template');
+
+    // --- FINAL FORM ---
+    const finalForm = document.getElementById('prescription-form');
+    const hiddenInput = document.getElementById('medication_details_hidden');
+
+    // --- FUNCTIONS ---
+    function populateDropdown(selectElement, items) {
+        selectElement.innerHTML = '<option value="" selected disabled>-- Select --</option>';
+        items.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item;
+            option.textContent = item;
+            selectElement.appendChild(option);
+        });
+    }
+
+    function resetAdderForm() {
+        medTypeSelect.value = "";
+        medicineSelectDiv.style.display = 'none';
+        syrupSelectDiv.style.display = 'none';
+        quantityDiv.style.display = 'none';
+        dosageDiv.style.display = 'none';
+        medicineQuantityInput.value = "";
+        medicineQuantityInput.disabled = true;
+        syrupDosageInput.value = "";
+        syrupDosageInput.disabled = true;
+        timingCheckboxes.forEach(cb => { cb.checked = false; cb.disabled = true; });
+        instructionInput.value = "";
+    }
+
+    function renderSummary() {
+        summaryContainer.innerHTML = ''; // Clear previous items
+        if (prescriptionItems.length === 0) {
+            summaryContainer.appendChild(emptyMsg);
+        } else {
+            prescriptionItems.forEach((item, index) => {
+                const clone = summaryTemplate.content.cloneNode(true);
+                clone.querySelector('.summary-item').dataset.index = index;
+                clone.querySelector('.item-name').textContent = item.name;
+                clone.querySelector('.item-dosage').textContent = item.dosage;
+                clone.querySelector('.item-timing').textContent = item.timing.join(', ') || 'Not specified';
+                const instructionEl = clone.querySelector('.item-instruction');
+                if (item.instruction) {
+                    instructionEl.textContent = `Instruction: ${item.instruction}`;
+                } else {
+                    instructionEl.style.display = 'none';
+                }
+                summaryContainer.appendChild(clone);
+            });
+        }
+    }
+    
+    function addItemToPrescription() {
+        const type = medTypeSelect.value;
+        let name, dosage;
+
+        if (type === 'Medicine') {
+            name = medicineNameSelect.value;
+            dosage = medicineQuantityInput.value;
+        } else if (type === 'Syrup') {
+            name = syrupNameSelect.value;
+            dosage = syrupDosageInput.value;
+        }
+
+        if (!name || !dosage) {
+            alert('Please select a medication and enter its quantity/dosage.');
+            return;
+        }
+
+        const timing = Array.from(timingCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
+        const instruction = instructionInput.value.trim();
+
+        prescriptionItems.push({ name, dosage, timing, instruction });
+        renderSummary();
+        resetAdderForm();
+    }
+
+    // --- EVENT LISTENERS ---
+    medTypeSelect.addEventListener('change', function() {
+        const type = this.value;
+        // Reset fields below type
+        medicineSelectDiv.style.display = 'none';
+        syrupSelectDiv.style.display = 'none';
+        quantityDiv.style.display = 'none';
+        dosageDiv.style.display = 'none';
+        medicineQuantityInput.disabled = true;
+        syrupDosageInput.disabled = true;
+        timingCheckboxes.forEach(cb => cb.disabled = true);
+
+        if (type === 'Medicine') {
+            populateDropdown(medicineNameSelect, MEDICINES);
+            medicineSelectDiv.style.display = 'block';
+        } else if (type === 'Syrup') {
+            populateDropdown(syrupNameSelect, SYRUPS);
+            syrupSelectDiv.style.display = 'block';
+        }
+    });
+
+    medicineNameSelect.addEventListener('change', function() {
+        if (this.value) {
+            quantityDiv.style.display = 'block';
+            medicineQuantityInput.disabled = false;
+        }
+    });
+
+    syrupNameSelect.addEventListener('change', function() {
+        if (this.value) {
+            dosageDiv.style.display = 'block';
+            syrupDosageInput.disabled = false;
+        }
+    });
+
+    medicineQuantityInput.addEventListener('input', function() {
+        timingCheckboxes.forEach(cb => cb.disabled = !this.value);
+    });
+
+    syrupDosageInput.addEventListener('input', function() {
+        timingCheckboxes.forEach(cb => cb.disabled = !this.value);
+    });
+
+    addToPrescriptionBtn.addEventListener('click', addItemToPrescription);
+
+    summaryContainer.addEventListener('click', function(e) {
+        const removeBtn = e.target.closest('.remove-item-btn');
+        if (removeBtn) {
+            const itemDiv = removeBtn.closest('.summary-item');
+            const index = parseInt(itemDiv.dataset.index, 10);
+            prescriptionItems.splice(index, 1); // Remove from array
+            renderSummary(); // Re-render the list
+        }
+    });
+
+    finalForm.addEventListener('submit', function(e) {
+        if (prescriptionItems.length === 0) {
+            alert('Please add at least one medication to the prescription.');
+            e.preventDefault();
+            return;
+        }
+        hiddenInput.value = JSON.stringify(prescriptionItems);
+    });
+
+    // --- INITIALIZATION ---
+    populateDropdown(medicineNameSelect, MEDICINES);
+    populateDropdown(syrupNameSelect, SYRUPS);
+
+    // Load existing prescription data for editing
+    const existingDataRaw = {{ prescription.medication_details|tojson if prescription and prescription.medication_details else 'null' }};
+    if (existingDataRaw) {
+        try {
+            const existingData = JSON.parse(existingDataRaw);
+            if (Array.isArray(existingData)) {
+                prescriptionItems = existingData;
+                renderSummary();
+            }
+        } catch(e) {
+            console.error("Could not parse existing prescription data:", e);
+        }
+    }
+});
+</script>
 {% endblock %}

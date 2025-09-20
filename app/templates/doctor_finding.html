@@ -6,19 +6,13 @@
 <div class="container py-5">
     <!-- Search Bar -->
     <div class="card p-4 mb-5 search-results-bar">
-        <form action="{{ url_for('find_doctor') }}" method="POST">
-            <div class="row g-2 align-items-center">
-                <div class="col-md">
-                    <label for="disease" class="form-label visually-hidden">Condition, specialty...</label>
-                    <input type="text" class="form-control form-control-lg" id="disease" name="disease" placeholder="Condition, specialty..." value="{{ disease_query or '' }}" required>
-                </div>
-                <div class="col-md">
-                    <label for="location" class="form-label visually-hidden">City or area...</label>
-                    <input type="text" class="form-control form-control-lg" id="location" name="location" placeholder="City or area..." value="{{ location_query or '' }}" required>
-                </div>
-                <div class="col-md-auto">
-                    <button type="submit" class="btn btn-primary btn-lg w-100"><i class="bi bi-search me-2"></i>Search Again</button>
-                </div>
+        <form id="unified-search-form" action="{{ url_for('find_doctor') }}" method="POST">
+            <div class="input-group input-group-lg">
+                {# Reconstruct the search query for a unified experience. #}
+                {% set search_value = disease_query %}
+                {% if location_query %}{% set search_value = search_value + ' in ' + location_query %}{% endif %}
+                <input type="text" class="form-control" name="disease" id="disease-input" placeholder="Symptom, specialty, or doctor in a city..." value="{{ search_value }}" required>
+                <button class="btn btn-primary" type="submit" id="search-submit-button"><i class="bi bi-search me-2"></i>Search Again</button>
             </div>
         </form>
     </div>

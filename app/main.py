@@ -14,7 +14,7 @@ def create_app():
     # Configure Upload Folder
     app.config["UPLOAD_FOLDER"] = os.path.join("static", "uploads")
     # Make sure the folder exists
-    # os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
     # Optional: restrict file size (2 MB here)
     app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024
     
@@ -30,7 +30,8 @@ def create_app():
     # --- Twilio Configuration for SMS---
     # IMPORTANT: Replace these placeholders with your actual Twilio credentials.
     app.config['TWILIO_ACCOUNT_SID'] = os.getenv("TWILIO_ACCOUNT_SID")
-    app.config['TWILIO_AUTH_TOKEN'] = os.getenv("TWILIO_AUTH_TOKEN")                     # <-- REPLACE with your Twilio phone number
+    app.config['TWILIO_AUTH_TOKEN'] = os.getenv("TWILIO_AUTH_TOKEN")
+    app.config['TWILIO_PHONE_NUMBER'] = os.getenv("TWILIO_PHONE_NUMBER") # <-- REPLACE with your Twilio phone number
 
     db.init_app(app)
     mail.init_app(app) # Initialize mail
