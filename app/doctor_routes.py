@@ -564,7 +564,7 @@ If you did not make this request then simply ignore this email and no changes wi
             flash("Your available slots have been updated successfully.", "success")
             return redirect(url_for('doctor_dashboard'))
 
-        return render_template('manage_slots.html', doctor=session.get('doctor_details'))
+        return render_template('manage_slots.html', doctor=doctor)
 
     @app.route('/doctor/write_prescription/<int:appointment_id>', methods=['GET', 'POST'])
     @doctor_login_required
