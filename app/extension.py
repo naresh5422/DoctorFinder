@@ -3,7 +3,8 @@ import os
 from flask import Flask, current_app
 from flask_mail import Mail
 from functools import wraps
-from flask import session, redirect, url_for, flash, request, Markup
+from flask import session, redirect, url_for, flash, request
+from markupsafe import Markup
 
 db = SQLAlchemy()
 mail = Mail()

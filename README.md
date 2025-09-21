@@ -195,8 +195,9 @@ Make sure your project is pushed to a GitHub repository.
     -   Under the "Environment" tab for your web service, add all the variables from your local `.env` file.
     -   `DATABASE_URL`: Paste the Internal Database URL from your Render PostgreSQL instance.
     -   `FLASK_ENV`: Set this to `production`.
+    -   `FLASK_APP`: Set this to `run.py`. This is crucial for the build command to work.
     -   `SECRET_KEY`: Generate a new, strong random string for production. You can use `python -c "import secrets; print(secrets.token_hex(32))"` to generate one.
-    -   `PYTHON_VERSION`: Set this to your Python version (e.g., `3.11.0`).
+    -   `PYTHON_VERSION`: Set this to your Python version (e.g., `3.11.0`). **Using a recent Python version like 3.11 is highly recommended to avoid dependency issues.**
     -   **Handling `GOOGLE_APPLICATION_CREDENTIALS`**:
         -   This is a special case. Instead of a file path, you need to store the content of your `firebase-service-account.json` file.
         -   In the Render dashboard, create the `GOOGLE_APPLICATION_CREDENTIALS` environment variable.

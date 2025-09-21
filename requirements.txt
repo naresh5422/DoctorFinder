@@ -4,10 +4,10 @@ Flask-Mail
 mysql-connector-python
 python-dotenv
 firebase-admin
-sentence-transformers
-spacy
-numpy
-tensorflow
+sentence-transformers==2.7.0
+spacy==3.7.5
+numpy==1.24.4
+tensorflow==2.13.0
 twilio
 Flask-Migrate
 gunicorn

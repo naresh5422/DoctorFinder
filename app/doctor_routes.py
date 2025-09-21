@@ -1,13 +1,14 @@
 import os
 import json
 import random
-from flask import render_template, request, session, redirect, url_for, flash, current_app, Markup
+from flask import render_template, request, session, redirect, url_for, flash, current_app, g
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 from flask_mail import Message as MailMessage  # Alias to avoid name conflict with model
 from twilio.rest import Client
 from datetime import date, datetime, timedelta
 import smtplib
 from firebase_admin import auth
+from markupsafe import Markup
 from app.extension import db, mail, doctor_login_required, doctor_verified_required, check_gmail_app_password
 from app.models import Doctor, Review, Appointment, Message, Patient, Prescription 
 from werkzeug.utils import secure_filename
@@ -23,15 +24,21 @@ def setup_doctor_routes(app):
 
     @app.context_processor
     def inject_doctor_data():
-        context = {'doctor_details': None, 'unread_doctor_messages': 0}
+        # Use Flask's 'g' object to store the doctor object for the duration of the request
+        # to avoid multiple database queries.
         if 'doctor_id' in session:
-            context['doctor_details'] = session.get('doctor_details')
-            context['unread_doctor_messages'] = Message.query.filter_by(
-                doctor_id=session['doctor_id'],
-                sender_type='patient',
-                is_read=False
-            ).count()
-        return context
+            if 'doctor' not in g:
+                g.doctor = Doctor.query.get(session['doctor_id'])
+            
+            if g.doctor:
+                unread_count = Message.query.filter_by(
+                    doctor_id=session['doctor_id'],
+                    sender_type='patient',
+                    is_read=False
+                ).count()
+                return {'doctor_details': g.doctor, 'unread_doctor_messages': unread_count}
+                
+        return {'doctor_details': None, 'unread_doctor_messages': 0}
 
 
     @app.route('/doctor_profile', methods = ['GET','POST'])
@@ -192,27 +199,6 @@ def setup_doctor_routes(app):
             # For backward compatibility with unhashed passwords from initial data load,
             if doctor and doctor.check_password(password):
                 session['doctor_id'] = doctor.id
-                session['doctor_name'] = doctor.doctor_name
-                # Store doctor details in session for easy access
-                session['doctor_details'] = {
-                    "id": doctor.id,
-                    "doctor_name": doctor.doctor_name,
-                    "specialization": doctor.specialization,
-                    "mobile_no": doctor.mobile_no,
-                    "email_id": doctor.email_id,
-                    "location": doctor.location,
-                    "experience": doctor.experience,
-                    "hospital_name": doctor.hospital_name,
-                    "hospital_address": doctor.hospital_address,
-                    "hospital_contact": doctor.hospital_contact,
-                    "bio": doctor.bio,
-                    "education": doctor.education,
-                    "certifications": doctor.certifications,
-                    "available_slots": doctor.available_slots,
-                    "image": doctor.image,
-                    "email_verified": getattr(doctor, 'email_verified', False),
-                    "mobile_verified": getattr(doctor, 'mobile_verified', False)
-                }
                 flash("Login successful!", "success")
                 return redirect(url_for("doctor_home_page"))
             else:
@@ -377,14 +363,9 @@ If you did not make this request then simply ignore this email and no changes wi
         if "doctor_id" not in session:
             flash("Please log in as doctor to continue.", "danger")
             return redirect(url_for("doctor_login"))
-        doctor_id = session["doctor_id"] 
-        doctor_session_details = session.get('doctor_details')
-
-        if not doctor_session_details:
-            flash("Doctor profile not found.", "danger")
-            return redirect(url_for("doctor_login"))
-        
+        doctor_id = session["doctor_id"]
         doctor = Doctor.query.get(doctor_id)
+
         if not doctor:
             flash("Doctor database record not found.", "danger")
             return redirect(url_for("doctor_login"))
@@ -462,7 +443,7 @@ If you did not make this request then simply ignore this email and no changes wi
                 except ValueError:
                     continue # Ignore invalid date keys
 
-        return render_template("doctor_dashboard.html", doctor=doctor_session_details,
+        return render_template("doctor_dashboard.html", doctor=doctor,
                                pending_appointments=pending_appointments,
                                confirmed_appointments=confirmed_appointments,
                                completed_appointments=completed_appointments,
@@ -482,9 +463,6 @@ If you did not make this request then simply ignore this email and no changes wi
     @app.route("/doctor_logout")
     def doctor_logout():
         session.pop("doctor_id", None)
-        session.pop("doctor_username", None)
-        session.pop("doctor_name", None)
-        session.pop("doctor_details", None)
         flash("You have been logged out successfully.", "info")
         return redirect(url_for("doctor_home"))
 
@@ -533,11 +511,6 @@ If you did not make this request then simply ignore this email and no changes wi
 
             db.session.commit()
             
-            # Update the session data to reflect changes immediately
-            session['doctor_details'].update(request.form.to_dict())
-            session['doctor_details']['image'] = doctor_to_update.image # Explicitly update image path in session
-            session.modified = True
-
             flash('Your profile has been updated successfully!', 'success')
             return redirect(url_for('my_profile'))
 
@@ -587,9 +560,6 @@ If you did not make this request then simply ignore this email and no changes wi
             
             doctor.available_slots = slots_data
             db.session.commit()
-
-            session['doctor_details']['available_slots'] = doctor.available_slots
-            session.modified = True
 
             flash("Your available slots have been updated successfully.", "success")
             return redirect(url_for('doctor_dashboard'))
@@ -709,9 +679,6 @@ If you did not make this request then simply ignore this email and no changes wi
                 if doctor.email_id == session.get('doctor_email_to_verify'):
                     doctor.email_verified = True
                     db.session.commit()
-                    if 'doctor_details' in session:
-                        session['doctor_details']['email_verified'] = True
-                        session.modified = True
                     flash('Your email has been successfully verified!', 'success')
                     session.pop('doctor_email_verification_otp', None)
                     session.pop('doctor_email_to_verify', None)
@@ -743,10 +710,6 @@ If you did not make this request then simply ignore this email and no changes wi
             if doctor.mobile_no == firebase_phone_number:
                 doctor.mobile_verified = True
                 db.session.commit()
-                # Update session to reflect the change immediately
-                if 'doctor_details' in session:
-                    session['doctor_details']['mobile_verified'] = True
-                    session.modified = True
                 flash('Your mobile number has been successfully verified!', 'success')
                 return jsonify({'success': True})
             else:
@@ -771,9 +734,6 @@ If you did not make this request then simply ignore this email and no changes wi
         doctor = Doctor.query.get(session['doctor_id'])
         doctor.mobile_verified = True
         db.session.commit()
-        if 'doctor_details' in session:
-            session['doctor_details']['mobile_verified'] = True
-            session.modified = True
         flash('DEV MODE: Mobile number verification bypassed.', 'success')
         return redirect(url_for('my_profile'))
 
@@ -789,9 +749,6 @@ If you did not make this request then simply ignore this email and no changes wi
         doctor = Doctor.query.get(session['doctor_id'])
         doctor.email_verified = True
         db.session.commit()
-        if 'doctor_details' in session:
-            session['doctor_details']['email_verified'] = True
-            session.modified = True
         flash('DEV MODE: Email verification bypassed.', 'success')
         return redirect(url_for('my_profile'))
 

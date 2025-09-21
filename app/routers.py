@@ -1,4 +1,4 @@
-from flask import render_template, request, session, redirect, url_for, flash, jsonify, current_app, Markup
+from flask import render_template, request, session, redirect, url_for, flash, jsonify, current_app
 from app.services.doctor_service import find_doctors, get_nearby_locations, map_disease_to_specialist, find_hospitals, get_featured_hospitals, extract_entities_from_query, get_autocomplete_suggestions, get_location_suggestions
 import os
 import random
@@ -11,6 +11,7 @@ from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignat
 from flask_mail import Message as MailMessage  # Alias to avoid name conflict with model
 from firebase_admin import auth
 import smtplib
+from markupsafe import Markup
 
 
 def _filter_doctor_slots(doctors_list):
