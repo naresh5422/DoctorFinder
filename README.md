@@ -76,6 +76,8 @@ Follow these instructions to get a copy of the project up and running on your lo
     ```
 
 2.  **Create and activate a virtual environment:**
+    > **Important**: Using a virtual environment is crucial to avoid conflicts with other Python packages installed on your system. This step isolates the project's dependencies.
+
     ```bash
     # For Windows
     python -m venv venv
