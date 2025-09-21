@@ -148,7 +148,7 @@
             <p class="text-center text-muted">No top-rated doctors available at the moment.</p>
         {% endif %}
         <div class="text-center mt-5">
-            <a href="{{ url_for('browse_doctors') }}" class="btn btn-primary btn-lg">Browse Doctors</a>
+            <a href="{{ url_for('browse_doctors') }}" class="btn btn-primary btn-lg">Browse All Doctors</a>
         </div>
     </div>
 </div>
@@ -166,7 +166,7 @@
                         <div class="feature-icon bg-primary bg-gradient text-white rounded-3 mb-4 mx-auto"><i class="bi bi-person-fill"></i></div>
                         <h2 class="fs-4 fw-bold">Are You a Patient?</h2>
                         <p class="mb-4 text-muted">Sign up to book appointments, manage your health records, and communicate with your doctors securely.</p>
-                        <a href="{{ url_for('register') }}" class="btn btn-outline-primary mt-auto">Sign Up Today</a>
+                        <a href="{{ url_for('signup') }}" class="btn btn-outline-primary mt-auto">Sign Up Today</a>
                     </div>
                 </div>
             </div>
@@ -177,7 +177,7 @@
                         <div class="feature-icon bg-secondary bg-gradient text-white rounded-3 mb-4 mx-auto"><i class="bi bi-heart-pulse-fill"></i></div>
                         <h2 class="fs-4 fw-bold">Are You a Doctor?</h2>
                         <p class="mb-4 text-muted">Join our growing network of professionals. Manage your profile, appointments, and connect with patients seeking your expertise.</p>
-                        <a href="{{ url_for('register') }}" class="btn btn-outline-secondary mt-auto">Join Our Network</a>
+                        <a href="{{ url_for('doctor_register') }}" class="btn btn-outline-secondary mt-auto">Join Our Network</a>
                     </div>
                 </div>
             </div>

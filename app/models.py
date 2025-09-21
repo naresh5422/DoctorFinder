@@ -24,6 +24,8 @@ class Doctor(db.Model):
     available_slots = db.Column(db.JSON, nullable=True) # Store available time slots
     image = db.Column(db.String(200), nullable=True)  # Path to profile image
     reviews = db.relationship('Review', backref='doctor', lazy=True, cascade="all, delete-orphan")
+    email_verified = db.Column(db.Boolean, default=False, nullable=False)
+    mobile_verified = db.Column(db.Boolean, default=False, nullable=False)
     appointments = db.relationship('Appointment', backref='doctor', lazy=True)
 
     def __repr__(self):
@@ -55,6 +57,8 @@ class Patient(db.Model):
     status = db.Column(db.String(10), default="logout")
     image = db.Column(db.String(200), nullable=True)  # Path to profile image
     bio = db.Column(db.Text, nullable=True)  # Extra details
+    email_verified = db.Column(db.Boolean, default=False, nullable=False)
+    mobile_verified = db.Column(db.Boolean, default=False, nullable=False)
 
     def __repr__(self):
         return f"<Patient {self.username}>"

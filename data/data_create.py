@@ -66,7 +66,7 @@ for i in range(100):
     experience = random.randint(3, 35)  # years of experience
     rating = round(random.uniform(3.0, 5.0), 1)  # rating between 3.0 and 5.0
     reviews = random.sample(positive_reviews, 2) + random.sample(negative_reviews, 1)
-    hospital = random.choice(hospitals)
+    hospital_details = random.choice(hospitals)
 
     doctor = {
         "id": id,
@@ -74,13 +74,15 @@ for i in range(100):
         "password": password,
         "doctor_name": doctor_name,
         "specialization": specialization,
-        "MobileNo": f"9{random.randint(100000000,999999999)}",
-        "EmailId": f"{username}@gmail.com",
+        "mobile_no": f"9{random.randint(100000000,999999999)}",
+        "email_id": f"{username}@gmail.com",
         "location": location,
         "experience": experience,
         "rating": rating,
         "reviews": reviews,
-        "hospital": hospital
+        "hospital_name": hospital_details['name'],
+        "hospital_address": hospital_details['address'],
+        "hospital_contact": hospital_details['contact']
     }
 
     doctors.append(doctor)

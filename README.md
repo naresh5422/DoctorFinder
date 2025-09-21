@@ -25,14 +25,14 @@ CareConnect is a modern, full-stack web application designed to bridge the gap b
 ## 🛠️ Tech Stack
 
 -   **Backend**: Python, Flask, SQLAlchemy
--   **Database**: PostgreSQL
--   **Frontend**: HTML5, CSS3, JavaScript, Bootstrap 5
+-   **Database**: MySQL (for local development), PostgreSQL (for production deployment)
+-   **Frontend**: HTML5, CSS3, JavaScript, Bootstrap 5, JQuery
 -   **AI & Machine Learning**:
     -   `sentence-transformers` for semantic similarity.
     -   `spacy` for Named Entity Recognition (NER).
 -   **External APIs & Services**:
-    -   **Twilio**: For sending SMS OTPs for mobile verification.
-    -   **Flask-Mail**: For sending email (e.g., for email verification).
+    -   **Firebase Authentication**: For sending SMS OTPs for mobile verification (free tier).
+    -   **Flask-Mail**: For sending email verification via any SMTP provider (e.g., Gmail, Brevo).
 
 ## 📂 Project Structure
 
@@ -98,10 +98,10 @@ Follow these instructions to get a copy of the project up and running on your lo
     ```
 
 5.  **Set up the Database:**
-    -   Make sure you have PostgreSQL installed and running.
-    -   Create a new database for the project.
+    -   Make sure you have MySQL installed and running.
+    -   Create a new database (schema) for the project.
     ```sql
-    CREATE DATABASE doctor_db;
+    CREATE DATABASE DoctorFinder_DB;
     ```
 
 6.  **Configure Environment Variables:**
@@ -109,26 +109,48 @@ Follow these instructions to get a copy of the project up and running on your lo
     -   Update the values with your own configuration (database URL, email credentials, Twilio keys, etc.).
 
     **.env file:**
-    ```env
+    ```dotenv
     # Flask Configuration
     SECRET_KEY='a_very_secret_and_long_random_string'
     FLASK_APP=run.py
     FLASK_ENV=development
 
-    # Database URL (PostgreSQL)
-    DATABASE_URL="postgresql://user:password@localhost:5432/doctor_db"
+    # Database URL (MySQL)
+    DATABASE_URL="mysql+mysqlconnector://root:Sulochana%40522@localhost:3306/DoctorFinder_DB"
 
-    # Email Configuration (e.g., for Gmail)
-    MAIL_SERVER=smtp.gmail.com
+    # --- Email Configuration ---
+    # Option 1: Brevo (Recommended for easy setup)
+    # Get credentials from your Brevo account -> SMTP & API -> SMTP tab
+    MAIL_SERVER="smtp-relay.brevo.com"
     MAIL_PORT=587
     MAIL_USE_TLS=True
-    MAIL_USERNAME='your-email@gmail.com'
-    MAIL_PASSWORD='your-app-password' # Use an App Password for Gmail
+    MAIL_USERNAME="your-brevo-login-email@example.com"
+    MAIL_PASSWORD="Your-Brevo-SMTP-Key"
 
-    # Twilio Configuration (for SMS OTP)
-    TWILIO_ACCOUNT_SID='ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-    TWILIO_AUTH_TOKEN='your_auth_token'
-    TWILIO_PHONE_NUMBER='+15017122661' # Your Twilio phone number
+    # Option 2: Gmail (Requires App Password)
+    # MAIL_SERVER="smtp.gmail.com"
+    # MAIL_USERNAME="your-email@gmail.com" 
+    # IMPORTANT: For Gmail, you MUST use a 16-character "App Password".
+    # 1. Enable 2-Step Verification on your Google Account.
+    # 2. Go to https://myaccount.google.com/apppasswords to generate one.
+    # MAIL_PASSWORD="your-generated-app-password"
+
+    # --- Firebase Configuration ---
+    # 1. For Backend (Admin SDK) - Set this to the path of your service account JSON file.
+    GOOGLE_APPLICATION_CREDENTIALS="D:/path/to/your/firebase-service-account.json"
+
+    # 2. For Frontend (Web SDK) - Get these from your Firebase project settings.
+    FIREBASE_API_KEY="AIzaSy..."
+    FIREBASE_AUTH_DOMAIN="your-project.firebaseapp.com"
+    FIREBASE_PROJECT_ID="your-project"
+    FIREBASE_STORAGE_BUCKET="your-project.appspot.com"
+    FIREBASE_MESSAGING_SENDER_ID="123456789"
+    FIREBASE_APP_ID="1:123456789:web:abcdef123456"
+
+    # Twilio Configuration (for Doctor password reset via SMS)
+    TWILIO_ACCOUNT_SID="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    TWILIO_AUTH_TOKEN="your_auth_token"
+    TWILIO_PHONE_NUMBER="+15017122661" # Your Twilio phone number
     ```
 
 7.  **Initialize the Database:**
@@ -144,6 +166,48 @@ Follow these instructions to get a copy of the project up and running on your lo
     flask run
     ```
     The application will be available at `http://127.0.0.1:5000`.
+
+## ☁️ Deployment
+
+This application is ready to be deployed on cloud platforms like Render. Here are the steps to deploy on Render's free tier.
+
+### 1. Prepare for Deployment
+
+Make sure your project is pushed to a GitHub repository.
+
+### 2. Set Up on Render
+
+> **Database Note**: These instructions use Render's free PostgreSQL database for deployment, which is different from the local MySQL setup. The application is configured to handle this switch automatically via the `DATABASE_URL` environment variable.
+
+1.  **Create a PostgreSQL Database**:
+    -   In the Render dashboard, go to **New > PostgreSQL**.
+    -   Choose a name and select the **Free** plan.
+    -   After creation, go to the database's "Info" page and copy the **Internal Database URL**. You will use this for the `DATABASE_URL` environment variable.
+
+2.  **Create a Web Service**:
+    -   Go to **New > Web Service** and connect your GitHub repository.
+    -   Render will detect it's a Python app. Configure the following settings:
+        -   **Runtime**: `Python 3`
+        -   **Build Command**: `pip install -r requirements.txt && python -m spacy download en_core_web_sm && flask db upgrade`
+        -   **Start Command**: `gunicorn run:app`
+
+3.  **Add Environment Variables**:
+    -   Under the "Environment" tab for your web service, add all the variables from your local `.env` file.
+    -   `DATABASE_URL`: Paste the Internal Database URL from your Render PostgreSQL instance.
+    -   `FLASK_ENV`: Set this to `production`.
+    -   `SECRET_KEY`: Generate a new, strong random string for production. You can use `python -c "import secrets; print(secrets.token_hex(32))"` to generate one.
+    -   `PYTHON_VERSION`: Set this to your Python version (e.g., `3.11.0`).
+    -   **Handling `GOOGLE_APPLICATION_CREDENTIALS`**:
+        -   This is a special case. Instead of a file path, you need to store the content of your `firebase-service-account.json` file.
+        -   In the Render dashboard, create the `GOOGLE_APPLICATION_CREDENTIALS` environment variable.
+        -   Open your local `.json` file, copy its **entire content**, and paste it into the value field in Render. Render supports multi-line variables.
+
+### 3. Deploy
+
+-   Click **Create Web Service**. Render will build your application, run the database migrations, and start the service.
+-   Your application will be live at the `.onrender.com` URL provided in your dashboard.
+
+> **Note on Free Tier**: Render's free web services will "spin down" after a period of inactivity and may take 30-60 seconds to start up on the first request. This is normal for free hosting plans.
 
 ## 💡 Usage
 

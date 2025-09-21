@@ -1,13 +1,15 @@
 import os
 import json
 import random
-from flask import render_template, request, session, redirect, url_for, flash, current_app
+from flask import render_template, request, session, redirect, url_for, flash, current_app, Markup
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
-from flask_mail import Message
+from flask_mail import Message as MailMessage  # Alias to avoid name conflict with model
 from twilio.rest import Client
 from datetime import date, datetime, timedelta
+import smtplib
+from firebase_admin import auth
+from app.extension import db, mail, doctor_login_required, doctor_verified_required, check_gmail_app_password
 from app.models import Doctor, Review, Appointment, Message, Patient, Prescription 
-from app.extension import db, mail, doctor_login_required
 from werkzeug.utils import secure_filename
 from sqlalchemy import func
 
@@ -116,8 +118,9 @@ def setup_doctor_routes(app):
         if "doctor_id" not in session:
             flash("Please login first", "warning")
             return redirect(url_for("doctor_login"))
-        doctor = session.get('doctor_details')
-        if not doctor: # This part remains as session holds the details
+        # Fetch from DB to get the most up-to-date info, including verification status
+        doctor = Doctor.query.get(session['doctor_id'])
+        if not doctor:
             flash("Doctor profile not found. Please log in again.", "danger")
             return redirect(url_for("doctor_login"))
         return render_template("my_profile.html", doctor=doctor)
@@ -205,9 +208,10 @@ def setup_doctor_routes(app):
                     "bio": doctor.bio,
                     "education": doctor.education,
                     "certifications": doctor.certifications,
-                    "reviews": doctor.review_texts, # Fetch review texts
                     "available_slots": doctor.available_slots,
-                    "image": doctor.image
+                    "image": doctor.image,
+                    "email_verified": getattr(doctor, 'email_verified', False),
+                    "mobile_verified": getattr(doctor, 'mobile_verified', False)
                 }
                 flash("Login successful!", "success")
                 return redirect(url_for("doctor_home_page"))
@@ -232,21 +236,58 @@ def setup_doctor_routes(app):
                 token = s.dumps(doctor.id, salt='password-reset-salt')
 
                 if '@' in identifier:
+                    # --- BEGIN REFACTOR ---
+                    # More detailed check for email configuration.
+                    missing_vars = []
+                    required_vars = ['MAIL_SERVER', 'MAIL_PORT', 'MAIL_USERNAME', 'MAIL_PASSWORD']
+                    for var in required_vars:
+                        if not current_app.config.get(var):
+                            missing_vars.append(var)
+                    if missing_vars:
+                        error_msg = f"Email feature disabled: The mail server is not configured. To enable this, please set the following in your .env file: {', '.join(missing_vars)}. See README.md for examples."
+                        flash(error_msg, 'danger')
+                        current_app.logger.error(f"Password reset failed: Missing environment variables: {', '.join(missing_vars)}")
+                        return redirect(url_for('doctor_forgot_password'))
+                    # --- END REFACTOR ---
+                    if not check_gmail_app_password():
+                        return redirect(url_for('doctor_forgot_password'))
+
                     # Send a real email
                     reset_url = url_for('doctor_reset_with_token', token=token, _external=True)
-                    msg = Message('Password Reset Request',
+                    msg = MailMessage('Password Reset Request',
                                   sender=app.config['MAIL_USERNAME'],
                                   recipients=[doctor.email_id])
                     msg.body = f'''To reset your password, visit the following link:
 {reset_url}
 If you did not make this request then simply ignore this email and no changes will be made.'''
-                    mail.send(msg)
-                    flash(f"A password reset link has been sent to {doctor.email_id}.", "info")
+                    try:
+                        mail.send(msg)
+                        flash(f"A password reset link has been sent to {doctor.email_id}.", "info")
+                    except smtplib.SMTPAuthenticationError as e:
+                        error_msg = Markup("Email sending failed due to an authentication error. If using Gmail, please use a 16-character <strong>App Password</strong>. <a href='https://myaccount.google.com/apppasswords' target='_blank' class='alert-link'>Generate one here</a>.")
+                        flash(error_msg, "danger")
+                        current_app.logger.error(f"SMTPAuthenticationError: {e}. Check MAIL_USERNAME and MAIL_PASSWORD.")
+                        return redirect(url_for('doctor_forgot_password'))
+
                 else:
                     # Generate a random 6-digit OTP
                     otp = str(random.randint(100000, 999999))
                     session['reset_otp'] = otp
                     session['reset_doctor_id'] = doctor.id
+
+                    # --- BEGIN REFACTOR ---
+                    # More detailed check for Twilio configuration.
+                    missing_vars = []
+                    required_vars = ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_PHONE_NUMBER']
+                    for var in required_vars:
+                        if not current_app.config.get(var):
+                            missing_vars.append(var)
+                    if missing_vars:
+                        error_msg = f"SMS feature disabled: The SMS service is not configured. To enable this, please set the following in your .env file: {', '.join(missing_vars)}. See README.md for examples."
+                        flash(error_msg, 'danger')
+                        current_app.logger.error(f"Password reset failed: Missing Twilio environment variables: {', '.join(missing_vars)}")
+                        return redirect(url_for('doctor_forgot_password'))
+                    # --- END REFACTOR ---
 
                     # Send the OTP via Twilio
                     try:
@@ -453,23 +494,25 @@ If you did not make this request then simply ignore this email and no changes wi
             flash("Please login to edit your profile.", "warning")
             return redirect(url_for("doctor_login"))
 
-        # Use doctor details from session, which come from the JSON file
-        doctor_details = session.get('doctor_details')
-        if not doctor_details:
-            flash("Could not find your profile details. Please log in again.", "danger")
-            return redirect(url_for("doctor_login"))
-
+        # Fetch the doctor from the database to get the most up-to-date info,
+        # including verification status.
         doctor_to_update = Doctor.query.get(session['doctor_id'])
         if not doctor_to_update:
             flash("Could not find your profile in the database.", "danger")
             return redirect(url_for('doctor_login'))
 
         if request.method == 'POST':
-            # Update the Doctor object with form data
-            doctor_to_update.doctor_name = request.form.get('doctor_name')
+            # Update general fields
+            doctor_to_update.doctor_name = request.form.get('doctor_name', doctor_to_update.doctor_name)
             doctor_to_update.specialization = request.form.get('specialization')
-            doctor_to_update.mobile_no = request.form.get('mobile_no')
-            doctor_to_update.email_id = request.form.get('email_id')
+
+            # Only update email/mobile if they are not verified
+            if not (hasattr(doctor_to_update, 'email_verified') and doctor_to_update.email_verified):
+                doctor_to_update.email_id = request.form.get('email_id', doctor_to_update.email_id)
+            
+            if not (hasattr(doctor_to_update, 'mobile_verified') and doctor_to_update.mobile_verified):
+                doctor_to_update.mobile_no = request.form.get('mobile_no', doctor_to_update.mobile_no)
+
             doctor_to_update.location = request.form.get('location')
             doctor_to_update.experience = int(request.form.get('experience', 0))
             doctor_to_update.hospital_name = request.form.get('hospital_name')
@@ -498,7 +541,7 @@ If you did not make this request then simply ignore this email and no changes wi
             flash('Your profile has been updated successfully!', 'success')
             return redirect(url_for('my_profile'))
 
-        return render_template('edit_doctor_profile.html', doctor=doctor_details)
+        return render_template('edit_doctor_profile.html', doctor=doctor_to_update)
 
     @app.route('/update_appointment_status/<int:appointment_id>/<string:status>', methods=['POST'])
     def update_appointment_status(appointment_id, status):
@@ -521,6 +564,7 @@ If you did not make this request then simply ignore this email and no changes wi
         return redirect(url_for('doctor_dashboard'))
 
     @app.route('/doctor/manage_slots', methods=['GET', 'POST'])
+    @doctor_verified_required
     def manage_slots():
         if "doctor_id" not in session:
             return redirect(url_for('doctor_login'))
@@ -554,6 +598,7 @@ If you did not make this request then simply ignore this email and no changes wi
 
     @app.route('/doctor/write_prescription/<int:appointment_id>', methods=['GET', 'POST'])
     @doctor_login_required
+    @doctor_verified_required
     def write_prescription(appointment_id):
         appointment = Appointment.query.get_or_404(appointment_id)
         
@@ -606,22 +651,212 @@ If you did not make this request then simply ignore this email and no changes wi
     
         return render_template('write_prescription.html', appointment=appointment, prescription=prescription)
 
-    # --- TEMPORARY DEBUGGING ROUTE ---
-    # This route is for debugging the password issue.
-    # Access it via /reset_doctor_password?username=THE_USERNAME&password=NEW_PASSWORD
-    # REMOVE THIS ROUTE IN PRODUCTION
-    @app.route('/reset_doctor_password')
-    def reset_doctor_password():
-        username = request.args.get('username')
-        new_password = request.args.get('password')
+    @app.route('/doctor/send_email_verification')
+    @doctor_login_required
+    def send_doctor_email_verification():
+        is_mail_configured = all([current_app.config.get('MAIL_SERVER'), current_app.config.get('MAIL_USERNAME'), current_app.config.get('MAIL_PASSWORD')])
 
-        if not username or not new_password:
-            return "Please provide 'username' and 'password' as query parameters.", 400
+        if not is_mail_configured:
+            flash("The email service is not configured. Please contact support.", "danger")
+            return redirect(url_for('my_profile'))
 
-        doctor = Doctor.query.filter_by(username=username).first()
-        if not doctor:
-            return f"Doctor with username '{username}' not found.", 404
+        if not check_gmail_app_password():
+            return redirect(url_for('my_profile'))
 
-        doctor.set_password(new_password)
+        doctor = Doctor.query.get(session['doctor_id'])
+        if not doctor.email_id:
+            flash('Please add an email address to your profile first.', 'warning')
+            return redirect(url_for('edit_doctor_profile'))
+
+        if hasattr(doctor, 'email_verified') and doctor.email_verified:
+            flash('Your email is already verified.', 'info')
+            return redirect(url_for('my_profile'))
+
+        # Generate and store OTP
+        otp = str(random.randint(100000, 999999))
+        session['doctor_email_verification_otp'] = otp
+        session['doctor_email_to_verify'] = doctor.email_id
+
+        # Send email with OTP
+        msg = MailMessage('Verify Your Email for CareConnect',
+                          sender=app.config['MAIL_USERNAME'],
+                          recipients=[doctor.email_id])
+        msg.body = f'Your CareConnect Doctor account email verification OTP is: {otp}'
+        try:
+            mail.send(msg)
+            flash(f'An OTP has been sent to {doctor.email_id}.', 'info')
+        except smtplib.SMTPAuthenticationError as e:
+            error_msg = Markup("Email sending failed due to an authentication error. If using Gmail, please use a 16-character <strong>App Password</strong>. <a href='https://myaccount.google.com/apppasswords' target='_blank' class='alert-link'>Generate one here</a>.")
+            flash(error_msg, "danger")
+            current_app.logger.error(f"SMTPAuthenticationError: {e}. Check MAIL_USERNAME and MAIL_PASSWORD.")
+            if current_app.debug:
+                flash(Markup(f"DEV MODE: Email sending failed. You can <a href='{url_for('dev_bypass_doctor_email_verification')}' class='alert-link'>click here to bypass verification</a>."), 'info')
+            return redirect(url_for('my_profile'))
+
+        return redirect(url_for('verify_doctor_email_otp'))
+
+    @app.route('/doctor/verify_email_otp', methods=['GET', 'POST'])
+    @doctor_login_required
+    def verify_doctor_email_otp():
+        if 'doctor_email_verification_otp' not in session:
+            flash('Verification process has expired. Please try again.', 'warning')
+            return redirect(url_for('my_profile'))
+
+        if request.method == 'POST':
+            submitted_otp = request.form.get('otp')
+            if submitted_otp == session.get('doctor_email_verification_otp'):
+                doctor = Doctor.query.get(session['doctor_id'])
+                if doctor.email_id == session.get('doctor_email_to_verify'):
+                    doctor.email_verified = True
+                    db.session.commit()
+                    if 'doctor_details' in session:
+                        session['doctor_details']['email_verified'] = True
+                        session.modified = True
+                    flash('Your email has been successfully verified!', 'success')
+                    session.pop('doctor_email_verification_otp', None)
+                    session.pop('doctor_email_to_verify', None)
+                    return redirect(url_for('my_profile'))
+                else:
+                    flash('Email address has changed. Please restart verification.', 'danger')
+                    return redirect(url_for('my_profile'))
+            else:
+                flash('Invalid OTP. Please try again.', 'danger')
+        
+        return render_template('doctor_verify_email.html')
+
+    @app.route('/doctor/verify_phone_token', methods=['POST'])
+    @doctor_login_required
+    def verify_doctor_phone_token():
+        """
+        Verifies a Firebase Auth ID token sent from the client for a doctor.
+        """
+        id_token = request.json.get('token')
+        if not id_token:
+            return jsonify({'success': False, 'error': 'No token provided.'}), 400
+
+        try:
+            decoded_token = auth.verify_id_token(id_token)
+            firebase_phone_number = decoded_token.get('phone_number')
+
+            doctor = Doctor.query.get(session['doctor_id'])
+
+            if doctor.mobile_no == firebase_phone_number:
+                doctor.mobile_verified = True
+                db.session.commit()
+                # Update session to reflect the change immediately
+                if 'doctor_details' in session:
+                    session['doctor_details']['mobile_verified'] = True
+                    session.modified = True
+                flash('Your mobile number has been successfully verified!', 'success')
+                return jsonify({'success': True})
+            else:
+                error_msg = f'Verified number ({firebase_phone_number}) does not match your profile number ({doctor.mobile_no}). Please update your profile and try again.'
+                return jsonify({'success': False, 'error': error_msg}), 400
+
+        except auth.InvalidIdTokenError:
+            return jsonify({'success': False, 'error': 'The provided token is invalid.'}), 401
+        except Exception as e:
+            current_app.logger.error(f"Firebase token verification failed for doctor {session['doctor_id']}: {e}")
+            return jsonify({'success': False, 'error': 'An internal server error occurred during verification.'}), 500
+
+    @app.route('/dev/bypass_doctor_mobile_verification')
+    @doctor_login_required
+    def dev_bypass_doctor_mobile_verification():
+        """
+        A developer-only route to bypass doctor mobile verification.
+        """
+        if not current_app.debug:
+            return "This feature is only available in development mode.", 404
+        
+        doctor = Doctor.query.get(session['doctor_id'])
+        doctor.mobile_verified = True
         db.session.commit()
-        return f"Password for doctor '{username}' has been reset successfully. You can now log in with the new password."
+        if 'doctor_details' in session:
+            session['doctor_details']['mobile_verified'] = True
+            session.modified = True
+        flash('DEV MODE: Mobile number verification bypassed.', 'success')
+        return redirect(url_for('my_profile'))
+
+    @app.route('/dev/bypass_doctor_email_verification')
+    @doctor_login_required
+    def dev_bypass_doctor_email_verification():
+        """
+        A developer-only route to bypass doctor email verification.
+        """
+        if not current_app.debug:
+            return "This feature is only available in development mode.", 404
+        
+        doctor = Doctor.query.get(session['doctor_id'])
+        doctor.email_verified = True
+        db.session.commit()
+        if 'doctor_details' in session:
+            session['doctor_details']['email_verified'] = True
+            session.modified = True
+        flash('DEV MODE: Email verification bypassed.', 'success')
+        return redirect(url_for('my_profile'))
+
+    @app.route('/doctor/messages')
+    @doctor_login_required
+    @doctor_verified_required
+    def doctor_list_conversations():
+        doctor_id = session['doctor_id']
+        
+        # Subquery to get the last message for each patient conversation
+        subq = db.session.query(
+            Message.patient_id,
+            func.max(Message.timestamp).label('max_ts')
+        ).filter(Message.doctor_id == doctor_id).group_by(Message.patient_id).subquery()
+
+        # Join to get the full last message details
+        last_messages_q = db.session.query(Message).join(
+            subq,
+            db.and_(Message.patient_id == subq.c.patient_id, Message.timestamp == subq.c.max_ts)
+        )
+        
+        conversations = []
+        for msg in last_messages_q.all():
+            patient = Patient.query.get(msg.patient_id)
+            # Count unread messages from this patient
+            unread_count = Message.query.filter_by(
+                doctor_id=doctor_id, 
+                patient_id=patient.id, 
+                is_read=False, 
+                sender_type='patient'
+            ).count()
+            conversations.append({
+                'patient': patient,
+                'last_message': msg,
+                'unread_count': unread_count
+            })
+        
+        # Sort conversations by the timestamp of the last message
+        conversations.sort(key=lambda x: x['last_message'].timestamp, reverse=True)
+
+        return render_template('doctor_conversations.html', conversations=conversations)
+
+    @app.route('/doctor/messages/<int:patient_id>', methods=['GET', 'POST'])
+    @doctor_login_required
+    @doctor_verified_required
+    def doctor_conversation(patient_id):
+        doctor_id = session['doctor_id']
+        patient = Patient.query.get_or_404(patient_id)
+
+        if request.method == 'POST':
+            content = request.form.get('content')
+            if content:
+                message = Message(patient_id=patient_id, doctor_id=doctor_id, sender_type='doctor', content=content)
+                db.session.add(message)
+                db.session.commit()
+            return redirect(url_for('doctor_conversation', patient_id=patient_id))
+
+        # Mark messages from this patient as read upon opening the chat
+        Message.query.filter_by(
+            doctor_id=doctor_id, 
+            patient_id=patient_id, 
+            sender_type='patient', 
+            is_read=False
+        ).update({Message.is_read: True})
+        db.session.commit()
+
+        messages = Message.query.filter_by(patient_id=patient_id, doctor_id=doctor_id).order_by(Message.timestamp.asc()).all()
+        return render_template('doctor_conversation.html', patient=patient, messages=messages)

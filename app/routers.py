@@ -1,15 +1,16 @@
-from flask import render_template, request, session, redirect, url_for, flash, jsonify
+from flask import render_template, request, session, redirect, url_for, flash, jsonify, current_app, Markup
 from app.services.doctor_service import find_doctors, get_nearby_locations, map_disease_to_specialist, find_hospitals, get_featured_hospitals, extract_entities_from_query, get_autocomplete_suggestions, get_location_suggestions
-from app.models import SearchHistory, Patient, Doctor, Appointment, Review, Message
 import os
 import random
 from werkzeug.utils import secure_filename
-from app.extension import db, mail, login_required, doctor_login_required
+from app.extension import db, mail, login_required, check_gmail_app_password
+from app.models import SearchHistory, Patient, Doctor, Appointment, Review, Message
 from datetime import datetime, date
 from sqlalchemy import func, case, and_
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
-from flask_mail import Message as MailMessage # Alias to avoid name conflict with model
-from twilio.rest import Client
+from flask_mail import Message as MailMessage  # Alias to avoid name conflict with model
+from firebase_admin import auth
+import smtplib
 
 
 def _filter_doctor_slots(doctors_list):
@@ -372,7 +373,7 @@ def setup_routes(app):
             doctor_id=doctor_id,
             appointment_id=appointment_id,
             rating=int(rating),
-            comment=comment
+            text=comment
         )
         db.session.add(review)
 
@@ -674,71 +675,6 @@ def setup_routes(app):
         messages = Message.query.filter_by(patient_id=patient_id, doctor_id=doctor_id).order_by(Message.timestamp.asc()).all()
         return render_template('conversation.html', doctor=doctor, messages=messages, back_url=back_url)
 
-    # Doctor-side Messaging
-    @app.route('/doctor/messages')
-    @doctor_login_required
-    def doctor_list_conversations():
-        doctor_id = session['doctor_id']
-        
-        # Subquery to get the last message for each patient conversation
-        subq = db.session.query(
-            Message.patient_id,
-            func.max(Message.timestamp).label('max_ts')
-        ).filter(Message.doctor_id == doctor_id).group_by(Message.patient_id).subquery()
-
-        # Join to get the full last message details
-        last_messages_q = db.session.query(Message).join(
-            subq,
-            db.and_(Message.patient_id == subq.c.patient_id, Message.timestamp == subq.c.max_ts)
-        )
-        
-        conversations = []
-        for msg in last_messages_q.all():
-            patient = Patient.query.get(msg.patient_id)
-            # Count unread messages from this patient
-            unread_count = Message.query.filter_by(
-                doctor_id=doctor_id, 
-                patient_id=patient.id, 
-                is_read=False, 
-                sender_type='patient'
-            ).count()
-            conversations.append({
-                'patient': patient,
-                'last_message': msg,
-                'unread_count': unread_count
-            })
-        
-        # Sort conversations by the timestamp of the last message
-        conversations.sort(key=lambda x: x['last_message'].timestamp, reverse=True)
-
-        return render_template('doctor_conversations.html', conversations=conversations)
-
-    @app.route('/doctor/messages/<int:patient_id>', methods=['GET', 'POST'])
-    @doctor_login_required
-    def doctor_conversation(patient_id):
-        doctor_id = session['doctor_id']
-        patient = Patient.query.get_or_404(patient_id)
-
-        if request.method == 'POST':
-            content = request.form.get('content')
-            if content:
-                message = Message(patient_id=patient_id, doctor_id=doctor_id, sender_type='doctor', content=content)
-                db.session.add(message)
-                db.session.commit()
-            return redirect(url_for('doctor_conversation', patient_id=patient_id))
-
-        # Mark messages from this patient as read upon opening the chat
-        Message.query.filter_by(
-            doctor_id=doctor_id, 
-            patient_id=patient_id, 
-            sender_type='patient', 
-            is_read=False
-        ).update({Message.is_read: True})
-        db.session.commit()
-
-        messages = Message.query.filter_by(patient_id=patient_id, doctor_id=doctor_id).order_by(Message.timestamp.asc()).all()
-        return render_template('doctor_conversation.html', patient=patient, messages=messages)
-
     # Hospital Services
     @app.route('/hospital_finding')
     def hospital_finder():
@@ -787,119 +723,141 @@ def setup_routes(app):
     @app.route('/send_email_verification')
     @login_required
     def send_email_verification():
+        # Check if mail is configured before attempting to send.
+        is_mail_configured = all([current_app.config.get('MAIL_SERVER'), current_app.config.get('MAIL_USERNAME'), current_app.config.get('MAIL_PASSWORD')])
+
+        if not is_mail_configured:
+            # This case is primarily handled by the template disabling the button,
+            # but this server-side check is a good fallback.
+            flash("The email service is not configured. Please contact support.", "danger")
+            return redirect(url_for('user_profile'))
+
+        if not check_gmail_app_password():
+            return redirect(url_for('user_profile'))
+
         patient = Patient.query.get(session['patient_id'])
         if not patient.email:
             flash('Please add an email address to your profile first.', 'warning')
             return redirect(url_for('user_profile'))
 
-        # Check if the attribute exists and if it's true
         if hasattr(patient, 'email_verified') and patient.email_verified:
             flash('Your email is already verified.', 'info')
             return redirect(url_for('user_profile'))
 
-        s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
-        token = s.dumps(patient.email, salt='email-verification-salt')
-        
-        verify_url = url_for('verify_email', token=token, _external=True)
+        # Generate and store OTP
+        otp = str(random.randint(100000, 999999))
+        session['email_verification_otp'] = otp
+        session['email_to_verify'] = patient.email
+
+        # Send email with OTP
         msg = MailMessage('Verify Your Email for CareConnect',
                           sender=app.config['MAIL_USERNAME'],
                           recipients=[patient.email])
-        msg.body = f'''Please click the following link to verify your email address:
-{verify_url}
-If you did not request this, please ignore this email.
-'''
-        mail.send(msg)
-        flash(f'A verification link has been sent to {patient.email}. Please check your inbox.', 'info')
-        return redirect(url_for('user_profile'))
-
-    @app.route('/verify_email/<token>')
-    @login_required
-    def verify_email(token):
-        s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+        msg.body = f'Your CareConnect email verification OTP is: {otp}'
         try:
-            email = s.loads(token, salt='email-verification-salt', max_age=3600) # 1 hour expiry
-        except (SignatureExpired, BadTimeSignature):
-            flash('The verification link is invalid or has expired.', 'danger')
+            mail.send(msg)
+            flash(f'An OTP has been sent to {patient.email}. Please check your inbox.', 'info')
+        except smtplib.SMTPAuthenticationError as e:
+            error_msg = Markup("Email sending failed due to an authentication error. If using Gmail, please use a 16-character <strong>App Password</strong>. <a href='https://myaccount.google.com/apppasswords' target='_blank' class='alert-link'>Generate one here</a>.")
+            flash(error_msg, "danger")
+            current_app.logger.error(f"SMTPAuthenticationError: {e}. Check MAIL_USERNAME and MAIL_PASSWORD.")
+            if current_app.debug:
+                flash(Markup(f"DEV MODE: Email sending failed. You can <a href='{url_for('dev_bypass_patient_email_verification')}' class='alert-link'>click here to bypass verification</a>."), 'info')
             return redirect(url_for('user_profile'))
 
-        patient = Patient.query.get(session['patient_id'])
-        if patient.email == email:
-            # Check if the attribute exists before trying to set it
-            if hasattr(patient, 'email_verified'):
-                patient.email_verified = True
-                db.session.commit()
-                flash('Your email has been successfully verified!', 'success')
-            else:
-                # This is a fallback if the DB schema is not updated.
-                flash('Email verification feature is not fully configured. Please contact support.', 'warning')
-        else:
-            flash('There was an error verifying your email. Please try again.', 'danger')
-        
-        return redirect(url_for('user_profile'))
+        return redirect(url_for('verify_email_otp'))
 
-    @app.route('/send_mobile_verification')
+    @app.route('/verify_email_otp', methods=['GET', 'POST'])
     @login_required
-    def send_mobile_verification():
-        patient = Patient.query.get(session['patient_id'])
-        if not patient.mobile:
-            flash('Please add a mobile number to your profile first.', 'warning')
-            return redirect(url_for('user_profile'))
-
-        # Check if the attribute exists and if it's true
-        if hasattr(patient, 'mobile_verified') and patient.mobile_verified:
-            flash('Your mobile number is already verified.', 'info')
-            return redirect(url_for('user_profile'))
-
-        otp = str(random.randint(100000, 999999))
-        session['mobile_verification_otp'] = otp
-        session['mobile_to_verify'] = patient.mobile
-
-        try:
-            client = Client(app.config['TWILIO_ACCOUNT_SID'], app.config['TWILIO_AUTH_TOKEN'])
-            message = client.messages.create(
-                body=f"Your CareConnect verification OTP is: {otp}",
-                from_=app.config['TWILIO_PHONE_NUMBER'],
-                to=patient.mobile # Assuming mobile number is in E.164 format
-            )
-            flash(f"An OTP has been sent to your mobile number.", "info")
-            return redirect(url_for('verify_mobile'))
-        except Exception as e:
-            flash("Failed to send OTP. Please check your mobile number or try again later.", "danger")
-            app.logger.error(f"Twilio failed to send SMS for patient verification: {e}")
-            return redirect(url_for('user_profile'))
-
-    @app.route('/verify_mobile', methods=['GET', 'POST'])
-    @login_required
-    def verify_mobile():
-        if 'mobile_verification_otp' not in session:
+    def verify_email_otp():
+        if 'email_verification_otp' not in session:
             flash('Verification process has expired. Please try again.', 'warning')
             return redirect(url_for('user_profile'))
 
         if request.method == 'POST':
             submitted_otp = request.form.get('otp')
-            if submitted_otp == session.get('mobile_verification_otp'):
+            if submitted_otp == session.get('email_verification_otp'):
                 patient = Patient.query.get(session['patient_id'])
-                if patient.mobile == session.get('mobile_to_verify'):
-                    # Check if the attribute exists before trying to set it
-                    if hasattr(patient, 'mobile_verified'):
-                        patient.mobile_verified = True
-                        db.session.commit()
-                        flash('Your mobile number has been successfully verified!', 'success')
-                        # Clean up session
-                        session.pop('mobile_verification_otp', None)
-                        session.pop('mobile_to_verify', None)
-                        return redirect(url_for('user_profile'))
-                    else:
-                        # This is a fallback if the DB schema is not updated.
-                        flash('Mobile verification feature is not fully configured. Please contact support.', 'warning')
-                        return redirect(url_for('user_profile'))
+                if patient.email == session.get('email_to_verify'):
+                    patient.email_verified = True
+                    db.session.commit()
+                    flash('Your email has been successfully verified!', 'success')
+                    # Clean up session
+                    session.pop('email_verification_otp', None)
+                    session.pop('email_to_verify', None)
+                    return redirect(url_for('user_profile'))
                 else:
-                    flash('Mobile number has changed. Please restart verification.', 'danger')
+                    flash('Email address has changed. Please restart verification.', 'danger')
                     return redirect(url_for('user_profile'))
             else:
                 flash('Invalid OTP. Please try again.', 'danger')
         
-        return render_template('patient_verify_mobile.html')
+        return render_template('patient_verify_email.html')
+
+    @app.route('/verify_phone_token', methods=['POST'])
+    @login_required
+    def verify_phone_token():
+        """
+        Verifies a Firebase Auth ID token sent from the client after successful
+        phone number OTP verification.
+        """
+        id_token = request.json.get('token')
+        if not id_token:
+            return jsonify({'success': False, 'error': 'No token provided.'}), 400
+
+        try:
+            # Verify the ID token is valid and not revoked.
+            decoded_token = auth.verify_id_token(id_token)
+            firebase_phone_number = decoded_token.get('phone_number')
+
+            patient = Patient.query.get(session['patient_id'])
+
+            # Ensure the number from the token matches the number in the user's profile.
+            # Firebase numbers are in E.164 format (e.g., +919876543210).
+            if patient.mobile == firebase_phone_number:
+                patient.mobile_verified = True
+                db.session.commit()
+                flash('Your mobile number has been successfully verified!', 'success')
+                return jsonify({'success': True})
+            else:
+                error_msg = f'Verified number ({firebase_phone_number}) does not match your profile number ({patient.mobile}). Please update your profile and try again.'
+                return jsonify({'success': False, 'error': error_msg}), 400
+
+        except auth.InvalidIdTokenError:
+            return jsonify({'success': False, 'error': 'The provided token is invalid.'}), 401
+        except Exception as e:
+            current_app.logger.error(f"Firebase token verification failed for patient {session['patient_id']}: {e}")
+            return jsonify({'success': False, 'error': 'An internal server error occurred during verification.'}), 500
+
+    @app.route('/dev/bypass_patient_mobile_verification')
+    @login_required
+    def dev_bypass_patient_mobile_verification():
+        """
+        A developer-only route to bypass mobile verification without Firebase.
+        """
+        if not current_app.debug:
+            return "This feature is only available in development mode.", 404
+        
+        patient = Patient.query.get(session['patient_id'])
+        patient.mobile_verified = True
+        db.session.commit()
+        flash('DEV MODE: Mobile number verification bypassed.', 'success')
+        return redirect(url_for('user_profile'))
+
+    @app.route('/dev/bypass_patient_email_verification')
+    @login_required
+    def dev_bypass_patient_email_verification():
+        """
+        A developer-only route to bypass email verification without sending an email.
+        """
+        if not current_app.debug:
+            return "This feature is only available in development mode.", 404
+        
+        patient = Patient.query.get(session['patient_id'])
+        patient.email_verified = True
+        db.session.commit()
+        flash('DEV MODE: Email verification bypassed.', 'success')
+        return redirect(url_for('user_profile'))
 
     @app.route('/hospital_doctor')
     @login_required

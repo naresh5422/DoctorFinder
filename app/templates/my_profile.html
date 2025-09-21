@@ -1,82 +1,227 @@
-{% extends "base.html" %}
+{% extends "doctor_base.html" %}
 
-{% block title %}My Profile - {{ doctor.doctor_name }}{% endblock %}
+{% block title %}My Doctor Profile{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
+<div class="container py-5">
+    <h1 class="h2 mb-4">My Profile</h1>
+    
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row g-4">
+        <!-- Left Column: Profile Picture -->
         <div class="col-lg-4">
-            <div class="card shadow-sm mb-4">
-                <div class="card-body text-center">
-                    {% if doctor.image %}
-                        <img src="{{ url_for('static', filename=doctor.image) }}" alt="Doctor Avatar" class="rounded-circle img-fluid" style="max-width: 150px; aspect-ratio: 1 / 1; object-fit: cover;">
-                    {% else %}
-                        <img src="https://static.vecteezy.com/system/resources/previews/005/544/718/original/profile-icon-design-free-vector.jpg" alt="Doctor Avatar" class="rounded-circle img-fluid" style="width: 150px;">
-                    {% endif %}
-                    <h4 class="my-3">{{ doctor.doctor_name }}</h4>
-                    <p class="text-muted mb-1">{{ doctor.specialization }}</p>
-                    <p class="text-muted mb-4">{{ doctor.location }}</p>
-                    <div class="d-flex justify-content-center mb-2">
-                        <a href="{{ url_for('edit_doctor_profile') }}" class="btn btn-primary">Edit Profile</a>
-                    </div>
+            <div class="card text-center">
+                <div class="card-body">
+                    <img id="profile-pic-preview" src="{{ url_for('static', filename=doctor.image or 'images/default-doctor.png') }}" alt="Profile Picture" class="rounded-circle img-fluid mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                    <h5 class="card-title">{{ doctor.doctor_name }}</h5>
+                    <p class="text-muted">{{ doctor.specialization }}</p>
+                    <a href="{{ url_for('edit_doctor_profile') }}" class="btn btn-primary"><i class="bi bi-pencil-square me-2"></i>Edit Profile</a>
                 </div>
             </div>
         </div>
+
+        <!-- Right Column: Profile Details -->
         <div class="col-lg-8">
-            <div class="card shadow-sm mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Profile & Verification Status</h5>
+                </div>
                 <div class="card-body">
-                    <ul class="nav nav-tabs" id="myProfileTab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab" aria-controls="details" aria-selected="true">Details</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="hospital-tab" data-bs-toggle="tab" data-bs-target="#hospital" type="button" role="tab" aria-controls="hospital" aria-selected="false">Hospital</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab" aria-controls="reviews" aria-selected="false">Reviews</button>
-                        </li>
-                    </ul>
-                    <div class="tab-content pt-3" id="myProfileTabContent">
-                        <!-- Professional Details Tab -->
-                        <div class="tab-pane fade show active" id="details" role="tabpanel" aria-labelledby="details-tab">
-                            <div class="row"><div class="col-sm-3"><p class="mb-0">Username</p></div><div class="col-sm-9"><p class="text-muted mb-0">{{ doctor.username }}</p></div></div><hr>
-                            <div class="row"><div class="col-sm-3"><p class="mb-0">Email</p></div><div class="col-sm-9"><p class="text-muted mb-0">{{ doctor.email_id }}</p></div></div><hr>
-                            <div class="row"><div class="col-sm-3"><p class="mb-0">Mobile</p></div><div class="col-sm-9"><p class="text-muted mb-0">{{ doctor.mobile_no }}</p></div></div><hr>
-                            <div class="row"><div class="col-sm-3"><p class="mb-0">Experience</p></div><div class="col-sm-9"><p class="text-muted mb-0">{{ doctor.experience }} years</p></div></div><hr>
-                            <div class="row"><div class="col-sm-3"><p class="mb-0">Rating</p></div><div class="col-sm-9"><p class="text-muted mb-0">{{ doctor.rating or 'N/A' }}/5</p></div></div>
-                            <hr>
-                            <p class="mb-1"><strong>Education & Certifications</strong></p>
-                            <p class="text-muted mb-0"><strong>Education:</strong> {{ doctor.education or 'Not specified.' }}</p>
-                            <p class="text-muted mb-0"><strong>Certifications:</strong> {{ doctor.certifications or 'Not specified.' }}</p>
-                            <hr>
-                            <p class="mb-1"><strong>Biography</strong></p>
-                            <p class="text-muted mb-0">{{ doctor.bio or 'No biography provided.' }}</p>
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label">Full Name</label>
+                        <div class="col-sm-9">
+                            <p class="form-control-plaintext">{{ doctor.doctor_name }}</p>
                         </div>
-                        <!-- Hospital Info Tab -->
-                        <div class="tab-pane fade" id="hospital" role="tabpanel" aria-labelledby="hospital-tab">
-                            <div class="row"><div class="col-sm-3"><p class="mb-0">Hospital Name</p></div><div class="col-sm-9"><p class="text-muted mb-0">{{ doctor.hospital_name }}</p></div></div><hr>
-                            <div class="row"><div class="col-sm-3"><p class="mb-0">Address</p></div><div class="col-sm-9"><p class="text-muted mb-0">{{ doctor.hospital_address }}</p></div></div><hr>
-                            <div class="row"><div class="col-sm-3"><p class="mb-0">Contact</p></div><div class="col-sm-9"><p class="text-muted mb-0">{{ doctor.hospital_contact }}</p></div></div>
+                    </div>
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label">Email</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <input type="email" class="form-control" value="{{ doctor.email_id or '' }}" readonly>
+                                {% if doctor.email_verified %}
+                                    <span class="btn btn-success disabled" title="Your email is verified."><i class="bi bi-check-circle-fill me-1"></i>Verified</span>
+                                {% elif not config.MAIL_SERVER or not config.MAIL_USERNAME %}
+                                    {% if config.DEBUG %}
+                                        <a href="{{ url_for('dev_bypass_doctor_email_verification') }}" class="btn btn-warning" title="DEV ONLY: Bypass email OTP">Bypass</a>
+                                    {% else %}
+                                        <button type="button" class="btn btn-outline-secondary" disabled title="The email service is not configured by the administrator.">Verify</button>
+                                    {% endif %}
+                                {% else %}
+                                    <a href="{{ url_for('send_doctor_email_verification') }}" class="btn btn-outline-secondary">Verify</a>
+                                {% endif %}
+                            </div>
+                            <small class="form-text text-muted">Verify your email to access all features. Once verified, it cannot be changed from the profile editor.</small>
                         </div>
-                        <!-- Reviews Tab -->
-                        <div class="tab-pane fade" id="reviews" role="tabpanel" aria-labelledby="reviews-tab">
-                            {% if doctor.reviews %}
-                                <ul class="list-group list-group-flush">
-                                {% for review_text in doctor.reviews %}
-                                    <li class="list-group-item d-flex align-items-start px-0">
-                                        <i class="bi bi-quote me-2"></i>
-                                        <p class="mb-0 fst-italic">"{{ review_text }}"</p>
-                                    </li>
-                                {% endfor %}
-                                </ul>
-                            {% else %}
-                                <p class="text-muted text-center">No reviews yet.</p>
-                            {% endif %}
+                    </div>
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label">Mobile</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="mobile" value="{{ doctor.mobile_no }}" readonly>
+                                {% if doctor.mobile_verified %}
+                                    <span class="btn btn-success disabled" title="Your mobile number is verified."><i class="bi bi-check-circle-fill me-1"></i>Verified</span>
+                                {% elif not config.FIREBASE_API_KEY %}
+                                    <button type="button" class="btn btn-outline-secondary" disabled title="The SMS service is not configured by the administrator.">Verify</button>
+                                    {% if config.DEBUG and not doctor.mobile_verified %}
+                                        <a href="{{ url_for('dev_bypass_doctor_mobile_verification') }}" class="btn btn-warning" title="DEV ONLY: Bypass Firebase OTP">Bypass</a>
+                                    {% endif %}
+                                {% else %}
+                                    <button type="button" id="verify-mobile-btn" class="btn btn-outline-secondary">Verify</button>
+                                {% endif %}
+                            </div>
+                            <small class="form-text text-muted">Verify your mobile number to access all features. Once verified, it cannot be changed from the profile editor.</small>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label">Location</label>
+                        <div class="col-sm-9">
+                            <p class="form-control-plaintext">{{ doctor.location }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label">Experience</label>
+                        <div class="col-sm-9">
+                            <p class="form-control-plaintext">{{ doctor.experience }} years</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label">Hospital</label>
+                        <div class="col-sm-9">
+                            <p class="form-control-plaintext">{{ doctor.hospital_name }}</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- OTP Verification Modal -->
+    <div class="modal fade" id="otpModal" tabindex="-1" aria-labelledby="otpModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="otpModalLabel">Enter OTP</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>An OTP will be sent to your mobile number. Please enter it below.</p>
+                    <div id="recaptcha-container" class="mb-3"></div>
+                    <div class="mb-3">
+                        <label for="otp-input" class="form-label">Verification Code</label>
+                        <input type="text" class="form-control" id="otp-input" placeholder="Enter 6-digit code">
+                    </div>
+                    <div id="otp-error" class="alert alert-danger d-none" role="alert"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="confirm-otp-btn" class="btn btn-primary">Confirm OTP</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+
+<!-- Firebase Phone Verification Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const firebaseConfig = {
+        apiKey: "{{ config.FIREBASE_API_KEY }}",
+        authDomain: "{{ config.FIREBASE_AUTH_DOMAIN }}",
+        projectId: "{{ config.FIREBASE_PROJECT_ID }}",
+        storageBucket: "{{ config.FIREBASE_STORAGE_BUCKET }}",
+        messagingSenderId: "{{ config.FIREBASE_MESSAGING_SENDER_ID }}",
+        appId: "{{ config.FIREBASE_APP_ID }}"
+    };
+
+    const missingFirebaseKeys = Object.entries(firebaseConfig).filter(([key, value]) => !value).map(([key, value]) => `FIREBASE_${key.replace(/([A-Z])/g, '_$1').toUpperCase()}`);
+    if (missingFirebaseKeys.length > 0) {
+        const errorMsg = `The SMS service (Firebase) is not configured. Please set the following in your .env file: ${missingFirebaseKeys.join(', ')}.`;
+        const verifyBtn = document.getElementById('verify-mobile-btn');
+        if(verifyBtn) verifyBtn.addEventListener('click', () => alert(errorMsg));
+        return;
+    }
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    const verifyBtn = document.getElementById('verify-mobile-btn');
+    const confirmOtpBtn = document.getElementById('confirm-otp-btn');
+    const otpModalElement = document.getElementById('otpModal');
+    if (!otpModalElement) return;
+    const otpModal = new bootstrap.Modal(otpModalElement);
+    const otpError = document.getElementById('otp-error');
+
+    window.confirmationResult = null;
+    window.recaptchaVerifier = new auth.RecaptchaVerifier('recaptcha-container', { 'size': 'invisible' });
+
+    if (verifyBtn) {
+        verifyBtn.addEventListener('click', () => {
+            const phoneNumber = document.getElementById('mobile').value;
+            if (!phoneNumber) {
+                alert('Mobile number not found in profile.');
+                return;
+            }
+            otpModal.show();
+            auth.signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier)
+                .then(confirmationResult => {
+                    window.confirmationResult = confirmationResult;
+                }).catch(error => {
+                    console.error("Error during signInWithPhoneNumber", error);
+                    otpModal.hide();
+                    alert(`Failed to send OTP. Ensure your number is in E.164 format (e.g., +919876543210).`);
+                    window.recaptchaVerifier.render().then(widgetId => grecaptcha.reset(widgetId));
+                });
+        });
+    }
+
+    if (confirmOtpBtn) {
+        confirmOtpBtn.addEventListener('click', () => {
+            const code = document.getElementById('otp-input').value;
+            if (!code || !window.confirmationResult) {
+                otpError.textContent = 'Please enter the OTP.';
+                otpError.classList.remove('d-none');
+                return;
+            }
+            window.confirmationResult.confirm(code).then(result => {
+                result.user.getIdToken().then(idToken => {
+                    fetch("{{ url_for('verify_doctor_phone_token') }}", {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token: idToken })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            alert('Verification failed: ' + data.error);
+                            otpModal.hide();
+                        }
+                    });
+                });
+            }).catch(error => {
+                otpError.textContent = `Invalid OTP. Please try again. (${error.code})`;
+                otpError.classList.remove('d-none');
+            });
+        });
+    }
+});
+</script>
 {% endblock %}

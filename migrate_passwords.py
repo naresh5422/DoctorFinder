@@ -2,6 +2,10 @@ import os
 from app.main import create_app
 from app.models import Doctor
 from app.extension import db
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 def migrate_doctor_passwords():
     """
