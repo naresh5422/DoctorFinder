@@ -37,9 +37,9 @@ if __name__ == "__main__":
     # --- Security Best Practice ---
     # The `debug=True` parameter enables the Werkzeug debugger, which is a major security risk in production.
     # This check ensures that debug mode is only active when FLASK_ENV is explicitly set to 'development'.
-    # is_development = os.environ.get('FLASK_ENV') == 'development'
-    # if not is_development and app.debug:
-    #     logging.error("SECURITY WARNING: Do not run with debug mode enabled in a production environment!")
-    # app.run(debug=is_development, port=5000)
-    port = int(os.environ.get("PORT", 5000))  # fallback for local dev
-    app.run(host="0.0.0.0", port=port)
+    is_development = os.environ.get('FLASK_ENV') == 'development'
+    if not is_development and app.debug:
+        logging.error("SECURITY WARNING: Do not run with debug mode enabled in a production environment!")
+    app.run(debug=is_development, port=5000)
+    # port = int(os.environ.get("PORT", 5000))  # fallback for local dev
+    # app.run(host="0.0.0.0", port=port)

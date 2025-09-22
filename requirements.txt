@@ -11,7 +11,7 @@ twilio==9.2.2
 Flask-Migrate==4.0.7
 gunicorn==22.0.0
 psycopg2-binary==2.9.9
-torch>=2.1.0
-torchvision>=0.16.0
-transformers>=4.37.0
+torch==2.1.2
+torchvision==0.16.2
+transformers==4.37.2
 sentence-transformers>=2.2.2

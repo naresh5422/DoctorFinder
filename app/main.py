@@ -26,10 +26,13 @@ def create_app():
                 if os.path.exists(cred_value):
                     # It's a file path (for local development)
                     cred = credentials.Certificate(cred_value)
-                else:
+                elif cred_value.strip().startswith('{'):
                     # It's a JSON string (for production on Render)
                     cred_info = json.loads(cred_value)
                     cred = credentials.Certificate(cred_info)
+                else:
+                    # It's likely an invalid file path
+                    raise FileNotFoundError(f"The path specified in GOOGLE_APPLICATION_CREDENTIALS does not exist: {cred_value}")
                 firebase_admin.initialize_app(cred)
                 app.logger.info("Firebase Admin SDK initialized successfully.")
             else:
