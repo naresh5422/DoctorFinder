@@ -1,60 +1,86 @@
 {% extends "base.html" %}
 
-{% block title %}Contact Us - CareConnect{% endblock %}
+{% block title %}Contact Us{% endblock %}
+
+{% block head_extra %}
+<style>
+    .contact-info-card {
+        background-color: #f8f9fa; /* Light background for info section */
+    }
+    .contact-info-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    .contact-info-item .icon {
+        font-size: 1.5rem;
+        color: #20c997; /* Primary theme color */
+        width: 50px;
+        flex-shrink: 0;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container py-5">
+    <!-- Header -->
     <div class="text-center mb-5">
-        <h1 class="display-5 fw-bold">Get in Touch</h1>
-        <p class="lead text-muted">We'd love to hear from you. Whether you have a question, feedback, or need support, our team is ready to help.</p>
+        <h1 class="display-4 fw-bold">Get in Touch</h1>
+        <p class="lead text-muted col-lg-8 mx-auto">We'd love to hear from you! Whether you have a question about our services, need assistance, or just want to share feedback, please reach out.</p>
     </div>
 
-    <div class="row g-5">
-        <!-- Contact Form Column -->
-        <div class="col-lg-7">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-body p-4">
-                    <h4 class="mb-4">Send Us a Message</h4>
-                    <form method="POST">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" id="name" name="name" placeholder="Your Name" required>
-                                    <label for="name">Your Name</label>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="email" class="form-control" id="email" name="email" placeholder="Your Email" required>
-                                    <label for="email">Your Email</label>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" id="subject" name="subject" placeholder="Subject" required>
-                                    <label for="subject">Subject</label>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="form-floating">
-                                    <textarea class="form-control" id="message" name="message" placeholder="Leave a message here" style="height: 150px" required></textarea>
-                                    <label for="message">Message</label>
-                                </div>
+    <div class="card shadow-lg border-0">
+        <div class="row g-0">
+            <!-- Left side: Contact Form -->
+            <div class="col-lg-7 p-4 p-md-5">
+                <h3 class="fw-bold mb-4">Send us a Message</h3>
+                <form>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="name" placeholder="Your Name" required>
+                                <label for="name">Your Name</label>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary btn-lg w-100 mt-4">Send Message</button>
-                    </form>
-                </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="email" class="form-control" id="email" placeholder="name@example.com" required>
+                                <label for="email">Email address</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="subject" placeholder="Subject" required>
+                                <label for="subject">Subject</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-floating mb-3">
+                                <textarea class="form-control" placeholder="Leave a message here" id="message" style="height: 150px" required></textarea>
+                                <label for="message">Message</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary btn-lg">Send Message</button>
+                        </div>
+                    </div>
+                </form>
             </div>
-        </div>
-        <!-- Contact Information Column -->
-        <div class="col-lg-5">
-            <div class="card h-100 border-0" style="background-color: #f0f7ff;">
-                <div class="card-body p-4">
-                    <h4 class="card-title mb-4">Contact Information</h4>
-                    <div class="d-flex align-items-start mb-4"><i class="bi bi-geo-alt-fill fs-4 text-primary me-3"></i><div><h6 class="mb-0">Our Office</h6><p class="text-muted">CBPuran, RSNagar, Duvvur, Kadapa, AP - 516175</p></div></div>
-                    <div class="d-flex align-items-start mb-4"><i class="bi bi-envelope-fill fs-4 text-primary me-3"></i><div><h6 class="mb-0">Email Us</h6><p class="text-muted"><a href="mailto:t.naresh5422@gmail.com" class="text-decoration-none text-dark">t.naresh5422@gmail.com</a></p></div></div>
-                    <div class="d-flex align-items-start"><i class="bi bi-telephone-fill fs-4 text-primary me-3"></i><div><h6 class="mb-0">Call Us</h6><p class="text-muted"><a href="tel:+918179027681" class="text-decoration-none text-dark">8179027681</a></p></div></div>
+
+            <!-- Right side: Contact Info -->
+            <div class="col-lg-5 bg-light p-4 p-md-5">
+                <h3 class="fw-bold mb-4">Contact Information</h3>
+                <div class="contact-info-item">
+                    <div class="icon"><i class="bi bi-geo-alt-fill"></i></div>
+                    <div><h5 class="mb-0">Address</h5><p class="text-muted mb-0">123 Health St, Wellness City, 12345</p></div>
+                </div>
+                <div class="contact-info-item">
+                    <div class="icon"><i class="bi bi-telephone-fill"></i></div>
+                    <div><h5 class="mb-0">Phone</h5><p class="text-muted mb-0">8179027681</p></div>
+                </div>
+                <div class="contact-info-item">
+                    <div class="icon"><i class="bi bi-envelope-fill"></i></div>
+                    <div><h5 class="mb-0">Email</h5><p class="text-muted mb-0">t.naresh5422@gmail.com</p></div>
                 </div>
             </div>
         </div>

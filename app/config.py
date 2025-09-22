@@ -1,4 +1,3 @@
-# DATA_PATH = "data/doctors.json"
 import os
 
 class Settings:

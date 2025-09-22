@@ -15,7 +15,6 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import func
 
 def setup_doctor_routes(app):
-    # Doctor Services
     @app.route('/doctor')
     def doctor_home():
         if 'doctor_id' in session:

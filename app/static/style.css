@@ -12,21 +12,20 @@ body {
 }
 
 body::after {
-    content: "CareConnect";
+    content: "";
+    background-image: url("logo.png"); /* Assumes logo.png is in the app/static/ folder */
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: 50vw; /* Adjust size as needed */
     position: fixed;
     top: 50%;
     left: 50%;
+    width: 100vw;
+    height: 100vh;
     transform: translate(-50%, -50%) rotate(-45deg);
-    font-size: 10vw;
-    font-weight: bold;
-    color: rgba(44, 62, 80, 0.05); /* Use a subtle color from the theme */
+    opacity: 0.05; /* Make it very subtle */
     pointer-events: none;
     z-index: -1; /* Place it behind all content */
-    white-space: nowrap;
-    user-select: none; /* Prevent text selection */
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
 }
 
 body.d-flex {

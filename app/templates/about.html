@@ -1,66 +1,81 @@
 {% extends "base.html" %}
 
-{% block title %}About Us - CareConnect{% endblock %}
+{% block title %}About Us{% endblock %}
+
+{% block head_extra %}
+<style>
+    .team-member-card {
+        border: none;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .team-member-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    }
+    .team-member-card img {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border: 5px solid #fff;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .value-card {
+        text-align: center;
+    }
+    .value-card .icon {
+        font-size: 3rem;
+        color: #20c997; /* Use primary theme color */
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container py-5">
+    <!-- Header Section -->
     <div class="text-center mb-5">
         <h1 class="display-4 fw-bold">About CareConnect</h1>
-        <p class="lead text-muted col-lg-8 mx-auto">Our goal is to bridge the gap between patients and healthcare providers through technology, making quality care more accessible for everyone.</p>
+        <p class="lead text-muted col-lg-8 mx-auto">Our mission is to make quality healthcare accessible to everyone, everywhere, by leveraging technology to connect patients with the right doctors seamlessly.</p>
     </div>
 
-    <!-- Our Mission & Vision Section -->
-    <div class="row align-items-center g-5 mb-5">
+    <!-- Our Story Section -->
+    <div class="row align-items-center g-5 mb-5 pb-5 border-bottom">
         <div class="col-lg-6">
-            <img src="https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?q=80&w=1932&auto=format&fit=crop" class="img-fluid rounded-3 shadow-lg" alt="Healthcare professional">
+            <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2070&auto=format&fit=crop" class="img-fluid rounded-3 shadow" alt="Doctor with tablet">
         </div>
         <div class="col-lg-6">
-            <div class="mb-4">
-                <h3 class="fw-bold"><i class="bi bi-bullseye text-primary me-2"></i> Our Mission</h3>
-                <p class="text-muted">To simplify the process of finding the right doctor. We believe that everyone deserves access to quality healthcare, and our platform is designed to provide a seamless, transparent, and trustworthy experience for all our users.</p>
-            </div>
-            <div>
-                <h3 class="fw-bold"><i class="bi bi-eye-fill text-success me-2"></i> Our Vision</h3>
-                <p class="text-muted">We envision a world where healthcare is accessible at your fingertips. Our goal is to become the most reliable online directory for medical professionals, empowering patients to make informed decisions about their health with confidence and ease.</p>
-            </div>
+            <h2 class="fw-bold">Our Story</h2>
+            <p class="text-muted">CareConnect was founded with a simple yet powerful idea: healthcare should be simple, transparent, and patient-centric. We saw the challenges patients faced in finding the right medical expertise and the hurdles doctors encountered in managing their practice efficiently. We decided to build a bridge.</p>
+            <p class="text-muted">Today, CareConnect is a thriving ecosystem that empowers patients to make informed decisions about their health and enables doctors to extend their reach and provide exceptional care. We are driven by innovation, guided by empathy, and committed to building a healthier future.</p>
         </div>
     </div>
 
-    <!-- Why Choose Us Section -->
-    <div class="py-5" style="background-color: #f8f9fa; border-radius: 15px;">
-        <div class="container">
-            <h2 class="text-center mb-5 fw-bold">Why Choose Us?</h2>
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="card h-100 text-center border-0 shadow-sm feature-card">
-                        <div class="card-body">
-                            <div class="feature-icon"><i class="bi bi-person-check-fill"></i></div>
-                            <h5 class="card-title">Verified Doctors</h5>
-                            <p class="card-text text-muted">We list profiles of verified and experienced medical professionals across various specializations.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card h-100 text-center border-0 shadow-sm feature-card">
-                        <div class="card-body">
-                            <div class="feature-icon"><i class="bi bi-search-heart"></i></div>
-                            <h5 class="card-title">Easy Search</h5>
-                            <p class="card-text text-muted">Our intuitive search allows you to find doctors by specialty, location, and patient reviews.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card h-100 text-center border-0 shadow-sm feature-card">
-                        <div class="card-body">
-                            <div class="feature-icon"><i class="bi bi-calendar2-plus-fill"></i></div>
-                            <h5 class="card-title">Simple Booking</h5>
-                            <p class="card-text text-muted">Book appointments directly through our platform with just a few clicks.</p>
-                        </div>
-                    </div>
-                </div>
+    <!-- Our Values Section -->
+    <div class="text-center mb-5 pt-5">
+        <h2 class="fw-bold">Our Core Values</h2>
+        <p class="lead text-muted col-lg-8 mx-auto">These principles guide every decision we make.</p>
+    </div>
+    <div class="row g-4 text-center mb-5 pb-5 border-bottom">
+        <div class="col-md-4">
+            <div class="value-card p-4">
+                <div class="icon mb-3"><i class="bi bi-shield-check"></i></div>
+                <h4 class="fw-bold">Trust</h4>
+                <p class="text-muted">We are committed to building a platform where every interaction is secure, transparent, and built on trust between patients and doctors.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="value-card p-4">
+                <div class="icon mb-3"><i class="bi bi-lightbulb"></i></div>
+                <h4 class="fw-bold">Innovation</h4>
+                <p class="text-muted">We continuously innovate, using AI and modern technology to simplify healthcare processes and improve outcomes for everyone.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="value-card p-4">
+                <div class="icon mb-3"><i class="bi bi-people"></i></div>
+                <h4 class="fw-bold">Compassion</h4>
+                <p class="text-muted">At the heart of our work is a deep sense of compassion for the people we serve. We strive to be empathetic in every feature we build.</p>
             </div>
         </div>
     </div>
-
 </div>
 {% endblock %}
