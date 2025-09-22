@@ -370,12 +370,28 @@ If you did not make this request then simply ignore this email and no changes wi
             flash("Doctor database record not found.", "danger")
             return redirect(url_for("doctor_login"))
 
-        # Appointments are still fetched from the database
-        all_appointments = Appointment.query.filter_by(doctor_id=doctor_id).order_by(Appointment.appointment_date.desc()).all()
+        # --- Refactored Appointment Fetching ---
+        # This logic now filters out expired appointments from the 'Pending' and 'Confirmed'
+        # lists and sorts them more logically.
+        now = datetime.now()
 
-        pending_appointments = [a for a in all_appointments if a.status == 'Pending']
-        confirmed_appointments = [a for a in all_appointments if a.status == 'Confirmed']
-        completed_appointments = [a for a in all_appointments if a.status == 'Completed']
+        # Fetch only upcoming pending appointments, sorted by the soonest first.
+        pending_appointments = Appointment.query.filter(
+            Appointment.doctor_id == doctor_id,
+            Appointment.status == 'Pending',
+            Appointment.appointment_date > now
+        ).order_by(Appointment.appointment_date.asc()).all()
+
+        # Fetch only upcoming confirmed appointments, sorted by the soonest first.
+        confirmed_appointments = Appointment.query.filter(
+            Appointment.doctor_id == doctor_id,
+            Appointment.status == 'Confirmed',
+            Appointment.appointment_date > now
+        ).order_by(Appointment.appointment_date.asc()).all()
+
+        # Fetch all completed appointments, sorted by the most recent first.
+        completed_appointments = Appointment.query.filter_by(doctor_id=doctor_id, status='Completed').order_by(Appointment.appointment_date.desc()).all()
+        # --- End Refactor ---
 
         # --- Start: Logic to get recent conversations for dashboard ---
         # Subquery to get the last message for each patient conversation
@@ -415,7 +431,6 @@ If you did not make this request then simply ignore this email and no changes wi
         now = datetime.now()
         weekly_slots = {}
 
-        # Robustly handle available_slots which might be a string from old data
         current_slots = doctor.available_slots
         if isinstance(current_slots, str):
             try:
@@ -423,25 +438,35 @@ If you did not make this request then simply ignore this email and no changes wi
             except json.JSONDecodeError:
                 current_slots = {}
 
+        # --- REFACTORED SLOT FILTERING LOGIC ---
+        # This logic now correctly removes slots that are already booked (Pending or Confirmed).
         if current_slots:
-            # Sort the dates first to process them in order
-            sorted_dates = sorted(current_slots.keys())
-            for date_str in sorted_dates:
-                try:
-                    slot_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-                    if today <= slot_date < today + timedelta(days=7):
-                        # Filter out past times for today's date
-                        if slot_date == today:
-                            future_times = [
-                                time_str for time_str in current_slots[date_str]
-                                if datetime.strptime(f"{date_str} {time_str}", '%Y-%m-%d %H:%M') > now
-                            ]
-                            if future_times:
-                                weekly_slots[date_str] = future_times
-                        else: # For future dates, all slots are valid
-                            weekly_slots[date_str] = current_slots[date_str]
-                except ValueError:
-                    continue # Ignore invalid date keys
+            seven_days_from_now = today + timedelta(days=7)
+            
+            relevant_dates = [
+                date_str for date_str in current_slots.keys()
+                if today <= datetime.strptime(date_str, '%Y-%m-%d').date() < seven_days_from_now
+            ]
+
+            if relevant_dates:
+                booked_appointments = Appointment.query.filter(
+                    Appointment.doctor_id == doctor_id,
+                    Appointment.appointment_date.cast(db.Date).in_(relevant_dates),
+                    Appointment.status.in_(['Pending', 'Confirmed'])
+                ).all()
+                booked_slot_keys = {f"{appt.appointment_date.strftime('%Y-%m-%d')}_{appt.appointment_date.strftime('%H:%M')}" for appt in booked_appointments}
+
+                for date_str in sorted(relevant_dates):
+                    try:
+                        available_times = [
+                            time_str for time_str in current_slots.get(date_str, [])
+                            if datetime.strptime(f"{date_str} {time_str}", '%Y-%m-%d %H:%M') > now and f"{date_str}_{time_str}" not in booked_slot_keys
+                        ]
+                        if available_times:
+                            weekly_slots[date_str] = available_times
+                    except (ValueError, TypeError):
+                        continue
+        # --- END REFACTOR ---
 
         return render_template("doctor_dashboard.html", doctor=doctor,
                                pending_appointments=pending_appointments,
@@ -754,7 +779,6 @@ If you did not make this request then simply ignore this email and no changes wi
 
     @app.route('/doctor/messages')
     @doctor_login_required
-    @doctor_verified_required
     def doctor_list_conversations():
         doctor_id = session['doctor_id']
         
@@ -793,7 +817,6 @@ If you did not make this request then simply ignore this email and no changes wi
 
     @app.route('/doctor/messages/<int:patient_id>', methods=['GET', 'POST'])
     @doctor_login_required
-    @doctor_verified_required
     def doctor_conversation(patient_id):
         doctor_id = session['doctor_id']
         patient = Patient.query.get_or_404(patient_id)

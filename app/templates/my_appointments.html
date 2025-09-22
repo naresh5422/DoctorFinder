@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="container py-5">
-    <h1 class="h2 mb-5">
+    <h3 class="h2 mb-5">
         {% if view_filter == 'conversations' %}
             My Doctor Conversations
         {% elif status_filter %}
@@ -14,7 +14,7 @@
         {% else %}
             My Appointments & Conversations
         {% endif %}
-    </h1>
+    </h3>
 
     <div class="row g-5">
         {# --- Define conditions for what to show --- #}
