@@ -137,8 +137,11 @@ Follow these instructions to get a copy of the project up and running on your lo
     # 2. Go to https://myaccount.google.com/apppasswords to generate one.
     # MAIL_PASSWORD="your-generated-app-password"
 
-    # --- Firebase Configuration ---
-    # 1. For Backend (Admin SDK) - Set this to the path of your service account JSON file.
+    # --- Firebase Configuration (for Phone OTP Verification) ---
+    # 1. For Backend (Admin SDK) - This must be the absolute path to your service account JSON file.
+    #    - Go to your Firebase Project Settings > Service accounts.
+    #    - Click "Generate new private key" to download the file.
+    #    - Save the file in a secure location OUTSIDE of your project folder.
     GOOGLE_APPLICATION_CREDENTIALS="D:/path/to/your/firebase-service-account.json"
 
     # 2. For Frontend (Web SDK) - Get these from your Firebase project settings.
@@ -190,8 +193,8 @@ Make sure your project is pushed to a GitHub repository.
     -   Go to **New > Web Service** and connect your GitHub repository.
     -   Render will detect it's a Python app. Configure the following settings:
         -   **Runtime**: `Python 3`
-        -   **Build Command**: `pip install -r requirements.txt && python -m spacy download en_core_web_sm && flask db upgrade`
-        -   **Start Command**: `gunicorn run:app`
+        -   **Build Command**: `pip install torch==2.1.2 && pip install -r requirements.txt && python -m spacy download en_core_web_sm && flask db upgrade`
+        -   **Start Command**: `gunicorn run:app`  **(Important: This tells Gunicorn to look for the `app` variable in your `run.py` file.)**
 
 3.  **Add Environment Variables**:
     -   Under the "Environment" tab for your web service, add all the variables from your local `.env` file.

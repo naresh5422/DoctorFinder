@@ -3,6 +3,7 @@ from flask import Flask
 from app.extension import db, mail
 from app.config import settings
 import firebase_admin
+import json
 from datetime import datetime
 from flask_migrate import Migrate
 from firebase_admin import credentials
@@ -15,12 +16,24 @@ def create_app():
     app.config.from_object(settings)
 
     # --- BEGIN: Firebase Admin SDK Initialization ---
+    # This logic handles both a file path (local) and a JSON string (production)
     # The GOOGLE_APPLICATION_CREDENTIALS env var should point to the service account file.
     try:
-        if os.getenv("GOOGLE_APPLICATION_CREDENTIALS") and not firebase_admin._apps:
-            cred = credentials.ApplicationDefault()
-            firebase_admin.initialize_app(cred)
-            app.logger.info("Firebase Admin SDK initialized successfully.")
+        if not firebase_admin._apps:
+            cred_value = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+            if cred_value:
+                # Check if it's a file path or a JSON string
+                if os.path.exists(cred_value):
+                    # It's a file path (for local development)
+                    cred = credentials.Certificate(cred_value)
+                else:
+                    # It's a JSON string (for production on Render)
+                    cred_info = json.loads(cred_value)
+                    cred = credentials.Certificate(cred_info)
+                firebase_admin.initialize_app(cred)
+                app.logger.info("Firebase Admin SDK initialized successfully.")
+            else:
+                app.logger.warning("GOOGLE_APPLICATION_CREDENTIALS not set. Phone verification will be disabled.")
     except Exception as e:
         app.logger.error(f"Failed to initialize Firebase Admin SDK: {e}. Phone verification will not work.")
     # --- END: Firebase Admin SDK Initialization ---
