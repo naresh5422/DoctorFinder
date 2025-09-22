@@ -20,6 +20,7 @@
     .dashboard-stat-card.border-left-success { border-left-color: #198754 !important; }
     .dashboard-stat-card.border-left-info { border-left-color: #0dcaf0 !important; }
     .dashboard-stat-card.border-left-primary { border-left-color: #0d6efd !important; }
+    .dashboard-stat-card.border-left-secondary { border-left-color: #6c757d !important; }
 
     .appointment-item {
         transition: background-color 0.2s ease;
@@ -42,8 +43,19 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="row g-4 mb-4">
-        <div class="col-sm-6 col-lg-3">
+    <div class="row g-4 mb-4 row-cols-1 row-cols-md-3 row-cols-lg-5">
+        <div class="col">
+            <div class="card h-100 dashboard-stat-card border-left-secondary">
+                <div class="card-body d-flex align-items-center">
+                    <div class="stat-icon text-secondary me-3"><i class="bi bi-calendar3"></i></div>
+                    <div>
+                        <h3 class="card-title mb-0">{{ total_appointments }}</h3>
+                        <p class="card-text text-muted mb-0">Total Appointments</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
             <div class="card h-100 dashboard-stat-card border-left-warning">
                 <div class="card-body d-flex align-items-center">
                     <div class="stat-icon text-warning me-3"><i class="bi bi-clock-history"></i></div>
@@ -54,7 +66,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
+        <div class="col">
             <div class="card h-100 dashboard-stat-card border-left-success">
                 <div class="card-body d-flex align-items-center">
                     <div class="stat-icon text-success me-3"><i class="bi bi-check2-circle"></i></div>
@@ -65,7 +77,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
+        <div class="col">
             <div class="card h-100 dashboard-stat-card border-left-info">
                 <div class="card-body d-flex align-items-center">
                     <div class="stat-icon text-info me-3"><i class="bi bi-journal-check"></i></div>
@@ -76,7 +88,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
+        <div class="col">
             <div class="card h-100 dashboard-stat-card border-left-primary">
                 <div class="card-body d-flex align-items-center">
                     <div class="stat-icon text-primary me-3"><i class="bi bi-chat-dots"></i></div>

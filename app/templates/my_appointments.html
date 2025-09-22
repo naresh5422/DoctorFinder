@@ -1,177 +1,121 @@
 {% extends "base.html" %}
 
-{% block title %}My Appointments & Conversations{% endblock %}
+{% block title %}My Appointments{% endblock %}
 
 {% block content %}
 <div class="container py-5">
-    <h3 class="h2 mb-5">
-        {% if view_filter == 'conversations' %}
-            My Doctor Conversations
-        {% elif status_filter %}
-            {{ status_filter }} Appointments
-        {% elif view_filter == 'appointments' %}
-            All Appointments
-        {% else %}
-            My Appointments & Conversations
-        {% endif %}
-    </h3>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">My Appointments & Messages</h1>
+        <a href="{{ url_for('browse_doctors') }}" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Book New Appointment</a>
+    </div>
 
     <div class="row g-5">
-        {# --- Define conditions for what to show --- #}
-        {% set show_appointments_only = status_filter or view_filter == 'appointments' %}
-        {% set show_conversations_only = view_filter == 'conversations' %}
-        {% set show_both = not show_appointments_only and not show_conversations_only %}
+        <div class="col-lg-8">
+            <!-- Appointment Tabs -->
+            <ul class="nav nav-pills mb-3">
+                <li class="nav-item">
+                    <a class="nav-link {% if not status_filter and view_filter != 'conversations' %}active{% endif %}" href="{{ url_for('my_appointments') }}">All</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if status_filter == 'Pending' %}active{% endif %}" href="{{ url_for('my_appointments', status='Pending') }}">Pending</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if status_filter == 'Confirmed' %}active{% endif %}" href="{{ url_for('my_appointments', status='Confirmed') }}">Confirmed</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if status_filter == 'Completed' %}active{% endif %}" href="{{ url_for('my_appointments', status='Completed') }}">Completed</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if status_filter == 'Canceled' %}active{% endif %}" href="{{ url_for('my_appointments', status='Canceled') }}">Canceled</a>
+                </li>
+            </ul>
 
-        <!-- Left Column: Appointments History -->
-        {% if show_appointments_only or show_both %}
-        <div class="{% if show_both %}col-lg-8{% else %}col-lg-12{% endif %}">
-            {% if show_both %}
-            <h3 class="mb-4">Appointment History</h3>
-            {% endif %}
-            {% if appointments %}
-                <div class="list-group">
+            <!-- Appointments List -->
+            <div class="list-group">
+                {% if appointments %}
                     {% for appt in appointments %}
-                        <div class="list-group-item p-3 mb-3 border rounded">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h5 class="mb-1">Dr. {{ appt.doctor.doctor_name }}</h5>
-                                <small class="text-muted">{{ appt.appointment_date.strftime('%b %d, %Y, %I:%M %p') }}</small>
-                            </div>
-                            <p class="mb-1 text-muted">Specialty: {{ appt.doctor.specialization }}</p>
-                            <p class="mb-2">Reason: {{ appt.reason or 'Not specified' }}</p>
-                            
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small>Status: 
-                                    {% if appt.status == 'Pending' %}
+                        <div class="list-group-item p-3">
+                            <div class="row align-items-center">
+                                <div class="col-md-2 text-center mb-3 mb-md-0">
+                                    <img src="{{ url_for('static', filename=appt.doctor.image or 'images/default-doctor.png') }}" alt="Dr. {{ appt.doctor.doctor_name }}" class="img-fluid rounded-circle" style="width: 70px; height: 70px; object-fit: cover;">
+                                </div>
+                                <div class="col-md-6">
+                                    <h5 class="mb-1">Dr. {{ appt.doctor.doctor_name }}</h5>
+                                    <p class="mb-1 text-muted">{{ appt.doctor.specialization }}</p>
+                                    <p class="mb-1"><small><strong>Reason:</strong> {{ appt.reason or 'Not specified' }}</small></p>
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    <p class="mb-1"><small>{{ appt.appointment_date.strftime('%a, %b %d, %Y') }} at {{ appt.appointment_date.strftime('%I:%M %p') }}</small></p>
+                                    
+                                    {# --- STATUS LOGIC --- #}
+                                    {% if appt.status == 'Pending' and appt.appointment_date < now %}
+                                        <span class="badge bg-danger">Not Confirmed</span>
+                                    {% elif appt.status == 'Confirmed' and appt.appointment_date < now %}
+                                        <span class="badge bg-secondary">Not Consulted</span>
+                                    {% elif appt.status == 'Pending' %}
                                         <span class="badge bg-warning text-dark">{{ appt.status }}</span>
                                     {% elif appt.status == 'Confirmed' %}
                                         <span class="badge bg-success">{{ appt.status }}</span>
-                                    {% elif appt.status == 'Cancelled' %}
-                                        <span class="badge bg-danger">{{ appt.status }}</span>
                                     {% elif appt.status == 'Completed' %}
+                                        <span class="badge bg-info">{{ appt.status }}</span>
+                                    {% elif appt.status == 'Canceled' %}
                                         <span class="badge bg-secondary">{{ appt.status }}</span>
-                                    {% else %}
-                                        <span class="badge bg-light text-dark">{{ appt.status }}</span>
                                     {% endif %}
-                                </small>
-                                
-                                {% if appt.status == 'Confirmed' %}
-                                    <a href="{{ url_for('conversation', doctor_id=appt.doctor.id, back_url=request.url) }}" class="btn btn-outline-success btn-sm">
-                                        <i class="bi bi-chat-dots-fill me-1"></i> Message Doctor
-                                    </a>
-                                {% elif appt.status == 'Completed' %}
-                                    {% if appt.doctor_id not in reviewed_doctor_ids %}
-                                        <a href="#" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#reviewModal-{{ appt.id }}">
-                                            <i class="bi bi-star-fill me-1"></i> Write a Review
-                                        </a>
-                                    {% else %}
-                                        <span class="text-success small"><i class="bi bi-check-circle-fill me-1"></i> Reviewed</span>
+                                    
+                                    {# --- ACTION BUTTONS --- #}
+                                    {% if appt.status == 'Completed' and appt.doctor.id not in reviewed_doctor_ids %}
+                                        <button class="btn btn-sm btn-outline-primary mt-2" data-bs-toggle="modal" data-bs-target="#reviewModal-{{ appt.id }}">Write a Review</button>
+                                    {% elif appt.status == 'Confirmed' and appt.appointment_date > now %}
+                                        <a href="{{ url_for('conversation', doctor_id=appt.doctor.id, back_url=request.url) }}" class="btn btn-sm btn-outline-primary mt-2">Message Doctor</a>
                                     {% endif %}
-                                {% endif %}
+                                </div>
                             </div>
                         </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="text-center p-4 border rounded bg-light">
-                    <p class="mb-0 text-muted">You have no appointment history.</p>
-                    <a href="{{ url_for('browse_doctors') }}" class="btn btn-primary btn-sm mt-2">Book an Appointment</a>
-                </div>
-            {% endif %}
-        </div>
-        {% endif %}
 
-        <!-- Right Column: Doctor Conversations -->
-        {% if show_conversations_only or show_both %}
-        <div class="{% if show_both %}col-lg-4{% else %}col-lg-8 offset-lg-2{% endif %}">
-            <div {% if show_both %}class="sticky-top" style="top: 2rem;"{% endif %}>
-                {% if show_both %}
-                <h3 class="mb-4">My Doctor Conversations</h3>
-                {% endif %}
-                {% if conversations %}
-                    <div class="conversation-list">
-                        {% for conv in conversations %}
-                            <a href="{{ url_for('conversation', doctor_id=conv.doctor.id, back_url=request.url) }}" class="conversation-card-link">
-                                <div class="card conversation-card mb-3 {% if conv.unread_count > 0 %}has-unread{% endif %}">
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-center">
-                                            <div class="flex-shrink-0">
-                                                <img src="{{ url_for('static', filename=conv.doctor.image or 'images/default-doctor.png') }}" class="rounded-circle" alt="Dr. {{ conv.doctor.doctor_name }}" style="width: 50px; height: 50px; object-fit: cover;">
-                                            </div>
-                                            <div class="flex-grow-1 ms-3">
-                                                <div class="d-flex justify-content-between align-items-start">
-                                                    <div>
-                                                        <h6 class="mb-0">Dr. {{ conv.doctor.doctor_name }}</h6>
-                                                        <p class="mb-0 small text-muted text-truncate" style="max-width: 250px;">
-                                                            {% if conv.last_message %}
-                                                                {% if conv.last_message.sender_type == 'patient' %}<strong>You:</strong> {% endif %}{{ conv.last_message.content }}
-                                                            {% else %}
-                                                                <span class="fst-italic">No messages yet.</span>
-                                                            {% endif %}
-                                                        </p>
-                                                    </div>
-                                                    <div class="text-end">
-                                                        {% if conv.last_message %}
-                                                            <small class="text-muted">{{ conv.last_message.timestamp.strftime('%b %d') }}</small>
-                                                        {% endif %}
-                                                        {% if conv.unread_count > 0 %}
-                                                            <span class="badge bg-primary rounded-pill mt-1">{{ conv.unread_count }}</span>
-                                                        {% endif %}
-                                                    </div>
+                        <!-- Review Modal -->
+                        {% if appt.status == 'Completed' and appt.doctor.id not in reviewed_doctor_ids %}
+                        <div class="modal fade" id="reviewModal-{{ appt.id }}" tabindex="-1" aria-labelledby="reviewModalLabel-{{ appt.id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <form action="{{ url_for('submit_review', doctor_id=appt.doctor.id) }}" method="POST">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="reviewModalLabel-{{ appt.id }}">Review Dr. {{ appt.doctor.doctor_name }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <input type="hidden" name="appointment_id" value="{{ appt.id }}">
+                                            <div class="mb-3 text-center">
+                                                <label class="form-label">Your Rating</label>
+                                                <div class="rating">
+                                                    <input type="radio" id="star5-{{ appt.id }}" name="rating" value="5" required /><label for="star5-{{ appt.id }}">★</label>
+                                                    <input type="radio" id="star4-{{ appt.id }}" name="rating" value="4" /><label for="star4-{{ appt.id }}">★</label>
+                                                    <input type="radio" id="star3-{{ appt.id }}" name="rating" value="3" /><label for="star3-{{ appt.id }}">★</label>
+                                                    <input type="radio" id="star2-{{ appt.id }}" name="rating" value="2" /><label for="star2-{{ appt.id }}">★</label>
+                                                    <input type="radio" id="star1-{{ appt.id }}" name="rating" value="1" /><label for="star1-{{ appt.id }}">★</label>
                                                 </div>
                                             </div>
+                                            <div class="mb-3">
+                                                <label for="comment-{{ appt.id }}" class="form-label">Your Comment</label>
+                                                <textarea class="form-control" id="comment-{{ appt.id }}" name="comment" rows="4" required></textarea>
+                                            </div>
                                         </div>
-                                    </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-primary">Submit Review</button>
+                                        </div>
+                                    </form>
                                 </div>
-                            </a>
-                        {% endfor %}
-                    </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
                 {% else %}
-                    <div class="text-center p-4 border rounded bg-light">
-                        <p class="mb-0 text-muted">You have no active conversations.</p>
+                    <div class="text-center p-5 border rounded bg-light">
+                        <p class="mb-0 text-muted">You have no appointments in this category.</p>
                     </div>
                 {% endif %}
             </div>
         </div>
-        {% endif %}
     </div>
-    
-    <!-- Review Modals -->
-    {% for appt in appointments %}
-        {% if appt.status == 'Completed' and appt.doctor_id not in reviewed_doctor_ids %}
-            <div class="modal fade" id="reviewModal-{{ appt.id }}" tabindex="-1" aria-labelledby="reviewModalLabel-{{ appt.id }}" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="reviewModalLabel-{{ appt.id }}">Review for Dr. {{ appt.doctor.doctor_name }}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <form action="{{ url_for('submit_review', doctor_id=appt.doctor_id) }}" method="POST">
-                            <div class="modal-body">
-                                <input type="hidden" name="appointment_id" value="{{ appt.id }}">
-                                <div class="mb-3 text-center">
-                                    <label class="form-label">Your Rating</label>
-                                    <div class="rating">
-                                        <input type="radio" id="star5-{{ appt.id }}" name="rating" value="5" /><label for="star5-{{ appt.id }}"><i class="bi bi-star-fill"></i></label>
-                                        <input type="radio" id="star4-{{ appt.id }}" name="rating" value="4" /><label for="star4-{{ appt.id }}"><i class="bi bi-star-fill"></i></label>
-                                        <input type="radio" id="star3-{{ appt.id }}" name="rating" value="3" /><label for="star3-{{ appt.id }}"><i class="bi bi-star-fill"></i></label>
-                                        <input type="radio" id="star2-{{ appt.id }}" name="rating" value="2" /><label for="star2-{{ appt.id }}"><i class="bi bi-star-fill"></i></label>
-                                        <input type="radio" id="star1-{{ appt.id }}" name="rating" value="1" required/><label for="star1-{{ appt.id }}"><i class="bi bi-star-fill"></i></label>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="comment-{{ appt.id }}" class="form-label">Comment</label>
-                                    <textarea class="form-control" id="comment-{{ appt.id }}" name="comment" rows="4" placeholder="Share your experience..." required></textarea>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                <button type="submit" class="btn btn-primary">Submit Review</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        {% endif %}
-    {% endfor %}
 </div>
 {% endblock %}

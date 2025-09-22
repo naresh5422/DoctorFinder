@@ -374,6 +374,16 @@ If you did not make this request then simply ignore this email and no changes wi
         # lists and sorts them more logically.
         now = datetime.now()
 
+        # --- New: Calculate total valid appointments for the stat card ---
+        # A valid appointment is any appointment that is NOT a past, pending appointment.
+        total_appointments = Appointment.query.filter(
+            Appointment.doctor_id == doctor_id,
+            db.or_(
+                Appointment.status != 'Pending',
+                Appointment.appointment_date > now
+            )
+        ).count()
+
         # Fetch only upcoming pending appointments, sorted by the soonest first.
         pending_appointments = Appointment.query.filter(
             Appointment.doctor_id == doctor_id,
@@ -442,10 +452,14 @@ If you did not make this request then simply ignore this email and no changes wi
         if current_slots:
             seven_days_from_now = today + timedelta(days=7)
             
-            relevant_dates = [
-                date_str for date_str in current_slots.keys()
-                if today <= datetime.strptime(date_str, '%Y-%m-%d').date() < seven_days_from_now
-            ]
+            relevant_dates = []
+            for date_str in current_slots.keys():
+                try:
+                    if today <= datetime.strptime(date_str, '%Y-%m-%d').date() < seven_days_from_now:
+                        relevant_dates.append(date_str)
+                except ValueError:
+                    # Gracefully skip keys that are not in 'YYYY-MM-DD' format, like the erroneous 'slots' key.
+                    continue
 
             if relevant_dates:
                 booked_appointments = Appointment.query.filter(
@@ -468,6 +482,7 @@ If you did not make this request then simply ignore this email and no changes wi
         # --- END REFACTOR ---
 
         return render_template("doctor_dashboard.html", doctor=doctor,
+                               total_appointments=total_appointments,
                                pending_appointments=pending_appointments,
                                confirmed_appointments=confirmed_appointments,
                                completed_appointments=completed_appointments,
@@ -481,8 +496,8 @@ If you did not make this request then simply ignore this email and no changes wi
         if "doctor_id" not in session:
             flash("Please log in to access your homepage.", "warning")
             return redirect(url_for("doctor_login"))
-        doctor_name = session.get("doctor_name", "Doctor")
-        return render_template("doctor_home.html", doctor_name=doctor_name)
+        # The doctor's details are injected by the context processor, so we can use them directly in the template.
+        return render_template("doctor_home.html")
 
     @app.route("/doctor_logout")
     def doctor_logout():

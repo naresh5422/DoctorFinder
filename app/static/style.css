@@ -5,7 +5,7 @@ html, body {
 body {
     font-family: 'Poppins', sans-serif;
     margin: 0;
-    background-color: #f8f9fa;
+    background-color: #F2F2F2;
     color: #495057;
     position: relative; /* Establish stacking context for watermark */
     z-index: 0;
@@ -54,7 +54,7 @@ body.d-flex {
 
 .hero-section {
     /* New animated gradient background */
-    background: linear-gradient(-45deg, #e9f9f5, #f8f9fa, #d4f3e9, #ffffff);
+    background: linear-gradient(-45deg, #e0f2f1, #F2F2F2, #b2dfdb, #ffffff);
     background-size: 400% 400%;
     animation: gradientAnimation 15s ease infinite;
     padding: 6rem 0;
@@ -65,7 +65,7 @@ body.d-flex {
     font-weight: 700;
     margin-bottom: 1rem;
     /* New gradient with the teal color scheme */
-    background: linear-gradient(45deg, #20c997, #1a9875);
+    background: linear-gradient(45deg, #008080, #006666);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -127,7 +127,7 @@ body.d-flex {
 }
 
 .trust-badge i {
-    color: #20c997;
+    color: #008080;
     margin-right: 0.5rem;
 }
 
@@ -140,7 +140,7 @@ body.d-flex {
 .how-it-works-section::before, .how-it-works-section::after {
     content: '';
     position: absolute;
-    background-color: #e9f9f5; /* Light teal */
+    background-color: #e0f2f1; /* Light teal */
     border-radius: 50%;
     opacity: 0.6;
     z-index: -1;
@@ -159,8 +159,8 @@ body.d-flex {
 }
 
 .how-it-works-step .step-number {
-    background-color: #e9f9f5; /* Light teal */
-    color: #20c997;
+    background-color: #e0f2f1; /* Light teal */
+    color: #008080;
     width: 50px;
     height: 50px;
     border-radius: 50%;
@@ -175,7 +175,7 @@ body.d-flex {
 
 .how-it-works-step:hover .step-number {
     transform: scale(1.1);
-    background-color: #20c997;
+    background-color: #008080;
     color: #fff;
 }
 .testimonial-card {
@@ -196,7 +196,7 @@ body.d-flex {
     top: 1.5rem;
     left: 1.5rem;
     font-size: 2.5rem;
-    color: #20c997;
+    color: #008080;
     opacity: 0.15;
 }
 
@@ -215,7 +215,7 @@ body.d-flex {
 
 /* Generic section background */
 .section-bg-light {
-    background-color: #f8f9fa;
+    background-color: #F2F2F2;
 }
 
 /* --- Featured Doctors Section --- */
@@ -285,7 +285,7 @@ body.d-flex {
 }
 
 .doctor-result-card .border-start {
-    background-color: #f8f9fa;
+    background-color: #F2F2F2;
 }
 
 .search-results-bar {
@@ -321,10 +321,10 @@ body.d-flex {
     display: inline-block;
     margin-top: 0.5rem;
 }
-.stat-card.border-top-primary { border-top-color: #20c997; }
+.stat-card.border-top-primary { border-top-color: #008080; }
 .stat-card.border-top-primary .stat-number {
-    background-color: rgba(32, 201, 151, 0.1);
-    color: #1a9875;
+    background-color: rgba(0, 128, 128, 0.1);
+    color: #006666;
 }
 .stat-card.border-top-warning { border-top-color: #ffc107; }
 .stat-card.border-top-warning .stat-number {
@@ -363,7 +363,7 @@ body.d-flex {
 
 .hospital-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 12px 25px rgba(32, 201, 151, 0.12);
+    box-shadow: 0 12px 25px rgba(0, 128, 128, 0.12);
 }
 
 .hospital-card .card-img-top-wrapper {
@@ -397,16 +397,16 @@ body.d-flex {
 
 .specialty-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 12px 24px rgba(32, 201, 151, 0.08);
-    border-color: #20c997;
+    box-shadow: 0 12px 24px rgba(0, 128, 128, 0.08);
+    border-color: #008080;
     background-color: #fff;
 }
 
 .specialty-card .icon {
     font-size: 2.5rem;
-    color: #20c997;
+    color: #008080;
     margin-bottom: 1rem;
-    background-color: #e9f9f5;
+    background-color: #e0f2f1;
     width: 60px;
     height: 60px;
     border-radius: 50%;
@@ -417,7 +417,7 @@ body.d-flex {
 }
 
 .specialty-card:hover .icon {
-    background-color: #20c997;
+    background-color: #008080;
     color: #fff;
 }
 
@@ -504,10 +504,10 @@ body.d-flex {
     justify-content: flex-end;
 }
 .chat-message.sent .message-meta {
-    color: #c1f0e4; /* Light teal for meta on dark background */
+    color: #b2dfdb; /* Light teal for meta on dark background */
 }
 .chat-message.sent .message-content {
-    background-color: #20c997;
+    background-color: #008080;
     color: white;
     border-bottom-right-radius: 0;
 }
@@ -527,9 +527,9 @@ body.d-flex {
 /* --- End Chat Interface --- */
 
 .navbar .btn-primary {
-    --bs-btn-bg: #20c997;
-    --bs-btn-border-color: #20c997;
-    --bs-btn-hover-bg: #1a9875;
+    --bs-btn-bg: #008080;
+    --bs-btn-border-color: #008080;
+    --bs-btn-hover-bg: #006666;
 }
 
 /* Star Rating Styles */
@@ -553,7 +553,7 @@ body.d-flex {
 }
 
 .footer {
-    background-color: #f8f9fa;
+    background-color: #F2F2F2;
     color: #6c757d;
 }
 
@@ -582,11 +582,11 @@ body.d-flex {
 }
 
 .footer-links a:hover {
-    color: #20c997;
+    color: #008080;
 }
 
 .footer-contact i {
-    color: #20c997;
+    color: #008080;
     padding-top: 4px;
 }
 
@@ -595,8 +595,8 @@ body.d-flex {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background-color: #e9f9f5;
-    color: #20c997;
+    background-color: #e0f2f1;
+    color: #008080;
     justify-content: center;
     align-items: center;
     text-decoration: none;
@@ -605,7 +605,7 @@ body.d-flex {
 }
 
 .footer-social a:hover {
-    background-color: #20c997;
+    background-color: #008080;
     color: #fff;
     transform: translateY(-2px);
 }
@@ -649,13 +649,13 @@ body.d-flex {
 }
 
 .calendar-day.empty {
-    background-color: #f8f9fa;
+    background-color: #F2F2F2;
     cursor: default;
 }
 
 .calendar-day:not(.empty):hover {
-    background-color: #e9f9f5;
-    border-color: #20c997;
+    background-color: #e0f2f1;
+    border-color: #008080;
 }
 
 .calendar-day.has-slots {
@@ -665,15 +665,15 @@ body.d-flex {
 }
 
 .calendar-day.selected {
-    background-color: #20c997;
+    background-color: #008080;
     color: #fff;
-    border-color: #20c997;
+    border-color: #008080;
     transform: scale(1.05);
-    box-shadow: 0 4px 10px rgba(32, 201, 151, 0.3);
+    box-shadow: 0 4px 10px rgba(0, 128, 128, 0.3);
 }
 
 #slot-editor {
-    background-color: #f8f9fa;
+    background-color: #F2F2F2;
     height: 100%;
 }
 

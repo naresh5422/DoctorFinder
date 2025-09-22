@@ -255,31 +255,51 @@ def setup_routes(app):
     @login_required
     def dashboard():
         patient_id = session["patient_id"]
+        now = datetime.now()
         
-        # Fetch all appointments for stats
-        all_appointments = Appointment.query.filter_by(user_id=patient_id).all()
-        total_appointments = len(all_appointments) 
-        pending_appointments_count = sum(1 for a in all_appointments if a.status == 'Pending')
-        confirmed_appointments_count = sum(1 for a in all_appointments if a.status == 'Confirmed')
+        # Fetch counts for stats directly from the database for efficiency.
+        # Refined total: Exclude expired pending appointments as they are non-events.
+        total_appointments = Appointment.query.filter(
+            Appointment.user_id == patient_id,
+            db.or_(
+                Appointment.status != 'Pending',
+                Appointment.appointment_date > now
+            )
+        ).count()
+        
+        pending_appointments_count = Appointment.query.filter(
+            Appointment.user_id == patient_id,
+            Appointment.status == 'Pending',
+            Appointment.appointment_date > now
+        ).count()
+        
+        confirmed_appointments_count = Appointment.query.filter(
+            Appointment.user_id == patient_id,
+            Appointment.status == 'Confirmed',
+            Appointment.appointment_date > now
+        ).count()
         
         # Count unique doctors for completed consultations
-        consultations_completed_count = len({a.doctor_id for a in all_appointments if a.status == 'Completed'})
+        consultations_completed_count = db.session.query(func.count(func.distinct(Appointment.doctor_id))).filter(
+            Appointment.user_id == patient_id,
+            Appointment.status == 'Completed'
+        ).scalar() or 0
 
         # Fetch reviews given by the patient
         reviews_given = Review.query.filter_by(patient_id=patient_id).order_by(Review.timestamp.desc()).all()
 
         # --- New: Count unique conversations ---
         # A conversation exists if there's an appointment or a message.
-        conversation_doctor_ids = {app.doctor_id for app in all_appointments}
-        messages_with_doctors = Message.query.filter_by(patient_id=patient_id).all()
-        conversation_doctor_ids.update({msg.doctor_id for msg in messages_with_doctors})
+        appointment_doctor_ids = db.session.query(Appointment.doctor_id).filter_by(user_id=patient_id).distinct()
+        message_doctor_ids = db.session.query(Message.doctor_id).filter_by(patient_id=patient_id).distinct()
+        conversation_doctor_ids = {row[0] for row in appointment_doctor_ids.union(message_doctor_ids).all()}
         total_conversations_count = len(conversation_doctor_ids)
 
         recent_searches = SearchHistory.query.filter_by(patient_id=patient_id).order_by(SearchHistory.timestamp.desc()).limit(5).all()
         upcoming_appointments = Appointment.query.filter(
             Appointment.user_id == patient_id,
             Appointment.status.in_(['Pending', 'Confirmed']),
-            Appointment.appointment_date >= datetime.now()
+            Appointment.appointment_date >= now
         ).order_by(Appointment.appointment_date.asc()).all()
         
         return render_template("user_dashboard.html", recent_searches=recent_searches, upcoming_appointments=upcoming_appointments, 
@@ -293,11 +313,24 @@ def setup_routes(app):
         patient_id = session['patient_id']
         status_filter = request.args.get('status')
         view_filter = request.args.get('view')
+        now = datetime.now()
         
-        # Fetch all appointments for the patient
         appointments_query = Appointment.query.filter_by(user_id=patient_id)
-        if status_filter and status_filter in ['Pending', 'Confirmed', 'Completed', 'Cancelled']:
+
+        # --- Refactored Appointment Filtering ---
+        # This logic now filters out expired appointments from the 'Pending' and 'Confirmed'
+        # views to provide a cleaner and more relevant appointment list.
+        if status_filter in ['Pending', 'Confirmed']:
+            # For Pending and Confirmed tabs, only show upcoming appointments.
+            appointments_query = appointments_query.filter(
+                Appointment.status == status_filter,
+                Appointment.appointment_date > now
+            )
+        elif status_filter in ['Completed', 'Canceled']:
+            # For Completed and Cancelled tabs, show all historical appointments.
             appointments_query = appointments_query.filter_by(status=status_filter)
+        else: # No status filter (the "All" tab)
+            pass # The base query fetches all appointments, which is correct for the "All" tab.
 
         appointments = appointments_query.order_by(Appointment.appointment_date.desc()).all()
         
@@ -349,7 +382,7 @@ def setup_routes(app):
             conversations.sort(key=lambda x: x['last_message'].timestamp if x['last_message'] else datetime.min, reverse=True)
         # --- End: Logic to get all doctors for conversations ---
 
-        return render_template('my_appointments.html', appointments=appointments, reviewed_doctor_ids=reviewed_doctor_ids, conversations=conversations, status_filter=status_filter, view_filter=view_filter)
+        return render_template('my_appointments.html', appointments=appointments, reviewed_doctor_ids=reviewed_doctor_ids, conversations=conversations, status_filter=status_filter, view_filter=view_filter, now=now)
 
     @app.route('/submit_review/<int:doctor_id>', methods=['POST'])
     @login_required

@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 warnings.filterwarnings("ignore", message="`resume_download` is deprecated and will be removed in version 1.0.0.*")
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' 
 os.environ['OTF_ENABLE_ONEDNN_OPTS'] = "0"
 logging.getLogger('tensorflow').setLevel(logging.ERROR)
 env_loaded = load_dotenv()
