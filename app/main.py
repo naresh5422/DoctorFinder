@@ -45,6 +45,13 @@ def create_app():
         return dict(current_year=datetime.utcnow().year)
     db.init_app(app)
     mail.init_app(app)
+
+    # --- Load service data and AI models ---
+    # This is done after db.init_app to ensure the app context and DB are available.
+    with app.app_context():
+        from app.services.doctor_service import load_service_data
+        load_service_data()
+
     Migrate(app, db)
     from app.routers import setup_routes
     from app.doctor_routes import setup_doctor_routes

@@ -44,6 +44,16 @@
                             <div class="card-body">
                                 <h5 class="card-title mb-1">{{ doctor.doctor_name }}</h5>
                                 <h6 class="card-subtitle text-primary mb-2">{{ doctor.specialization }}</h6>
+                                <div class="mb-2">
+                                    {% if doctor.consultation_types == 'Both' %}
+                                        <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis rounded-pill"><i class="bi bi-camera-video"></i> Online</span>
+                                        <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill"><i class="bi bi-building"></i> In-Person</span>
+                                    {% elif doctor.consultation_types == 'Online' %}
+                                        <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis rounded-pill"><i class="bi bi-camera-video"></i> Online</span>
+                                    {% else %}
+                                        <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill"><i class="bi bi-building"></i> In-Person</span>
+                                    {% endif %}
+                                </div>
                                 <p class="card-text text-muted small mb-2">{{ doctor.experience }} years experience</p>
                                 <p class="card-text small">
                                     <i class="bi bi-hospital me-1"></i>
@@ -56,15 +66,23 @@
                             <div class="card-body d-flex flex-column h-100">
                                 <h6 class="text-muted small mb-2">Next Available Slots</h6>
                                 {% if doctor.available_slots %}
-                                    <div class="d-flex flex-wrap gap-2 mb-3">
-                                        {% for date, times in doctor.available_slots.items()|sort %}
-                                            {% if loop.first %}
+                                    <div class="d-flex flex-wrap gap-2 mb-3 available-slots-summary">
+                                        {# Show a mix of online and in-person slots if available, up to 2 #}
+                                        {% set slots_shown = namespace(count=0) %}
+                                        {% for type, date_slots in doctor.available_slots.items() %}
+                                            {% for date, times in date_slots.items()|sort %}
                                                 {% for time in times %}
-                                                    {% if loop.index <= 2 %}
-                                                        <a href="{{ url_for('view_doctor_profile', doctor_id=doctor.id, date=date, time=time) }}" class="btn btn-outline-success btn-sm">{{ time }}</a>
+                                                    {% if slots_shown.count < 2 %}
+                                                        <a href="{{ url_for('view_doctor_profile', doctor_id=doctor.id, date=date, time=time, type=type) }}" class="btn btn-outline-success btn-sm">
+                                                            {{ time }}
+                                                            {% if type == 'online' %}
+                                                                <i class="bi bi-camera-video" title="Online"></i>
+                                                            {% endif %}
+                                                        </a>
+                                                        {% set slots_shown.count = slots_shown.count + 1 %}
                                                     {% endif %}
                                                 {% endfor %}
-                                            {% endif %}
+                                        {% endfor %}
                                         {% endfor %}
                                     </div>
                                 {% else %}

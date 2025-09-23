@@ -16,6 +16,7 @@ class Doctor(db.Model):
     experience = db.Column(db.Integer, default=0)
     rating = db.Column(db.Float, default=0.0)
     hospital_name = db.Column(db.String(120))
+    consultation_types = db.Column(db.String(50), nullable=False, default='In-Person') # e.g., 'In-Person', 'Online', 'Both'
     hospital_address = db.Column(db.String(255))
     hospital_contact = db.Column(db.String(20))
     bio = db.Column(db.Text, nullable=True)
@@ -68,6 +69,40 @@ class Patient(db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password, password)
+
+    def can_message_doctor(self, doctor_id):
+        """
+        Checks if a patient is allowed to message a doctor.
+        Messaging is enabled if there is an upcoming appointment or if the last
+        completed appointment is within a 7-day follow-up period.
+        """
+        from datetime import datetime, timedelta
+        MESSAGING_FOLLOW_UP_DAYS = 7
+        follow_up_period = timedelta(days=MESSAGING_FOLLOW_UP_DAYS)
+        now = datetime.now()
+
+        # 1. Check for any upcoming (Pending or Confirmed) appointments
+        upcoming_appointment = Appointment.query.filter(
+            Appointment.user_id == self.id,
+            Appointment.doctor_id == doctor_id,
+            Appointment.status.in_(['Pending', 'Confirmed']),
+            Appointment.appointment_date > now
+        ).first()
+        if upcoming_appointment:
+            return True
+
+        # 2. Check for a recently completed appointment
+        last_completed_appointment = Appointment.query.filter(
+            Appointment.user_id == self.id,
+            Appointment.doctor_id == doctor_id,
+            Appointment.status == 'Completed'
+        ).order_by(Appointment.appointment_date.desc()).first()
+
+        if last_completed_appointment:
+            if now <= last_completed_appointment.appointment_date + follow_up_period:
+                return True
+
+        return False
     
 class SearchHistory(db.Model):
     __tablename__ = 'search_history'
@@ -102,6 +137,7 @@ class Appointment(db.Model):
     doctor_id = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=False)
     appointment_date = db.Column(db.DateTime, nullable=False)
     consultation_for = db.Column(db.String(50), default='Self') # e.g., Self, Spouse, Child
+    consultation_type = db.Column(db.String(20), nullable=False, default='In-Person') # 'In-Person' or 'Online'
     reason = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(20), nullable=False, default='Pending') # e.g., Pending, Confirmed, Completed, Canceled
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -143,3 +179,41 @@ class Prescription(db.Model):
 
     def __repr__(self):
         return f'<Prescription for Appointment {self.appointment_id}>'
+
+
+# --- Models for Scalable Business Logic ---
+
+class Specialty(db.Model):
+    __tablename__ = 'specialties'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), unique=True, nullable=False)
+
+    def __repr__(self):
+        return f'<Specialty {self.name}>'
+
+class Symptom(db.Model):
+    __tablename__ = 'symptoms'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), unique=True, nullable=False)
+    specialty_id = db.Column(db.Integer, db.ForeignKey('specialties.id'), nullable=False)
+    specialty = db.relationship('Specialty', backref=db.backref('symptoms', lazy=True))
+
+    def __repr__(self):
+        return f'<Symptom {self.name}>'
+
+class Location(db.Model):
+    __tablename__ = 'locations'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), unique=True, nullable=False)
+    parent_id = db.Column(db.Integer, db.ForeignKey('locations.id'), nullable=True)
+    sub_locations = db.relationship('Location', backref=db.backref('parent', remote_side=[id]), lazy='dynamic')
+
+    def __repr__(self):
+        return f'<Location {self.name}>'
+
+class LocationAlias(db.Model):
+    __tablename__ = 'location_aliases'
+    id = db.Column(db.Integer, primary_key=True)
+    alias = db.Column(db.String(120), unique=True, nullable=False)
+    location_id = db.Column(db.Integer, db.ForeignKey('locations.id'), nullable=False)
+    location = db.relationship('Location', backref=db.backref('aliases', lazy=True))

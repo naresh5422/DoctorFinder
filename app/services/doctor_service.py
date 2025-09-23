@@ -3,25 +3,77 @@ import json
 import random
 from sentence_transformers import SentenceTransformer, util
 import spacy
+from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 import numpy as np
 from app.extension import db
-from app.models import Doctor
+from app.models import Doctor, Specialty, Symptom, Location, LocationAlias
+import re
 
-# --- AI Model Loading ---
-# In a production Flask app, this should be initialized once when the app starts,
-# for example, within your Flask app factory, to avoid reloading on every request.
-try:
-    nlp_ner = spacy.load("en_core_web_sm")
-    semantic_model = SentenceTransformer('all-MiniLM-L6-v2')
-    AI_MODELS_LOADED = True
-    print("AI models loaded successfully.")
-except (OSError, ImportError) as e:
-    nlp_ner = None
-    semantic_model = None
-    AI_MODELS_LOADED = False
-    print(f"Warning: Could not load AI models. Semantic search will be disabled. Error: {e}")
-    print("To enable, run: pip install sentence-transformers spacy torch")
-    print("And then: python -m spacy download en_core_web_sm")
+# --- AI Model & Data Caching ---
+# These are populated at startup by load_service_data() in main.py to avoid repeated DB queries.
+nlp_ner = None
+semantic_model = None
+AI_MODELS_LOADED = False
+SEMANTIC_DATA = {}
+AUTOCOMPLETE_DATA = {"all": [], "locations": []}
+
+def load_service_data():
+    """
+    Loads AI models and data from the database into memory at application start.
+    This is a one-time operation called from the app factory.
+    """
+    global AI_MODELS_LOADED, SEMANTIC_DATA, AUTOCOMPLETE_DATA, nlp_ner, semantic_model
+    
+    try:
+        nlp_ner = spacy.load("en_core_web_sm")
+        semantic_model = SentenceTransformer('all-MiniLM-L6-v2')
+        AI_MODELS_LOADED = True
+        print("✅ AI models (spaCy, SentenceTransformer) loaded successfully.")
+    except (OSError, ImportError) as e:
+        # --- BEGIN IMPROVEMENT: More helpful error message for missing spaCy model ---
+        error_message = str(e)
+        print(f"⚠️ Warning: Could not load AI models. Semantic search will be disabled. Error: {error_message}")
+        if "[E050]" in error_message or "[E0550]" in error_message: # Common spaCy model-not-found error codes.
+            print("   -> FIX: The spaCy NLP model ('en_core_web_sm') is missing. Run this command in your terminal:")
+            print("   -> python -m spacy download en_core_web_sm")
+        # --- END IMPROVEMENT ---
+        return
+
+    # Pre-compute embeddings for semantic search
+    try:
+        symptoms = Symptom.query.options(joinedload(Symptom.specialty)).all()
+        if not symptoms:
+            print("⚠️ Warning: No symptoms found in the database. Semantic search will be limited. Run seed_data.py.")
+        else:
+            symptom_names = [s.name for s in symptoms]
+            symptom_embeddings = semantic_model.encode(symptom_names, convert_to_tensor=True)
+            SEMANTIC_DATA = {
+                "symptoms": symptom_names,
+                "embeddings": symptom_embeddings,
+                "symptom_to_specialty": {s.name: s.specialty.name for s in symptoms}
+            }
+            print("✅ Symptom embeddings computed and cached for semantic search.")
+    except Exception as e:
+        print(f"❌ Error pre-computing embeddings: {e}. Semantic search may not work correctly.")
+        AI_MODELS_LOADED = False
+
+    # Pre-compile autocomplete terms
+    try:
+        symptoms = [s.name.title() for s in Symptom.query.all()]
+        specialties = [s.name.title() for s in Specialty.query.all()]
+        locations = [l.name.title() for l in Location.query.all()]
+        aliases = [a.alias for a in LocationAlias.query.all()]
+
+        all_terms = set(symptoms + specialties + locations + aliases)
+        all_terms.add("Emergency Services")
+        AUTOCOMPLETE_DATA["all"] = sorted(list(all_terms))
+
+        location_terms = set(locations + aliases)
+        AUTOCOMPLETE_DATA["locations"] = sorted(list(location_terms))
+        print("✅ Autocomplete suggestions cached from database.")
+    except Exception as e:
+        print(f"❌ Error caching autocomplete data: {e}. Autocomplete may not work.")
 
 
 def find_doctors(locations, specialization):
@@ -108,195 +160,39 @@ def get_featured_hospitals(limit=3):
     
     return unique_hospitals[:limit]
 
-# --- Location Data ---
-NEARBY_LOCATIONS_MAP = {
-    "Gajuwaka": ["Gajuwaka", "Visakhapatnam", "NAD Junction", "Malkapuram"],
-    "Hyderabad": ["Hyderabad", "Secunderabad", "Gachibowli", "Madhapur", "Kukatpally"],
-    "Tirupati": ["Tirupati", "Renigunta", "Chandragiri", "Mangalam"],
-    "Chennai": ["Chennai", "Velachery", "Tambaram", "T Nagar"],
-    "Bangalore": ["Bangalore", "Bengaluru", "Whitefield", "Electronic City", "Indiranagar", "HSR Layout"],
-    "Vijayawada": ["Vijayawada", "Benz Circle", "Governorpet", "Gollapudi"],
-    "Delhi": ["Delhi", "Dwarka", "Saket", "Karol Bagh"],
-    "Mumbai": ["Mumbai", "Andheri", "Bandra", "Dadar"],
-    "Kolkata": ["Kolkata", "Salt Lake", "Howrah", "New Town"],
-    "Pune": ["Pune", "Hinjewadi", "Kothrud", "Baner"]
-}
-
-# NEW: Create a reverse map to find the canonical city from any of its sub-locations.
-# e.g., {"gachibowli": "Hyderabad", "secunderabad": "Hyderabad"}
-REVERSE_NEARBY_MAP = {
-    sub_loc.lower(): canonical_key
-    for canonical_key, sub_loc_list in NEARBY_LOCATIONS_MAP.items()
-    for sub_loc in sub_loc_list
-}
-
-# NEW: Add a map for common location abbreviations and alternate spellings.
-LOCATION_ALIASES = {
-    # Canonical Name: [list of aliases]
-    "Hyderabad": ["hyd"],
-    "Visakhapatnam": ["vizag", "vskp"],
-    "Bangalore": ["ben", "ban", "bang", "bengalore", "bangaluru"],
-    "Delhi": ["del"],
-    "Mumbai": ["mum", "bom"],
-    "Kolkata": ["kol", "ccu"],
-    "Chennai": ["che", "maa"],
-    "Pune": ["pun"],
-    "Secunderabad": ["sec"],
-}
-# Create a reverse map for quick lookup: {alias: canonical_name}
-REVERSE_ALIAS_MAP = {
-    alias.lower(): canonical 
-    for canonical, aliases in LOCATION_ALIASES.items() 
-    for alias in aliases
-}
-SORTED_ALIASES = sorted(REVERSE_ALIAS_MAP.keys(), key=len, reverse=True)
-
-# Create a flat, lowercased list of all known locations for efficient searching.
-# Sorted by length descending to match longer names first (e.g., "Electronic City" before "City").
-ALL_KNOWN_LOCATIONS = sorted(
-    list(set([loc.lower() for sublist in NEARBY_LOCATIONS_MAP.values() for loc in sublist])),
-    key=len,
-    reverse=True
-)
-
 def get_nearby_locations(location):
     """
-    Finds a list of nearby/related locations for a given location.
-    It can find the main city from a sub-location and return all related areas.
-    The lookup is case-insensitive and resolves common aliases.
+    Finds a list of nearby/related locations for a given location by querying the database.
+    It resolves aliases (e.g., 'hyd' -> 'Hyderabad') and finds parent/child relationships.
     """
     if not location:
         return []
 
-    original_input_title = location.strip().title()
     search_term = location.strip().lower()
 
-    # 1. Resolve alias first (e.g., 'hyd' -> 'Hyderabad')
-    canonical_from_alias = REVERSE_ALIAS_MAP.get(search_term)
-    if canonical_from_alias:
-        search_term = canonical_from_alias.lower() # Use the resolved canonical name for further lookups
+    # 1. Check for an exact location match
+    loc = Location.query.filter(func.lower(Location.name) == search_term).first()
 
-    # 2. Look up the term in the reverse map to find the main group key.
-    main_group_key = REVERSE_NEARBY_MAP.get(search_term)
-    if main_group_key:
-        return NEARBY_LOCATIONS_MAP.get(main_group_key)
+    # 2. If no match, check aliases
+    if not loc:
+        alias = LocationAlias.query.options(joinedload(LocationAlias.location)).filter(func.lower(LocationAlias.alias) == search_term).first()
+        if alias:
+            loc = alias.location
 
-    # 3. Fallback: Check if the original input (or its alias) is a key in the main map.
-    key_to_check = canonical_from_alias if canonical_from_alias else original_input_title
-    return NEARBY_LOCATIONS_MAP.get(key_to_check, [original_input_title])
+    # 3. If a location is found, determine the search group
+    if loc:
+        # If the location has a parent, the group is the parent and all its children
+        if loc.parent:
+            parent_loc = loc.parent
+            related_locations = [parent_loc.name] + [child.name for child in parent_loc.sub_locations]
+            return list(set(related_locations))
+        # If the location has no parent, it is a parent itself. The group is the location and its children.
+        else:
+            related_locations = [loc.name] + [child.name for child in loc.sub_locations]
+            return list(set(related_locations))
 
-DISEASE_SPECIALIST_MAP = {"diabetes": "Endocrinologist",
- "sugar": "Endocrinologist",
- "thyroid disorder": "Endocrinologist",
- "high blood pressure": "Cardiologist",
- "bp": "Cardiologist",
- "chest pain": "Cardiologist",
- "heart pain": "Cardiologist",
- "heart palpitations": "Cardiologist",
- "fever": "General Physician",
-    "common cold": "General Physician",
-    "headache": "Neurologist",
-    "body weakness": "General Physician",
-    "migraine": "Neurologist",
-    "seizures": "Neurologist",
-    "memory loss": "Neurologist",
-    "asthma": "Pulmonologist",
-    "shortness of breath": "Pulmonologist",
-    "chronic cough": "Pulmonologist",
-    "skin rash": "Dermatologist",
-    "acne": "Dermatologist",
-    "eczema": "Dermatologist",
-    "tooth pain": "Dentist",
-    "toothache": "Dentist",
-    "cavity": "Dentist",
-    "gum bleeding": "Dentist",
-    "eye pain": "Ophthalmologist",
-    "blurred vision": "Ophthalmologist",
-    "cataract": "Ophthalmologist",
-    "knee pain": "Orthopedic Surgeon",
-    "back pain": "Orthopedic Surgeon",
-    "fracture": "Orthopedic Surgeon",
-    "neck pain": "Orthopedic Surgeon",
-    "pregnancy care": "Gynecologist",
-    "menstrual problems": "Gynecologist",
-    "fertility issues": "Gynecologist",
-    "kidney stone": "Urologist",
-    "urine infection": "Urologist",
-    "prostate problem": "Urologist",
-    "stomach pain": "Gastroenterologist",
-    "stomach ache": "Gastroenterologist",
-    "gastric issues": "Gastroenterologist",
-    "liver disease": "Gastroenterologist",
-    "depression": "Psychiatrist",
-    "anxiety": "Psychiatrist",
-    "sleep disorder": "Psychiatrist",
-    "child vaccination": "Pediatrician",
-    "child fever": "Pediatrician",
-    "growth issues": "Pediatrician",
-    "hearing loss": "ENT Specialist",
-    "ear infection": "ENT Specialist",
-    "sore throat": "ENT Specialist",
-    "tonsillitis": "ENT Specialist",
-    "joint swelling": "Rheumatologist",
-    "arthritis": "Rheumatologist",
-    "autoimmune disease": "Rheumatologist",
-    "cancer screening": "Oncologist",
-    "tumor treatment": "Oncologist",
-    "chemotherapy": "Oncologist",
-    "allergy": "Allergist",
-    "food allergy": "Allergist",
-    "seasonal allergy": "Allergist",
-    "weight management": "Dietitian",
-    "nutrition deficiency": "Dietitian",
-    "obesity": "Dietitian",
-    "stroke recovery": "Neurologist",
-    "paralysis": "Neurologist",
-    "thyroid swelling": "Endocrinologist",
-    "sinus infection": "ENT Specialist",
-    "varicose veins": "Vascular Surgeon",
-    "blood clot": "Hematologist",
-    "anemia": "Hematologist",
-    "diarrhea": "Gastroenterologist",
-    "constipation": "Gastroenterologist",
-    "piles": "Proctologist",
-    "hernia": "General Surgeon",
-    "appendicitis": "General Surgeon",
-    "burn injury": "Plastic Surgeon",
-    "cosmetic surgery": "Plastic Surgeon",
-    "infertility": "Gynecologist",
-    "hepatitis": "Gastroenterologist",
-    }
-
-SPECIALIST_SET = set(DISEASE_SPECIALIST_MAP.values())
-LOWERCASE_SPECIALIST_MAP = {spec.lower(): spec for spec in SPECIALIST_SET}
-DISEASE_EMBEDDINGS = {}
-
-# --- Pre-compute embeddings for semantic search (at startup) ---
-if AI_MODELS_LOADED:
-    try:
-        # Get a unique list of diseases/symptoms from our map
-        disease_list = list(DISEASE_SPECIALIST_MAP.keys())
-        # Compute embeddings for all of them
-        disease_embeddings_tensor = semantic_model.encode(disease_list, convert_to_tensor=True)
-        DISEASE_EMBEDDINGS = {
-            "diseases": disease_list,
-            "embeddings": disease_embeddings_tensor
-        }
-    except Exception as e:
-        print(f"Error pre-computing embeddings: {e}")
-        AI_MODELS_LOADED = False
-
-# --- Autocomplete Suggestion Generation ---
-# Pre-compile a list of all possible search terms for fast autocompletion.
-AUTOCOMPLETE_TERMS = set()
-AUTOCOMPLETE_TERMS.update([d.title() for d in DISEASE_SPECIALIST_MAP.keys()])
-AUTOCOMPLETE_TERMS.update([s.title() for s in SPECIALIST_SET])
-AUTOCOMPLETE_TERMS.update([loc.title() for loc in ALL_KNOWN_LOCATIONS])
-AUTOCOMPLETE_TERMS.update(list(REVERSE_ALIAS_MAP.keys()))
-# Add a specific term to guide users to emergency services.
-AUTOCOMPLETE_TERMS.add("Emergency Services")
-
-SORTED_AUTOCOMPLETE_TERMS = sorted(list(AUTOCOMPLETE_TERMS))
+    # 4. Fallback: if no match, return the original input as a single-item list
+    return [location.strip().title()]
 
 def get_autocomplete_suggestions(query: str, limit: int = 10):
     """
@@ -309,33 +205,24 @@ def get_autocomplete_suggestions(query: str, limit: int = 10):
     
     query_lower = query.lower()
     
+    # Use the cached list from AUTOCOMPLETE_DATA
+    suggestion_pool = AUTOCOMPLETE_DATA.get("all", [])
+    if not suggestion_pool:
+        return []
+
     # 1. Find matches that start with the query (highest priority)
-    starts_with_matches = [
-        term for term in SORTED_AUTOCOMPLETE_TERMS if term.lower().startswith(query_lower)
-    ]
+    starts_with_matches = [term for term in suggestion_pool if term.lower().startswith(query_lower)]
     
     # If we have enough matches, return them.
     if len(starts_with_matches) >= limit:
         return starts_with_matches[:limit]
     
     # 2. Find matches that contain the query string, but don't start with it.
-    contains_matches = [
-        term for term in SORTED_AUTOCOMPLETE_TERMS 
-        if query_lower in term.lower() and term not in starts_with_matches
-    ]
+    contains_matches = [term for term in suggestion_pool if query_lower in term.lower() and term not in starts_with_matches]
     
     # Combine the lists and return up to the limit.
     all_matches = starts_with_matches + contains_matches
     return all_matches[:limit]
-
-
-# --- Location-specific Autocomplete ---
-# Combine all known locations and their aliases into one list for suggestions.
-ALL_LOCATION_TERMS = set([loc.title() for loc in ALL_KNOWN_LOCATIONS])
-ALL_LOCATION_TERMS.update([alias for alias in REVERSE_ALIAS_MAP.keys()])
-# Ensure canonical names from aliases are also present, title-cased
-ALL_LOCATION_TERMS.update([name.title() for name in LOCATION_ALIASES.keys()])
-SORTED_LOCATION_TERMS = sorted(list(ALL_LOCATION_TERMS))
 
 def get_location_suggestions(query: str, limit: int = 10):
     """
@@ -346,21 +233,21 @@ def get_location_suggestions(query: str, limit: int = 10):
         return []
     
     query_lower = query.lower()
-    
+
+    # Use the cached list from AUTOCOMPLETE_DATA
+    suggestion_pool = AUTOCOMPLETE_DATA.get("locations", [])
+    if not suggestion_pool:
+        return []
+
     # 1. Find matches that start with the query (highest priority)
-    starts_with_matches = [
-        term for term in SORTED_LOCATION_TERMS if term.lower().startswith(query_lower)
-    ]
+    starts_with_matches = [term for term in suggestion_pool if term.lower().startswith(query_lower)]
     
     # If we have enough matches, return them.
     if len(starts_with_matches) >= limit:
         return starts_with_matches[:limit]
     
     # 2. Find matches that contain the query string, but don't start with it.
-    contains_matches = [
-        term for term in SORTED_LOCATION_TERMS 
-        if query_lower in term.lower() and term not in starts_with_matches
-    ]
+    contains_matches = [term for term in suggestion_pool if query_lower in term.lower() and term not in starts_with_matches]
     
     # Combine the lists and return up to the limit.
     all_matches = starts_with_matches + contains_matches
@@ -374,17 +261,17 @@ def map_disease_to_specialist(disease: str)->str:
     term = disease.lower().strip()
 
     # --- AI-powered Semantic Search (if models are loaded) ---
-    if AI_MODELS_LOADED and DISEASE_EMBEDDINGS and term:
+    if AI_MODELS_LOADED and SEMANTIC_DATA and term:
         try:
             query_embedding = semantic_model.encode(term, convert_to_tensor=True)
-            cosine_scores = util.cos_sim(query_embedding, DISEASE_EMBEDDINGS["embeddings"])[0]
+            cosine_scores = util.cos_sim(query_embedding, SEMANTIC_DATA["embeddings"])[0]
             best_match_index = np.argmax(cosine_scores)
             best_match_score = cosine_scores[best_match_index]
             
             # Lowered threshold to be more forgiving of typos.
             if best_match_score > 0.45:
-                matched_disease = DISEASE_EMBEDDINGS["diseases"][best_match_index]
-                specialist = DISEASE_SPECIALIST_MAP[matched_disease]
+                matched_disease = SEMANTIC_DATA["symptoms"][best_match_index]
+                specialist = SEMANTIC_DATA["symptom_to_specialty"][matched_disease]
                 
                 # Provide a "did you mean" suggestion for medium-confidence matches.
                 did_you_mean = None
@@ -401,12 +288,15 @@ def map_disease_to_specialist(disease: str)->str:
             # Fall through to keyword search if AI fails
 
     # --- Fallback to existing keyword-based search ---
-    if term in DISEASE_SPECIALIST_MAP:
-        specialist = DISEASE_SPECIALIST_MAP[term]
-        return {"original_term": term.title(), "specialist": specialist, "did_you_mean": None}
-    if term in LOWERCASE_SPECIALIST_MAP:
-        specialist = LOWERCASE_SPECIALIST_MAP[term]
-        return {"original_term": specialist, "specialist": specialist, "did_you_mean": None}
+    # Check for exact symptom match
+    symptom = Symptom.query.options(joinedload(Symptom.specialty)).filter(func.lower(Symptom.name) == term).first()
+    if symptom:
+        return {"original_term": term.title(), "specialist": symptom.specialty.name, "did_you_mean": None}
+
+    # Check for exact specialty match
+    specialty = Specialty.query.filter(func.lower(Specialty.name) == term).first()
+    if specialty:
+        return {"original_term": specialty.name, "specialist": specialty.name, "did_you_mean": None}
 
     # If no match is found, return None for the specialist.
     return {"original_term": term.title(), "specialist": None, "did_you_mean": None}
@@ -420,29 +310,28 @@ def extract_entities_from_query(query: str) -> dict:
     if not AI_MODELS_LOADED or not nlp_ner:
         return {'symptom': query, 'locations': []}
 
-    import re
     symptom_text = query
     locations = []
 
     # 1. Use spaCy's NER to find all GPEs (Geopolitical Entities)
     doc = nlp_ner(query)
     for ent in doc.ents:
-        if ent.label_ == "GPE":
+        if ent.label_ in ["GPE", "LOC"]: # GPE (Geopolitical Entity) and LOC (Location)
             locations.append(ent.text.title())
             symptom_text = symptom_text.replace(ent.text, "")
 
     # 2. Use custom search for our specific known locations and aliases.
     # This is more precise and catches terms spaCy might miss (e.g., 'Gachibowli', 'hyd').
-    all_searchable_terms = sorted(ALL_KNOWN_LOCATIONS + SORTED_ALIASES, key=len, reverse=True)
+    all_searchable_terms = sorted(AUTOCOMPLETE_DATA.get("locations", []), key=len, reverse=True)
     
     for term in all_searchable_terms:
         pattern = r'\b' + re.escape(term) + r'\b'
         matches = list(re.finditer(pattern, symptom_text, re.IGNORECASE))
         if matches:
             for match in matches:
-                found_term = match.group(0).lower()
-                # Resolve alias or title case the location
-                canonical_location = REVERSE_ALIAS_MAP.get(found_term, found_term.title())
+                # Find the canonical location from the DB to add to the list
+                nearby = get_nearby_locations(match.group(0)) # This resolves aliases
+                canonical_location = nearby[0] if nearby else match.group(0).title()
                 if canonical_location not in locations:
                     locations.append(canonical_location)
             # Remove from the text so we don't match sub-parts

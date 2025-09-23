@@ -89,6 +89,7 @@ def setup_doctor_routes(app):
             mobile_no = request.form.get("mobile")
             email_id = request.form.get("email")
             location = request.form.get("location")
+            consultation_types = request.form.get("consultation_types", "In-Person")
             hospital_name = request.form.get("hospital_name")
 
             # Validate required fields
@@ -113,6 +114,7 @@ def setup_doctor_routes(app):
                 mobile_no=mobile_no,
                 email_id=email_id,
                 location=location,
+                consultation_types=consultation_types,
                 hospital_name=hospital_name,
                 hospital_address=request.form.get("hospital_address"),
                 hospital_contact=request.form.get("hospital_contact"),
@@ -372,10 +374,12 @@ If you did not make this request then simply ignore this email and no changes wi
                 is_read=False, 
                 sender_type='patient'
             ).count()
+            can_message = patient.can_message_doctor(doctor_id)
             recent_conversations.append({
                 'patient': patient,
                 'last_message': msg,
-                'unread_count': unread_count
+                'unread_count': unread_count,
+                'can_message': can_message
             })
         # --- End: Logic for recent conversations ---
         
@@ -469,6 +473,7 @@ If you did not make this request then simply ignore this email and no changes wi
             # Update general fields
             doctor_to_update.doctor_name = request.form.get('doctor_name', doctor_to_update.doctor_name)
             doctor_to_update.specialization = request.form.get('specialization')
+            doctor_to_update.consultation_types = request.form.get('consultation_types', doctor_to_update.consultation_types)
 
             # Only update email/mobile if they are not verified
             if not (hasattr(doctor_to_update, 'email_verified') and doctor_to_update.email_verified):
@@ -537,11 +542,18 @@ If you did not make this request then simply ignore this email and no changes wi
             # The form will submit all slots as a JSON string
             slots_data_str = request.form.get('slots_data')
             try:
-                # Sort times for each date
+                # The new structure is nested, e.g., {"online": {"date": [times]}}
                 slots_data = json.loads(slots_data_str)
-                for date in slots_data:
-                    slots_data[date].sort()
-            except (json.JSONDecodeError, TypeError):
+                # Sort times within each date for both online and in-person
+                if 'online' in slots_data and isinstance(slots_data.get('online'), dict):
+                    for date in slots_data['online']:
+                        if isinstance(slots_data['online'][date], list):
+                            slots_data['online'][date].sort()
+                if 'in-person' in slots_data and isinstance(slots_data.get('in-person'), dict):
+                    for date in slots_data['in-person']:
+                        if isinstance(slots_data['in-person'][date], list):
+                            slots_data['in-person'][date].sort()
+            except (json.JSONDecodeError, TypeError, AttributeError):
                 slots_data = {}
             
             doctor.available_slots = slots_data
@@ -765,10 +777,12 @@ If you did not make this request then simply ignore this email and no changes wi
                 is_read=False, 
                 sender_type='patient'
             ).count()
+            can_message = patient.can_message_doctor(doctor_id)
             conversations.append({
                 'patient': patient,
                 'last_message': msg,
-                'unread_count': unread_count
+                'unread_count': unread_count,
+                'can_message': can_message
             })
         
         # Sort conversations by the timestamp of the last message
@@ -782,7 +796,13 @@ If you did not make this request then simply ignore this email and no changes wi
         doctor_id = session['doctor_id']
         patient = Patient.query.get_or_404(patient_id)
 
+        can_message = patient.can_message_doctor(doctor_id)
+
         if request.method == 'POST':
+            if not can_message:
+                flash("Messaging is disabled for this patient as their follow-up period has ended.", "warning")
+                return redirect(url_for('doctor_conversation', patient_id=patient_id))
+
             content = request.form.get('content')
             if content:
                 message = Message(patient_id=patient_id, doctor_id=doctor_id, sender_type='doctor', content=content)
@@ -800,4 +820,4 @@ If you did not make this request then simply ignore this email and no changes wi
         db.session.commit()
 
         messages = Message.query.filter_by(patient_id=patient_id, doctor_id=doctor_id).order_by(Message.timestamp.asc()).all()
-        return render_template('doctor_conversation.html', patient=patient, messages=messages)
+        return render_template('doctor_conversation.html', patient=patient, messages=messages, can_message=can_message)

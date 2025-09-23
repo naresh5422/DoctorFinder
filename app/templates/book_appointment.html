@@ -16,27 +16,45 @@
                 <p class="card-text text-muted">{{ doctor.specialization }}</p>
                 <hr>
                 <form method="post">
-                    {% if preselected_date and preselected_time %}
-                    <div class="alert alert-info">
-                        You have selected an appointment on <strong>{{ preselected_date }}</strong> at <strong>{{ preselected_time }}</strong>.
+                    {% if doctor.consultation_types == 'Both' %}
+                    <div class="mb-3">
+                        <label class="form-label">Consultation Type</label>
+                        <div id="consultation-type-selector">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="consultation_type" id="type-in-person" value="in-person" {% if preselected_type == 'in-person' or not preselected_type %}checked{% endif %}>
+                                <label class="form-check-label" for="type-in-person">In-Person</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="consultation_type" id="type-online" value="online" {% if preselected_type == 'online' %}checked{% endif %}>
+                                <label class="form-check-label" for="type-online">Online</label>
+                            </div>
+                        </div>
                     </div>
-                    <input type="hidden" name="appointment_date" value="{{ preselected_date }}">
-                    <input type="hidden" name="appointment_time" value="{{ preselected_time }}">
+                    {% else %}
+                        <input type="hidden" name="consultation_type" value="{{ doctor.consultation_types|lower }}">
+                    {% endif %}
 
-                    {% elif doctor.available_slots %}
+                    {% if doctor.available_slots %}
                     <div class="mb-3">
                         <label for="appointment_date_select" class="form-label">Select an Available Date</label>
                         <select class="form-select" id="appointment_date_select" name="appointment_date" required>
                             <option value="" selected disabled>-- Choose a date to see times --</option>
-                            {% for date in doctor.available_slots.keys()|sort %}
-                                <option value="{{ date }}">{{ date }}</option>
-                            {% endfor %}
+                            {# Options will be populated by JavaScript #}
                         </select>
                     </div>
                     <div class="mb-3" id="time-slots-container" style="display: none;">
                         <label class="form-label">Select an Available Time</label>
                         <div id="time-slots-pills" class="d-flex flex-wrap gap-2">
                             <!-- Time slots will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    {# This hidden div is for pre-selected slots from the search page #}
+                    <div style="display: none;">
+                        <div id="preselected-data" 
+                             data-date="{{ preselected_date }}" 
+                             data-time="{{ preselected_time }}"
+                             data-type="{{ preselected_type }}">
                         </div>
                     </div>
                     {% else %}
@@ -70,30 +88,91 @@
 </div>
 
 <script>
-    const availableSlots = {{ doctor.available_slots|tojson if doctor.available_slots else '{}' }};
+document.addEventListener('DOMContentLoaded', function() {
+    const availableSlots = {{ doctor.available_slots|tojson|safe if doctor.available_slots else '{}' }};
+    const dateSelect = document.getElementById('appointment_date_select');
+    const timeSlotsContainer = document.getElementById('time-slots-container');
+    const timeSlotsPills = document.getElementById('time-slots-pills');
+    const consultationTypeRadios = document.querySelectorAll('input[name="consultation_type"]');
+    const preselectedDiv = document.getElementById('preselected-data');
 
-    document.getElementById('appointment_date_select').addEventListener('change', function() {
-        const selectedDate = this.value;
-        const times = availableSlots[selectedDate] || [];
-        const timeSlotsContainer = document.getElementById('time-slots-container');
-        const timeSlotsPills = document.getElementById('time-slots-pills');
+    function getSelectedConsultationType() {
+        const checkedRadio = document.querySelector('input[name="consultation_type"]:checked');
+        if (checkedRadio) {
+            return checkedRadio.value;
+        }
+        // Fallback for doctors who only offer one type
+        const hiddenInput = document.querySelector('input[name="consultation_type"]');
+        return hiddenInput ? hiddenInput.value : 'in-person';
+    }
 
+    function populateDates() {
+        const consultType = getSelectedConsultationType();
+        const slotsForType = availableSlots[consultType] || {};
+        const dates = Object.keys(slotsForType).sort();
+
+        dateSelect.innerHTML = '<option value="" selected disabled>-- Choose a date --</option>';
+        dates.forEach(date => {
+            const option = new Option(date, date);
+            dateSelect.add(option);
+        });
+
+        // Clear time slots when dates change
+        timeSlotsPills.innerHTML = '';
+        timeSlotsContainer.style.display = 'none';
+    }
+
+    function populateTimes(selectedDate) {
+        const consultType = getSelectedConsultationType();
+        const times = (availableSlots[consultType] && availableSlots[consultType][selectedDate]) ? availableSlots[consultType][selectedDate] : [];
+        
         timeSlotsPills.innerHTML = ''; // Clear previous time slots
 
         if (times.length > 0) {
             times.forEach((time, index) => {
                 const id = `time-${index}`;
                 timeSlotsPills.innerHTML += `
-                    <div>
-                        <input type="radio" class="btn-check" name="appointment_time" id="${id}" value="${time}" autocomplete="off" required>
-                        <label class="btn btn-outline-primary" for="${id}">${time}</label>
-                    </div>
+                    <input type="radio" class="btn-check" name="appointment_time" id="${id}" value="${time}" autocomplete="off" required>
+                    <label class="btn btn-outline-primary" for="${id}">${time}</label>
                 `;
             });
             timeSlotsContainer.style.display = 'block';
         } else {
             timeSlotsContainer.style.display = 'none';
         }
+    }
+
+    // Event Listeners
+    dateSelect.addEventListener('change', function() {
+        populateTimes(this.value);
     });
+
+    consultationTypeRadios.forEach(radio => {
+        radio.addEventListener('change', populateDates);
+    });
+
+    // Initial Population & Handling Pre-selection
+    populateDates();
+
+    if (preselectedDiv) {
+        const preselectedDate = preselectedDiv.dataset.date;
+        const preselectedTime = preselectedDiv.dataset.time;
+        const preselectedType = preselectedDiv.dataset.type;
+
+        if (preselectedDate && preselectedTime && preselectedType) {
+            // Set the consultation type radio
+            const radioToSelect = document.getElementById(`type-${preselectedType}`);
+            if (radioToSelect) radioToSelect.checked = true;
+            
+            populateDates(); // Repopulate dates for the correct type
+            dateSelect.value = preselectedDate; // Select the date
+            populateTimes(preselectedDate); // Populate times for that date
+            
+            // Select the time
+            const timeRadioToSelect = document.querySelector(`input[name="appointment_time"][value="${preselectedTime}"]`);
+            if (timeRadioToSelect) timeRadioToSelect.checked = true;
+        }
+    }
+});
 </script>
 {% endblock %}

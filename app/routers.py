@@ -48,9 +48,9 @@ def _filter_doctor_slots(doctors_list):
 
     # Create a lookup map for booked slots: {doctor_id: {booked_slot_key, ...}}
     booked_slots_by_doctor = {}
-    for appt in all_appointments:
-        slot_key = f"{appt.appointment_date.strftime('%Y-%m-%d')}_{appt.appointment_date.strftime('%H:%M')}"
-        booked_slots_by_doctor.setdefault(appt.doctor_id, set()).add(slot_key)
+    for appt in all_appointments: 
+        slot_key = f"{appt.consultation_type}_{appt.appointment_date.strftime('%Y-%m-%d')}_{appt.appointment_date.strftime('%H:%M')}" 
+        booked_slots_by_doctor.setdefault(appt.doctor_id, set()).add(slot_key) 
     # --- End Optimization ---
 
     for doctor in doctors_list:
@@ -61,19 +61,40 @@ def _filter_doctor_slots(doctors_list):
         valid_slots = {}
         booked_slot_times = booked_slots_by_doctor.get(doctor.id, set())
 
-        for slot_date_str, times in doctor.available_slots.items():
-            try:
-                slot_date = datetime.strptime(slot_date_str, '%Y-%m-%d').date()
-                if slot_date >= today:
-                    available_times = []
-                    for time_str in times:
-                        slot_datetime = datetime.strptime(f"{slot_date_str} {time_str}", '%Y-%m-%d %H:%M')
-                        if slot_datetime > now and f"{slot_date_str}_{time_str}" not in booked_slot_times:
-                            available_times.append(time_str)
-                    if available_times:
-                        valid_slots[slot_date_str] = available_times
-            except (ValueError, TypeError):
+        # Normalize slots into a unified structure: {'online': {...}, 'in-person': {...}}
+        normalized_slots = {}
+        is_new_structure = 'online' in doctor.available_slots or 'in-person' in doctor.available_slots
+
+        if is_new_structure:
+            normalized_slots = doctor.available_slots
+        else: # Handle old structure for backward compatibility
+            # Default old slots to the doctor's primary consultation type, or 'In-Person'
+            default_type = 'in-person' if doctor.consultation_types in ['In-Person', 'Both'] else 'online'
+            normalized_slots = {default_type: doctor.available_slots}
+
+        # Process the normalized structure
+        for consult_type, date_slots in normalized_slots.items():
+            if consult_type not in ['online', 'in-person'] or not isinstance(date_slots, dict):
                 continue
+            
+            valid_type_slots = {}
+            for slot_date_str, times in date_slots.items():
+                try:
+                    slot_date = datetime.strptime(slot_date_str, '%Y-%m-%d').date()
+                    if slot_date >= today and isinstance(times, list):
+                        available_times = []
+                        for time_str in times:
+                            slot_datetime = datetime.strptime(f"{slot_date_str} {time_str}", '%Y-%m-%d %H:%M')
+                            slot_key = f"{consult_type}_{slot_date_str}_{time_str}"
+                            if slot_datetime > now and slot_key not in booked_slot_times:
+                                available_times.append(time_str)
+                        if available_times:
+                            valid_type_slots[slot_date_str] = available_times
+                except (ValueError, TypeError):
+                    continue
+            if valid_type_slots:
+                valid_slots[consult_type] = valid_type_slots
+
         doctor.available_slots = valid_slots
     return doctors_list
 
@@ -311,6 +332,7 @@ def setup_routes(app):
     @login_required
     def my_appointments():
         patient_id = session['patient_id']
+        patient = Patient.query.get(patient_id)
         status_filter = request.args.get('status')
         view_filter = request.args.get('view')
         now = datetime.now()
@@ -372,10 +394,12 @@ def setup_routes(app):
                     is_read=False, 
                     sender_type='doctor'
                 ).count()
+                can_message = patient.can_message_doctor(doc.id)
                 conversations.append({
                     'doctor': doc,
                     'last_message': last_messages_map.get(doc.id),
-                    'unread_count': unread_count
+                    'unread_count': unread_count,
+                    'can_message': can_message
                 })
             
             # Sort conversations by last message time, descending
@@ -702,10 +726,17 @@ def setup_routes(app):
     @login_required
     def conversation(doctor_id):
         patient_id = session['patient_id']
+        patient = Patient.query.get(patient_id)
         doctor = Doctor.query.get_or_404(doctor_id)
         back_url = request.args.get('back_url') or url_for('my_appointments')
 
+        can_message = patient.can_message_doctor(doctor_id)
+
         if request.method == 'POST':
+            if not can_message:
+                flash("Messaging is disabled as the follow-up period for your last appointment has ended. Please book a new appointment to re-enable messaging.", "warning")
+                return redirect(url_for('conversation', doctor_id=doctor_id, back_url=back_url))
+
             content = request.form.get('content')
             if content:
                 message = Message(patient_id=patient_id, doctor_id=doctor_id, sender_type='patient', content=content)
@@ -723,7 +754,7 @@ def setup_routes(app):
         db.session.commit()
 
         messages = Message.query.filter_by(patient_id=patient_id, doctor_id=doctor_id).order_by(Message.timestamp.asc()).all()
-        return render_template('conversation.html', doctor=doctor, messages=messages, back_url=back_url)
+        return render_template('conversation.html', doctor=doctor, messages=messages, back_url=back_url, can_message=can_message)
 
     # Hospital Services
     @app.route('/hospital_finding')
@@ -927,39 +958,8 @@ def setup_routes(app):
         if not doctor:
             return "Doctor not found", 404
 
-        # --- START: Filter out booked and past slots ---
-        today = date.today()
-        now = datetime.now()
-
-        # Ensure available_slots is a dictionary before processing.
-        if not isinstance(doctor.available_slots, dict):
-            doctor.available_slots = {}
-
-        if doctor.available_slots:
-            valid_slots = {}
-            # Get all appointments for this doctor on their available dates
-            appointments = Appointment.query.filter(
-                Appointment.doctor_id == doctor.id,
-                Appointment.appointment_date.cast(db.Date).in_(doctor.available_slots.keys()),
-                Appointment.status.in_(['Pending', 'Confirmed'])
-            ).all()
-            booked_slot_times = {f"{appt.appointment_date.strftime('%Y-%m-%d')}_{appt.appointment_date.strftime('%H:%M')}" for appt in appointments}
-
-            for slot_date_str, times in doctor.available_slots.items():
-                try:
-                    slot_date = datetime.strptime(slot_date_str, '%Y-%m-%d').date()
-                    if slot_date >= today:
-                        available_times = []
-                        for time_str in times:
-                            slot_datetime = datetime.strptime(f"{slot_date_str} {time_str}", '%Y-%m-%d %H:%M')
-                            if slot_datetime > now and f"{slot_date_str}_{time_str}" not in booked_slot_times:
-                                available_times.append(time_str)
-                        if available_times:
-                            valid_slots[slot_date_str] = available_times
-                except ValueError:
-                    continue # Safely skip keys that are not dates
-            doctor.available_slots = valid_slots
-        # --- END: Slot filtering ---
+        # Use the centralized helper to filter out past and booked slots.
+        _filter_doctor_slots([doctor])
 
         # Ensure doctor has slots before proceeding to the general booking page
         if not doctor.available_slots and not (request.args.get('date') and request.args.get('time')):
@@ -969,11 +969,13 @@ def setup_routes(app):
         # Pre-fill from query parameters if available
         preselected_date = request.args.get('date')
         preselected_time = request.args.get('time')
+        preselected_type = request.args.get('type')
 
         if request.method == 'POST':
             reason = request.form.get('reason')
             consultation_for = request.form.get('consultation_for', 'Self')
             patient_id = session.get('patient_id')
+            consultation_type = request.form.get('consultation_type', 'In-Person')
             appointment_date = None
 
             # Check if booking is based on pre-defined slots
@@ -996,6 +998,7 @@ def setup_routes(app):
                 doctor_id=doctor_id,
                 appointment_date=appointment_date,
                 consultation_for=consultation_for,
+                consultation_type=consultation_type,
                 reason=reason
             )
             db.session.add(new_appointment)
@@ -1003,4 +1006,4 @@ def setup_routes(app):
             flash(f'Appointment requested with {doctor.doctor_name}. You will be notified upon confirmation.', 'success')
             return redirect(url_for('find_doctor'))
 
-        return render_template('book_appointment.html', doctor=doctor, preselected_date=preselected_date, preselected_time=preselected_time)
+        return render_template('book_appointment.html', doctor=doctor, preselected_date=preselected_date, preselected_time=preselected_time, preselected_type=preselected_type)
