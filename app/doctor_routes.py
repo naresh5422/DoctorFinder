@@ -40,69 +40,16 @@ def setup_doctor_routes(app):
         return {'doctor_details': None, 'unread_doctor_messages': 0}
 
 
-    @app.route('/doctor_profile', methods = ['GET','POST'])
-    def doctor_profile():
+    @app.route('/search_doctors', methods = ['GET','POST'])
+    def search_doctors():
         doctors = []
-        doctor_name_query = ""
-        is_review_submission = "review_text" in request.form and "doctor_id" in request.form
+        doctor_name_query = request.form.get('doctor_name', request.args.get('doctor_name', '')).strip()
 
-        if request.method == 'POST':
-            if is_review_submission:
-                doctor_id_str = request.form.get("doctor_id", "").strip()
-                doctor_id = int(doctor_id_str) if doctor_id_str.isdigit() else None
-                review_text = request.form["review_text"].strip()
-                rating = int(request.form.get("rating", 5))
-                patient_id = session.get('patient_id')
-
-                if not all([doctor_id, review_text, patient_id]):
-                    flash("Invalid review submission.", "danger")
-                    return redirect(request.args.get('next') or url_for("doctor_profile"))
-                
-                # Security Check: A patient can only review a doctor after a completed appointment.
-                can_review = Appointment.query.filter_by(
-                    doctor_id=doctor_id,
-                    user_id=patient_id,
-                    status='Completed'
-                ).first()
-
-                if not can_review:
-                    flash("You can only review a doctor after a completed appointment.", "danger")
-                    return redirect(request.args.get('next') or url_for("doctor_profile"))
-                
-                # Prevent duplicate reviews
-                if Review.query.filter_by(doctor_id=doctor_id, patient_id=patient_id).first():
-                    flash("You have already submitted a review for this doctor.", "warning")
-                    return redirect(request.args.get('next') or url_for("doctor_profile"))
-
-                # All checks passed, add the review
-                new_review = Review(text=review_text, rating=rating, doctor_id=doctor_id, patient_id=patient_id)
-                db.session.add(new_review)
-
-                # Recalculate doctor's average rating
-                doctor = Doctor.query.get(doctor_id)
-                if doctor:
-                    all_reviews = Review.query.filter_by(doctor_id=doctor_id).all()
-                    total_ratings = sum(r.rating for r in all_reviews)
-                    average_rating = total_ratings / len(all_reviews) if all_reviews else 0
-                    doctor.rating = round(average_rating, 1)
-
-                db.session.commit()
-                flash("Your review has been submitted.", "success")
-                
-                # Redirect back to the 'next' URL if provided, otherwise default to the doctor profile page.
-                # This ensures the user returns to the page they were on (e.g., My Appointments).
-                next_url = request.args.get('next') or url_for("doctor_profile")
-                return redirect(next_url)
-            else:
-                # This is for the doctor search form on the profile page itself
-                doctor_name_query = request.form.get('doctor_name', '').strip()
-                if doctor_name_query:
-                    doctors = Doctor.query.filter(Doctor.doctor_name.ilike(f'%{doctor_name_query}%')).all()
-        
-        # For GET requests with a query parameter
-        elif 'doctor_name' in request.args:
-            doctor_name_query = request.args.get('doctor_name', '')
-            doctors = Doctor.query.filter(Doctor.doctor_name.ilike(f'%{doctor_name_query}%')).all() if doctor_name_query else []
+        # This route is for searching doctors by name. The review submission logic
+        # was a duplicate of the `submit_review` route and has been removed to
+        # adhere to the Single Responsibility Principle.
+        if doctor_name_query:
+            doctors = Doctor.query.filter(Doctor.doctor_name.ilike(f'%{doctor_name_query}%')).all()
 
         # For each doctor, check if the logged-in patient has a completed appointment
         if 'patient_id' in session and doctors:

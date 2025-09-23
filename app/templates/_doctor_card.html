@@ -1,0 +1,22 @@
+<div class="card doctor-card h-100 w-100">
+    <div class="doctor-avatar">
+        {% if doc.image %}
+            <img src="{{ url_for('static', filename=doc.image) }}" alt="Dr. {{ doc.doctor_name }}">
+        {% else %}
+            <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" alt="Doctor Photo">
+        {% endif %}
+    </div>
+    <div class="card-body text-center d-flex flex-column">
+        <h5 class="card-title mt-4">{{ doc.doctor_name }}</h5>
+        <h6 class="card-subtitle mb-2 text-primary">{{ doc.specialization }}</h6>
+        <div class="rating-stars my-2">
+            {% for i in range(doc.rating|int) %}<i class="bi bi-star-fill"></i>{% endfor %}{% if doc.rating > doc.rating|int %}<i class="bi bi-star-half"></i>{% endif %}{% for i in range(5 - (doc.rating|int) - (1 if doc.rating > doc.rating|int else 0)) %}<i class="bi bi-star"></i>{% endfor %}
+            <span class="ms-1 text-muted small">({{ doc.rating }})</span>
+        </div>
+        {% if doc.experience %}
+        <p class="card-text text-muted small mt-2"><i class="bi bi-briefcase-fill me-1"></i> {{ doc.experience }} years experience</p>
+        {% endif %}
+        <p class="card-text text-muted small"><i class="bi bi-hospital me-1"></i> {{ doc.hospital_name }}</p>
+        <a href="{{ url_for('view_doctor_profile', doctor_id=doc.id) }}" class="btn btn-outline-primary rounded-pill mt-auto">View Profile & Book</a>
+    </div>
+</div>

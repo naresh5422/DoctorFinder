@@ -61,7 +61,7 @@
                                             {% if loop.first %}
                                                 {% for time in times %}
                                                     {% if loop.index <= 2 %}
-                                                        <a href="{{ url_for('book_appointment', doctor_id=doctor.id, date=date, time=time) }}" class="btn btn-outline-success btn-sm">{{ time }}</a>
+                                                        <a href="{{ url_for('view_doctor_profile', doctor_id=doctor.id, date=date, time=time) }}" class="btn btn-outline-success btn-sm">{{ time }}</a>
                                                     {% endif %}
                                                 {% endfor %}
                                             {% endif %}
@@ -71,7 +71,7 @@
                                     <p class="small text-muted">No slots available.</p>
                                 {% endif %}
                                 <div class="mt-auto">
-                                    <a href="{{ url_for('book_appointment', doctor_id=doctor.id) }}" class="btn btn-primary w-100">Book Appointment</a>
+                                    <a href="{{ url_for('view_doctor_profile', doctor_id=doctor.id) }}" class="btn btn-primary w-100">Book Appointment</a>
                                 </div>
                             </div>
                         </div>

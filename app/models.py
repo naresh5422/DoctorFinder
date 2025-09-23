@@ -87,8 +87,10 @@ class Review(db.Model):
     text = db.Column(db.Text, nullable=False)
     doctor_id = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=False)
     patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False)
+    appointment_id = db.Column(db.Integer, db.ForeignKey('appointments.id'), nullable=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     patient = db.relationship('Patient', backref='reviews')
+    appointment = db.relationship('Appointment', backref=db.backref('review', uselist=False))
 
     def __repr__(self):
         return f"<Review for Doctor {self.doctor_id} by Patient {self.patient_id}>"

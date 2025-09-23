@@ -395,11 +395,27 @@ def setup_routes(app):
         if not rating or not comment:
             flash('Rating and comment are required.', 'danger')
             return redirect(request.referrer or url_for('my_appointments'))
+        
+        if not appointment_id:
+            flash('A valid appointment is required to submit a review.', 'danger')
+            return redirect(request.referrer or url_for('my_appointments'))
 
-        # Check if a review for this doctor by this patient already exists
-        existing_review = Review.query.filter_by(patient_id=patient_id, doctor_id=doctor_id).first()
+        # Check if a review for this APPOINTMENT already exists
+        existing_review = Review.query.filter_by(appointment_id=appointment_id).first()
         if existing_review:
-            flash('You have already reviewed this doctor.', 'warning')
+            flash('You have already reviewed this appointment.', 'warning')
+            return redirect(url_for('my_appointments'))
+
+        # Security check: ensure the appointment belongs to the logged-in patient, the correct doctor, and is completed.
+        appointment = Appointment.query.filter_by(
+            id=appointment_id, 
+            user_id=patient_id, 
+            doctor_id=doctor_id,
+            status='Completed'
+        ).first()
+
+        if not appointment:
+            flash('You can only review a completed appointment that belongs to you.', 'danger')
             return redirect(url_for('my_appointments'))
 
         review = Review(
@@ -903,9 +919,9 @@ def setup_routes(app):
     def hospital_reviews():
         return render_template('hospital_reviews.html')
 
-    @app.route('/book_appointment/<int:doctor_id>', methods=['GET', 'POST'])
+    @app.route('/doctor/<int:doctor_id>', methods=['GET', 'POST'])
     @login_required
-    def book_appointment(doctor_id):
+    def view_doctor_profile(doctor_id):
         # Fetch doctor details from the database
         doctor = Doctor.query.get_or_404(doctor_id)
         if not doctor:
@@ -966,13 +982,13 @@ def setup_routes(app):
                 slot_date_str = request.form.get('appointment_date') # The date is now from a select input
                 if not slot_date_str or not slot_time_str:
                     flash('Invalid slot selection. Please try again.', 'danger')
-                    return redirect(url_for('book_appointment', doctor_id=doctor_id))
+                    return redirect(url_for('view_doctor_profile', doctor_id=doctor_id))
                 appointment_date = datetime.strptime(f"{slot_date_str} {slot_time_str}", '%Y-%m-%d %H:%M')
             else: # Fallback to datetime-local input
                 appointment_date_str = request.form.get('appointment_date')
                 if not appointment_date_str:
                     flash('Please select a date and time for the appointment.', 'danger')
-                    return redirect(url_for('book_appointment', doctor_id=doctor_id))
+                    return redirect(url_for('view_doctor_profile', doctor_id=doctor_id))
                 appointment_date = datetime.strptime(appointment_date_str, '%Y-%m-%dT%H:%M')
 
             new_appointment = Appointment(
