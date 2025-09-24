@@ -12,6 +12,11 @@
                 </div>
                 <div class="card-body">
                     <form method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="nmr_id" class="form-label">NMR ID</label>
+                            <input type="text" class="form-control" id="nmr_id" value="{{ doctor.NMR_ID }}" readonly disabled>
+                            <small class="form-text text-muted">Your National Medical Register ID cannot be changed.</small>
+                        </div>
                         <h5 class="mt-3">Personal & Professional Details</h5>
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -22,6 +27,14 @@
                                 <label for="specialization" class="form-label">Specialization</label>
                                 <input type="text" class="form-control" id="specialization" name="specialization" value="{{ doctor.specialization }}">
                             </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="consultation_types" class="form-label">Consultation Types Offered</label>
+                            <select class="form-select" id="consultation_types" name="consultation_types">
+                                <option value="In-Person" {% if doctor.consultation_types == 'In-Person' %}selected{% endif %}>In-Person Only</option>
+                                <option value="Online" {% if doctor.consultation_types == 'Online' %}selected{% endif %}>Online Only</option>
+                                <option value="Both" {% if doctor.consultation_types == 'Both' %}selected{% endif %}>Both In-Person and Online</option>
+                            </select>
                         </div>
                         <div class="mb-3">
                             <label for="bio" class="form-label">Biography</label>
@@ -49,8 +62,8 @@
 
                         <h5 class="mt-4">Contact & Hospital Details</h5>
                         <div class="row">
-                            <div class="col-md-6 mb-3"><label for="mobile_no" class="form-label">Mobile</label><input type="text" class="form-control" id="mobile_no" name="mobile_no" value="{{ doctor.mobile_no }}"></div>
-                            <div class="col-md-6 mb-3"><label for="email_id" class="form-label">Email</label><input type="email" class="form-control" id="email_id" name="email_id" value="{{ doctor.email_id }}"></div>
+                            <div class="col-md-6 mb-3"><label for="mobile_no" class="form-label">Mobile</label><input type="text" class="form-control" id="mobile_no" name="mobile_no" value="{{ doctor.mobile_no }}" {% if doctor.mobile_verified %}readonly{% endif %}></div>
+                            <div class="col-md-6 mb-3"><label for="email_id" class="form-label">Email</label><input type="email" class="form-control" id="email_id" name="email_id" value="{{ doctor.email_id }}" {% if doctor.email_verified %}readonly{% endif %}></div>
                         </div>
                         <div class="mb-3"><label for="location" class="form-label">Primary Location</label><input type="text" class="form-control" id="location" name="location" value="{{ doctor.location }}"></div>
                         <div class="row">

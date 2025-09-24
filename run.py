@@ -19,8 +19,13 @@ if env_loaded:
         logging.warning("   -> ⚠️  Development environment detected with a PostgreSQL DATABASE_URL. For local setup, this should point to your MySQL database. Check your .env file.")
 else:
     logging.warning("⚠️ '.env' file not found. Application might not be configured. See README.md for setup.")
-app = create_app()  
 
+# Fail-fast check: Ensure DATABASE_URL is set before proceeding.
+if not os.getenv('DATABASE_URL'):
+    logging.critical("FATAL ERROR: DATABASE_URL is not set. The application cannot start without a database connection. Please create a '.env' file with a DATABASE_URL. See README.md for details.")
+    exit(1) # Exit the script immediately if the database is not configured.
+
+app = create_app()
 if __name__ == "__main__":
     is_development = os.environ.get('FLASK_ENV', 'production').lower() == 'development'
     port = int(os.environ.get("PORT", 5000))

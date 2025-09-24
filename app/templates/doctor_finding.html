@@ -66,24 +66,34 @@
                             <div class="card-body d-flex flex-column h-100">
                                 <h6 class="text-muted small mb-2">Next Available Slots</h6>
                                 {% if doctor.available_slots %}
-                                    <div class="d-flex flex-wrap gap-2 mb-3 available-slots-summary">
-                                        {# Show a mix of online and in-person slots if available, up to 2 #}
-                                        {% set slots_shown = namespace(count=0) %}
-                                        {% for type, date_slots in doctor.available_slots.items() %}
-                                            {% for date, times in date_slots.items()|sort %}
-                                                {% for time in times %}
-                                                    {% if slots_shown.count < 2 %}
-                                                        <a href="{{ url_for('view_doctor_profile', doctor_id=doctor.id, date=date, time=time, type=type) }}" class="btn btn-outline-success btn-sm">
-                                                            {{ time }}
-                                                            {% if type == 'online' %}
-                                                                <i class="bi bi-camera-video" title="Online"></i>
-                                                            {% endif %}
-                                                        </a>
-                                                        {% set slots_shown.count = slots_shown.count + 1 %}
-                                                    {% endif %}
-                                                {% endfor %}
-                                        {% endfor %}
-                                        {% endfor %}
+                                    <div class="mb-3">
+                                        {% set in_person_slots = doctor.available_slots.get('in-person', {}) %}
+                                        {% if in_person_slots %}
+                                            <div class="mb-2">
+                                                <strong class="small d-block mb-1"><i class="bi bi-building me-1"></i>In-Person:</strong>
+                                                {% set found = namespace(slot=false) %}
+                                                {% for date, times in in_person_slots.items()|sort %}{% if not found.slot %}{% for time in times %}{% if not found.slot %}
+                                                    <a href="{{ url_for('view_doctor_profile', doctor_id=doctor.id, date=date, time=time, type='in-person') }}" class="btn btn-outline-success btn-sm">
+                                                        {{ time }} on {{ date.split('-')[-1] }} {{ date|month_name }}
+                                                    </a>
+                                                    {% set found.slot = true %}
+                                                {% endif %}{% endfor %}{% endif %}{% endfor %}
+                                            </div>
+                                        {% endif %}
+
+                                        {% set online_slots = doctor.available_slots.get('online', {}) %}
+                                        {% if online_slots %}
+                                            <div>
+                                                <strong class="small d-block mb-1"><i class="bi bi-camera-video me-1"></i>Online:</strong>
+                                                {% set found = namespace(slot=false) %}
+                                                {% for date, times in online_slots.items()|sort %}{% if not found.slot %}{% for time in times %}{% if not found.slot %}
+                                                    <a href="{{ url_for('view_doctor_profile', doctor_id=doctor.id, date=date, time=time, type='online') }}" class="btn btn-outline-info btn-sm">
+                                                        {{ time }} on {{ date.split('-')[-1] }} {{ date|month_name }}
+                                                    </a>
+                                                    {% set found.slot = true %}
+                                                {% endif %}{% endfor %}{% endif %}{% endfor %}
+                                            </div>
+                                        {% endif %}
                                     </div>
                                 {% else %}
                                     <p class="small text-muted">No slots available.</p>

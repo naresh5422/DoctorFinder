@@ -2,9 +2,10 @@ import os
 import json
 import random
 from flask import render_template, request, session, redirect, url_for, flash, current_app, g
-from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature 
 from flask_mail import Message as MailMessage  # Alias to avoid name conflict with model
 from twilio.rest import Client
+from twilio.base import exceptions
 from datetime import date, datetime, timedelta
 import smtplib
 from firebase_admin import auth
@@ -40,31 +41,31 @@ def setup_doctor_routes(app):
         return {'doctor_details': None, 'unread_doctor_messages': 0}
 
 
-    @app.route('/search_doctors', methods = ['GET','POST'])
-    def search_doctors():
-        doctors = []
-        doctor_name_query = request.form.get('doctor_name', request.args.get('doctor_name', '')).strip()
+    # @app.route('/search_doctors', methods = ['GET','POST'])
+    # def search_doctors():
+    #     doctors = []
+    #     doctor_name_query = request.form.get('doctor_name', request.args.get('doctor_name', '')).strip()
 
-        # This route is for searching doctors by name. The review submission logic
-        # was a duplicate of the `submit_review` route and has been removed to
-        # adhere to the Single Responsibility Principle.
-        if doctor_name_query:
-            doctors = Doctor.query.filter(Doctor.doctor_name.ilike(f'%{doctor_name_query}%')).all()
+    #     # This route is for searching doctors by name. The review submission logic
+    #     # was a duplicate of the `submit_review` route and has been removed to
+    #     # adhere to the Single Responsibility Principle.
+    #     if doctor_name_query:
+    #         doctors = Doctor.query.filter(Doctor.doctor_name.ilike(f'%{doctor_name_query}%')).all()
 
-        # For each doctor, check if the logged-in patient has a completed appointment
-        if 'patient_id' in session and doctors:
-            patient_id = session['patient_id']
-            for doc in doctors:
-                completed_appointment = Appointment.query.filter_by(
-                    doctor_id=doc.id,
-                    user_id=patient_id,
-                ).filter(Appointment.status == 'Completed').first()
-                doc.can_be_reviewed_by_user = completed_appointment is not None
-        else:
-            for doc in doctors:
-                doc.can_be_reviewed_by_user = False
+    #     # For each doctor, check if the logged-in patient has a completed appointment
+    #     if 'patient_id' in session and doctors:
+    #         patient_id = session['patient_id']
+    #         for doc in doctors:
+    #             completed_appointment = Appointment.query.filter_by(
+    #                 doctor_id=doc.id,
+    #                 user_id=patient_id,
+    #             ).filter(Appointment.status == 'Completed').first()
+    #             doc.can_be_reviewed_by_user = completed_appointment is not None
+    #     else:
+    #         for doc in doctors:
+    #             doc.can_be_reviewed_by_user = False
             
-        return render_template('doctor_profile.html', doctors=doctors, doctor_name=doctor_name_query)
+    #     return render_template('doctor_profile.html', doctors=doctors, doctor_name=doctor_name_query)
 
     @app.route("/my_profile", methods=["GET"])
     def my_profile():
@@ -80,34 +81,48 @@ def setup_doctor_routes(app):
 
     @app.route("/doctor_register", methods=["GET", "POST"])
     def doctor_register():
+        # --- BEGIN REFACTOR: Unify Registration ---
+        # The GET request for doctor registration should now point to the main registration page.
+        if request.method == "GET":
+            return redirect(url_for('register'))
+        # --- END REFACTOR ---
         if request.method == "POST":
             username = request.form.get("username")
             password = request.form.get("password")
             confirm_password = request.form.get("confirm_password")
             doctor_name = request.form.get("name")
+            NMR_ID = request.form.get("NMR_ID")
             specialization = request.form.get("specialization")
             mobile_no = request.form.get("mobile")
             email_id = request.form.get("email")
             location = request.form.get("location")
             consultation_types = request.form.get("consultation_types", "In-Person")
             hospital_name = request.form.get("hospital_name")
+            hospital_address = request.form.get("hospital_address")
+            hospital_contact = request.form.get("hospital_contact")
 
             # Validate required fields
-            if not all([username, password, doctor_name, specialization, mobile_no, email_id, location, hospital_name]):
+            if not all([username, password, doctor_name, NMR_ID, specialization, mobile_no, email_id, location, hospital_name, hospital_address, hospital_contact]):
                 flash("Please fill all required fields", "danger")
-                return redirect(url_for("doctor_register"))
+                return redirect(url_for("register"))
             
             if password != confirm_password:
                 flash("Passwords do not match.", "danger")
-                return redirect(url_for("doctor_register"))
+                return redirect(url_for("register"))
 
             # Check for duplicate username in the database
             if Doctor.query.filter_by(username=username).first():
                 flash("Username already exists. Please choose another one.", "danger")
-                return redirect(url_for("doctor_register"))
+                return redirect(url_for("register"))
+
+            # Check for duplicate NMR ID
+            if Doctor.query.filter_by(NMR_ID=NMR_ID).first():
+                flash("A doctor with this NMR ID is already registered.", "danger")
+                return redirect(url_for("register"))
 
             # Create new Doctor object
             new_doctor = Doctor(
+                NMR_ID=NMR_ID,
                 username=username,
                 doctor_name=doctor_name,
                 specialization=specialization,
@@ -116,8 +131,8 @@ def setup_doctor_routes(app):
                 location=location,
                 consultation_types=consultation_types,
                 hospital_name=hospital_name,
-                hospital_address=request.form.get("hospital_address"),
-                hospital_contact=request.form.get("hospital_contact"),
+                hospital_address=hospital_address,
+                hospital_contact=hospital_contact,
                 experience=int(request.form.get("experience", 0)),
                 bio=request.form.get("bio"),
                 education=request.form.get("education"),
@@ -132,8 +147,7 @@ def setup_doctor_routes(app):
             flash("Doctor registered successfully!", "success")
             return redirect(url_for("doctor_login"))
 
-        return render_template("doctor_registration.html")
-
+        return redirect(url_for('register')) # Fallback redirect
     @app.route("/doctor_login", methods=["GET", "POST"])
     def doctor_login():
         if request.method == "POST":
@@ -191,9 +205,8 @@ def setup_doctor_routes(app):
                     msg = MailMessage('Password Reset Request',
                                   sender=app.config['MAIL_USERNAME'],
                                   recipients=[doctor.email_id])
-                    msg.body = f'''To reset your password, visit the following link:
-{reset_url}
-If you did not make this request then simply ignore this email and no changes will be made.'''
+                    msg.body = f'''To reset your password, visit the following link:{reset_url}
+                    If you did not make this request then simply ignore this email and no changes will be made.'''
                     try:
                         mail.send(msg)
                         flash(f"A password reset link has been sent to {doctor.email_id}.", "info")
@@ -821,3 +834,84 @@ If you did not make this request then simply ignore this email and no changes wi
 
         messages = Message.query.filter_by(patient_id=patient_id, doctor_id=doctor_id).order_by(Message.timestamp.asc()).all()
         return render_template('doctor_conversation.html', patient=patient, messages=messages, can_message=can_message)
+
+    @app.route('/doctor/send_mobile_verification')
+    @doctor_login_required
+    def send_doctor_mobile_verification():
+        # Check if Twilio is configured
+        required_vars = ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_PHONE_NUMBER']
+        if not all(current_app.config.get(var) for var in required_vars):
+            flash("The SMS service is not configured. Please contact support.", "danger")
+            return redirect(url_for('my_profile'))
+
+        doctor = Doctor.query.get(session['doctor_id'])
+        if not doctor.mobile_no:
+            flash('Please add a mobile number to your profile first.', 'warning')
+            return redirect(url_for('edit_doctor_profile'))
+
+        if getattr(doctor, 'mobile_verified', False):
+            flash('Your mobile number is already verified.', 'info')
+            return redirect(url_for('my_profile'))
+
+        # Generate and store OTP
+        otp = str(random.randint(100000, 999999))
+        session['doctor_mobile_verification_otp'] = otp
+        session['doctor_mobile_to_verify'] = doctor.mobile_no
+
+        # Send SMS with OTP via Twilio
+        try:
+            current_app.logger.info(f"Attempting to send OTP to doctor number: {doctor.mobile_no}")
+            client = Client(current_app.config['TWILIO_ACCOUNT_SID'], current_app.config['TWILIO_AUTH_TOKEN'])
+            message = client.messages.create(
+                body=f"Your CareConnect Doctor account mobile verification OTP is: {otp}",
+                from_=current_app.config['TWILIO_PHONE_NUMBER'],
+                to=doctor.mobile_no
+            )
+            flash(f'An OTP has been sent to {doctor.mobile_no}.', 'info')
+        except exceptions.TwilioRestException as e:
+            # Log the specific error from Twilio for debugging
+            current_app.logger.error(f"Twilio API error for doctor verification: {e.msg} (Code: {e.code})")
+            flash("Failed to send OTP. Please check your mobile number or try again later.", "danger")
+            if current_app.debug:
+                # In debug mode, show the specific Twilio error to the developer
+                flash(Markup(f"<b>DEV MODE DEBUG:</b> Twilio Error Code {e.code} - {e.msg}. <a href='https://www.twilio.com/docs/api/errors/{e.code}' target='_blank' class='alert-link'>More info here.</a>"), "warning")
+        except Exception as e:
+            current_app.logger.error(f"Twilio failed to send SMS for doctor verification: {e}")
+            flash("Failed to send OTP. Please check your mobile number or try again later.", "danger")
+            if current_app.debug:
+                flash(Markup(f"DEV MODE: SMS sending failed. You can <a href='{url_for('dev_bypass_doctor_mobile_verification')}' class='alert-link'>click here to bypass verification</a>."), 'info')
+            return redirect(url_for('my_profile'))
+
+        return redirect(url_for('verify_doctor_mobile'))
+
+    @app.route('/doctor/verify_mobile', methods=['GET', 'POST'])
+    @doctor_login_required
+    def verify_doctor_mobile():
+        if 'doctor_mobile_verification_otp' not in session:
+            flash('Verification process has expired. Please try again.', 'warning')
+            return redirect(url_for('my_profile'))
+
+        mobile_number = session.get('doctor_mobile_to_verify', '')
+        hidden_mobile_number = ''
+        # Create a masked version of the number, e.g., '*******3210'
+        if len(mobile_number) > 4:
+            hidden_mobile_number = '*' * (len(mobile_number) - 4) + mobile_number[-4:]
+
+        if request.method == 'POST':
+            submitted_otp = request.form.get('otp')
+            if submitted_otp == session.get('doctor_mobile_verification_otp'):
+                doctor = Doctor.query.get(session['doctor_id'])
+                if doctor.mobile_no == session.get('doctor_mobile_to_verify'):
+                    doctor.mobile_verified = True
+                    db.session.commit()
+                    flash('Your mobile number has been successfully verified!', 'success')
+                    session.pop('doctor_mobile_verification_otp', None)
+                    session.pop('doctor_mobile_to_verify', None)
+                    return redirect(url_for('my_profile'))
+                else:
+                    flash('Mobile number has changed. Please restart verification.', 'danger')
+                    return redirect(url_for('my_profile'))
+            else:
+                flash('Invalid OTP. Please try again.', 'danger')
+        
+        return render_template('doctor_verify_mobile.html', hidden_mobile_number=hidden_mobile_number)

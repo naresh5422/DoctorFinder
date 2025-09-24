@@ -18,17 +18,12 @@
                 <form method="post">
                     {% if doctor.consultation_types == 'Both' %}
                     <div class="mb-3">
-                        <label class="form-label">Consultation Type</label>
-                        <div id="consultation-type-selector">
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="consultation_type" id="type-in-person" value="in-person" {% if preselected_type == 'in-person' or not preselected_type %}checked{% endif %}>
-                                <label class="form-check-label" for="type-in-person">In-Person</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="consultation_type" id="type-online" value="online" {% if preselected_type == 'online' %}checked{% endif %}>
-                                <label class="form-check-label" for="type-online">Online</label>
-                            </div>
-                        </div>
+                        <label for="consultation-type-select" class="form-label">Consultation Type</label>
+                        <select class="form-select" id="consultation-type-select" name="consultation_type">
+                            <option value="in-person" {% if preselected_type == 'in-person' or not preselected_type %}selected{% endif %}>&#127970; In-Person</option>
+                            <option value="online" {% if preselected_type == 'online' %}selected{% endif %}>&#128249; Online</option>
+                        </select>
+                        <div class="form-text">Select a method to see available time slots.</div>
                     </div>
                     {% else %}
                         <input type="hidden" name="consultation_type" value="{{ doctor.consultation_types|lower }}">
@@ -93,13 +88,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const dateSelect = document.getElementById('appointment_date_select');
     const timeSlotsContainer = document.getElementById('time-slots-container');
     const timeSlotsPills = document.getElementById('time-slots-pills');
-    const consultationTypeRadios = document.querySelectorAll('input[name="consultation_type"]');
+    const consultTypeSelect = document.getElementById('consultation-type-select');
     const preselectedDiv = document.getElementById('preselected-data');
 
     function getSelectedConsultationType() {
-        const checkedRadio = document.querySelector('input[name="consultation_type"]:checked');
-        if (checkedRadio) {
-            return checkedRadio.value;
+        if (consultTypeSelect) {
+            return consultTypeSelect.value;
         }
         // Fallback for doctors who only offer one type
         const hiddenInput = document.querySelector('input[name="consultation_type"]');
@@ -147,9 +141,9 @@ document.addEventListener('DOMContentLoaded', function() {
         populateTimes(this.value);
     });
 
-    consultationTypeRadios.forEach(radio => {
-        radio.addEventListener('change', populateDates);
-    });
+    if (consultTypeSelect) {
+        consultTypeSelect.addEventListener('change', populateDates);
+    }
 
     // Initial Population & Handling Pre-selection
     populateDates();
@@ -160,11 +154,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const preselectedType = preselectedDiv.dataset.type;
 
         if (preselectedDate && preselectedTime && preselectedType) {
-            // Set the consultation type radio
-            const radioToSelect = document.getElementById(`type-${preselectedType}`);
-            if (radioToSelect) radioToSelect.checked = true;
+            // The template already sets the selected option in the dropdown.
+            // We just need to ensure the correct dates are populated and the right time is selected.
             
-            populateDates(); // Repopulate dates for the correct type
+            // The `populateDates()` call above already handles populating the dates for the pre-selected type.
+            
             dateSelect.value = preselectedDate; // Select the date
             populateTimes(preselectedDate); // Populate times for that date
             

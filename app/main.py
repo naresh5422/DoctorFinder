@@ -43,6 +43,16 @@ def create_app():
     @app.context_processor
     def utility_processor():
         return dict(current_year=datetime.utcnow().year)
+
+    def month_name_filter(date_str):
+        """A Jinja filter to get the abbreviated month name from a 'YYYY-MM-DD' string."""
+        try:
+            dt = datetime.strptime(date_str, '%Y-%m-%d')
+            return dt.strftime('%b') # e.g., 'Sep'
+        except (ValueError, TypeError):
+            return ''
+    app.jinja_env.filters['month_name'] = month_name_filter
+
     db.init_app(app)
     mail.init_app(app)
 

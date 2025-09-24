@@ -3,25 +3,31 @@
 {% block title %}Verify Mobile Number{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card shadow-sm">
+            <div class="card">
                 <div class="card-header">
-                    <h4 class="mb-0">Verify Your Mobile Number</h4>
+                    <h3 class="mb-0">Verify Your Mobile Number</h3>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted">An OTP has been sent to your registered mobile number. Please enter it below to complete the verification.</p>
-                    <form method="POST">
+                    {% if hidden_mobile_number %}
+                        <p class="text-muted">An OTP has been sent to your registered mobile number ending in <strong>{{ hidden_mobile_number }}</strong>. Please enter it below to complete the verification.</p>
+                    {% else %}
+                        <p class="text-muted">An OTP has been sent to your registered mobile number. Please enter it below to complete the verification.</p>
+                    {% endif %}
+                    <form method="POST" action="{{ url_for('verify_doctor_mobile') }}">
                         <div class="mb-3">
                             <label for="otp" class="form-label">Enter OTP</label>
-                            <input type="text" class="form-control" id="otp" name="otp" required autofocus>
+                            <input type="text" class="form-control" id="otp" name="otp" required autofocus placeholder="6-digit code">
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">Verify OTP</button>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Verify OTP</button>
+                        </div>
                     </form>
-                </div>
-                <div class="card-footer text-center">
-                    <small>Didn't receive an OTP? <a href="{{ url_for('send_doctor_mobile_verification') }}">Resend OTP</a></small>
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('send_doctor_mobile_verification') }}">Resend OTP</a> | <a href="{{ url_for('my_profile') }}">Cancel</a>
+                    </div>
                 </div>
             </div>
         </div>

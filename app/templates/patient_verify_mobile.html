@@ -3,25 +3,32 @@
 {% block title %}Verify Mobile Number{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
-        <div class="card shadow-lg border-0 rounded-lg mt-5">
-            <div class="card-header">
-                <h3 class="text-center font-weight-light my-4">
-                    <i class="bi bi-shield-check"></i> Verify Your Mobile Number
-                </h3>
-            </div>
-            <div class="card-body">
-                <div class="small mb-3 text-muted">An OTP has been sent to your mobile number. Please enter it below to complete verification.</div>
-                <form method="post" action="{{ url_for('verify_mobile') }}">
-                    <div class="form-floating mb-3">
-                        <input class="form-control" id="otp" name="otp" type="text" placeholder="123456" required autofocus>
-                        <label for="otp">Enter OTP</label>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Verify Your Mobile Number</h3>
+                </div>
+                <div class="card-body">
+                    {% if hidden_mobile_number %}
+                        <p class="text-muted">An OTP has been sent to your registered mobile number ending in <strong>{{ hidden_mobile_number }}</strong>. Please enter it below to complete the verification.</p>
+                    {% else %}
+                        <p class="text-muted">An OTP has been sent to your registered mobile number. Please enter it below to complete the verification.</p>
+                    {% endif %}
+                    <form method="POST" action="{{ url_for('verify_patient_mobile') }}">
+                        <div class="mb-3">
+                            <label for="otp" class="form-label">Enter OTP</label>
+                            <input type="text" class="form-control" id="otp" name="otp" required autofocus placeholder="6-digit code">
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Verify OTP</button>
+                        </div>
+                    </form>
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('send_patient_mobile_verification') }}">Resend OTP</a> | <a href="{{ url_for('user_profile') }}">Cancel</a>
                     </div>
-                    <div class="d-grid mt-4 mb-0">
-                        <button type="submit" class="btn btn-primary btn-block">Verify OTP</button>
-                    </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>

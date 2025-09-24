@@ -6,19 +6,20 @@ class Doctor(db.Model):
     __tablename__ = 'doctors'
 
     id = db.Column(db.Integer, primary_key=True)
+    NMR_ID = db.Column(db.String(50), unique=True, nullable=False)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(512), nullable=False)
     doctor_name = db.Column(db.String(120), nullable=False)
     specialization = db.Column(db.String(120), nullable=False)
     mobile_no = db.Column(db.String(20), nullable=False)
-    email_id = db.Column(db.String(120))
+    email_id = db.Column(db.String(120), nullable=False)
     location = db.Column(db.String(120), nullable=False)
     experience = db.Column(db.Integer, default=0)
     rating = db.Column(db.Float, default=0.0)
-    hospital_name = db.Column(db.String(120))
+    hospital_name = db.Column(db.String(120), nullable=False)
     consultation_types = db.Column(db.String(50), nullable=False, default='In-Person') # e.g., 'In-Person', 'Online', 'Both'
-    hospital_address = db.Column(db.String(255))
-    hospital_contact = db.Column(db.String(20))
+    hospital_address = db.Column(db.String(255), nullable=False)
+    hospital_contact = db.Column(db.String(20), nullable=False)
     bio = db.Column(db.Text, nullable=True)
     education = db.Column(db.String(255), nullable=True) # e.g., "MBBS, MD"
     certifications = db.Column(db.Text, nullable=True) # Comma-separated

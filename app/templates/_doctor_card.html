@@ -9,6 +9,16 @@
     <div class="card-body text-center d-flex flex-column">
         <h5 class="card-title mt-4">{{ doc.doctor_name }}</h5>
         <h6 class="card-subtitle mb-2 text-primary">{{ doc.specialization }}</h6>
+        <div class="my-2">
+            {% if doc.consultation_types == 'Both' %}
+                <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis rounded-pill"><i class="bi bi-camera-video"></i> Online</span>
+                <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill"><i class="bi bi-building"></i> In-Person</span>
+            {% elif doc.consultation_types == 'Online' %}
+                <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis rounded-pill"><i class="bi bi-camera-video"></i> Online</span>
+            {% else %}
+                <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill"><i class="bi bi-building"></i> In-Person</span>
+            {% endif %}
+        </div>
         <div class="rating-stars my-2">
             {% for i in range(doc.rating|int) %}<i class="bi bi-star-fill"></i>{% endfor %}{% if doc.rating > doc.rating|int %}<i class="bi bi-star-half"></i>{% endif %}{% for i in range(5 - (doc.rating|int) - (1 if doc.rating > doc.rating|int else 0)) %}<i class="bi bi-star"></i>{% endfor %}
             <span class="ms-1 text-muted small">({{ doc.rating }})</span>

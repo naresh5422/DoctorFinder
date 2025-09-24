@@ -71,13 +71,13 @@
                                 <input type="text" class="form-control" id="mobile" value="{{ doctor.mobile_no }}" readonly>
                                 {% if doctor.mobile_verified %}
                                     <span class="btn btn-success disabled" title="Your mobile number is verified."><i class="bi bi-check-circle-fill me-1"></i>Verified</span>
-                                {% elif not config.FIREBASE_API_KEY %}
+                                {% elif not config.TWILIO_ACCOUNT_SID %}
                                     <button type="button" class="btn btn-outline-secondary" disabled title="The SMS service is not configured by the administrator.">Verify</button>
                                     {% if config.DEBUG and not doctor.mobile_verified %}
                                         <a href="{{ url_for('dev_bypass_doctor_mobile_verification') }}" class="btn btn-warning" title="DEV ONLY: Bypass Firebase OTP">Bypass</a>
                                     {% endif %}
                                 {% else %}
-                                    <button type="button" id="verify-mobile-btn" class="btn btn-outline-secondary">Verify</button>
+                                    <a href="{{ url_for('send_doctor_mobile_verification') }}" class="btn btn-outline-secondary">Verify</a>
                                 {% endif %}
                             </div>
                             <small class="form-text text-muted">Verify your mobile number to access all features. Once verified, it cannot be changed from the profile editor.</small>
@@ -134,94 +134,5 @@
 {% endblock %}
 
 {% block scripts %}
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
-
-<!-- Firebase Phone Verification Script -->
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const firebaseConfig = {
-        apiKey: "{{ config.FIREBASE_API_KEY }}",
-        authDomain: "{{ config.FIREBASE_AUTH_DOMAIN }}",
-        projectId: "{{ config.FIREBASE_PROJECT_ID }}",
-        storageBucket: "{{ config.FIREBASE_STORAGE_BUCKET }}",
-        messagingSenderId: "{{ config.FIREBASE_MESSAGING_SENDER_ID }}",
-        appId: "{{ config.FIREBASE_APP_ID }}"
-    };
-
-    const missingFirebaseKeys = Object.entries(firebaseConfig).filter(([key, value]) => !value).map(([key, value]) => `FIREBASE_${key.replace(/([A-Z])/g, '_$1').toUpperCase()}`);
-    if (missingFirebaseKeys.length > 0) {
-        const errorMsg = `The SMS service (Firebase) is not configured. Please set the following in your .env file: ${missingFirebaseKeys.join(', ')}.`;
-        const verifyBtn = document.getElementById('verify-mobile-btn');
-        if(verifyBtn) verifyBtn.addEventListener('click', () => alert(errorMsg));
-        return;
-    }
-
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-
-    const verifyBtn = document.getElementById('verify-mobile-btn');
-    const confirmOtpBtn = document.getElementById('confirm-otp-btn');
-    const otpModalElement = document.getElementById('otpModal');
-    if (!otpModalElement) return;
-    const otpModal = new bootstrap.Modal(otpModalElement);
-    const otpError = document.getElementById('otp-error');
-
-    window.confirmationResult = null;
-    window.recaptchaVerifier = new auth.RecaptchaVerifier('recaptcha-container', { 'size': 'invisible' });
-
-    if (verifyBtn) {
-        verifyBtn.addEventListener('click', () => {
-            const phoneNumber = document.getElementById('mobile').value;
-            if (!phoneNumber) {
-                alert('Mobile number not found in profile.');
-                return;
-            }
-            otpModal.show();
-            auth.signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier)
-                .then(confirmationResult => {
-                    window.confirmationResult = confirmationResult;
-                }).catch(error => {
-                    console.error("Error during signInWithPhoneNumber", error);
-                    otpModal.hide();
-                    alert(`Failed to send OTP. Ensure your number is in E.164 format (e.g., +919876543210).`);
-                    window.recaptchaVerifier.render().then(widgetId => grecaptcha.reset(widgetId));
-                });
-        });
-    }
-
-    if (confirmOtpBtn) {
-        confirmOtpBtn.addEventListener('click', () => {
-            const code = document.getElementById('otp-input').value;
-            if (!code || !window.confirmationResult) {
-                otpError.textContent = 'Please enter the OTP.';
-                otpError.classList.remove('d-none');
-                return;
-            }
-            window.confirmationResult.confirm(code).then(result => {
-                result.user.getIdToken().then(idToken => {
-                    fetch("{{ url_for('verify_doctor_phone_token') }}", {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ token: idToken })
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            window.location.reload();
-                        } else {
-                            alert('Verification failed: ' + data.error);
-                            otpModal.hide();
-                        }
-                    });
-                });
-            }).catch(error => {
-                otpError.textContent = `Invalid OTP. Please try again. (${error.code})`;
-                otpError.classList.remove('d-none');
-            });
-        });
-    }
-});
-</script>
+<!-- No special scripts needed for backend-driven OTP flow -->
 {% endblock %}

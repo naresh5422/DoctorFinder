@@ -16,7 +16,7 @@ def check_gmail_app_password():
     Flashes a message on failure.
     """
     if current_app.config.get('MAIL_SERVER') == 'smtp.gmail.com':
-        mail_password = current_app.config.get('MAIL_PASSWORD', '')
+        mail_password = str(current_app.config.get('MAIL_PASSWORD', ''))
         # Google App Passwords are 16 characters long and don't contain spaces.
         if ' ' in mail_password or (mail_password and len(mail_password) != 16):
             flash(Markup("Gmail Configuration Error: Please use a 16-character <strong>App Password</strong>. Your regular password will not work. <a href='https://myaccount.google.com/apppasswords' target='_blank' class='alert-link'>Generate one here</a>."), "danger")

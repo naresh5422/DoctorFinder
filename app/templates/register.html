@@ -6,121 +6,86 @@
 <div class="row justify-content-center">
     <div class="col-lg-9">
         <div class="card shadow-lg border-0 rounded-lg mt-5">
-            <div class="card-header">
-                <h3 class="text-center font-weight-light my-4">Create Your Account</h3>
+            <div class="card-header bg-light border-0 pt-4">
+                <h3 class="text-center font-weight-light mb-0">Create Your Account</h3>
+                <!-- Tab navigation -->
+                <ul class="nav nav-tabs justify-content-center border-0 mt-3" id="registerTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="patient-tab" data-bs-toggle="tab" data-bs-target="#patient-form-pane" type="button" role="tab" aria-controls="patient-form-pane" aria-selected="true">
+                            <i class="bi bi-person me-2"></i>I am a Patient
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="doctor-tab" data-bs-toggle="tab" data-bs-target="#doctor-form-pane" type="button" role="tab" aria-controls="doctor-form-pane" aria-selected="false">
+                            <i class="bi bi-clipboard2-pulse me-2"></i>I am a Doctor
+                        </button>
+                    </li>
+                </ul>
             </div>
-            <div class="card-body">
-                <!-- Role Selection -->
-                <div class="mb-4 col-lg-6 mx-auto">
-                    <label for="role" class="form-label">I am a...</label>
-                    <select class="form-select form-select-lg" id="role" name="role">
-                        <option value="" selected disabled>-- Select Your Role --</option>
-                        <option value="patient">Patient</option>
-                        <option value="doctor">Doctor</option>
-                        <option value="hospital">Hospital (Coming Soon)</option>
-                    </select>
-                </div>
-
-                <!-- Patient Registration Form -->
-                <div id="patient-form" class="role-form" style="display: none;">
-                    <h4 class="mb-3">Patient Registration</h4>
+            <div class="card-body p-4 p-lg-5">
+                <div class="tab-content" id="registerTabsContent">
+                    <!-- Patient Registration Form Pane -->
+                    <div class="tab-pane fade show active" id="patient-form-pane" role="tabpanel" aria-labelledby="patient-tab">
                     <form action="{{ url_for('signup') }}" method="POST">
                         <div class="row g-4">
-                            <div class="col-md-6 form-floating">
-                                <input type="text" class="form-control" id="patient-name" name="name" placeholder="Full Name" required>
-                                <label for="patient-name" class="ms-2">Full Name</label>
-                            </div>
-                            <div class="col-md-6 form-floating">
-                                <input type="text" class="form-control" id="patient-username" name="username" placeholder="Username" required>
-                                <label for="patient-username" class="ms-2">Username</label>
-                            </div>
-                            <div class="col-md-6 form-floating">
-                                <input type="tel" class="form-control" id="patient-mobile" name="mobile" placeholder="Mobile Number" required>
-                                <label for="patient-mobile" class="ms-2">Mobile Number</label>
-                            </div>
-                            <div class="col-md-6 form-floating">
-                                <input type="email" class="form-control" id="patient-email" name="email" placeholder="Email (Optional)">
-                                <label for="patient-email" class="ms-2">Email (Optional)</label>
-                            </div>
-                            <div class="col-12 form-floating">
-                                <input type="text" class="form-control" id="patient-location" name="location" placeholder="Location" required>
-                                <label for="patient-location" class="ms-2">Location</label>
-                            </div>
-                            <div class="col-md-6 form-floating">
-                                <input type="password" class="form-control" id="patient-password" name="password" placeholder="Password" required>
-                                <label for="patient-password" class="ms-2">Password</label>
-                            </div>
-                            <div class="col-md-6 form-floating">
-                                <input type="password" class="form-control" id="patient-confirm-password" name="confirm_password" placeholder="Confirm Password" required>
-                                <label for="patient-confirm-password" class="ms-2">Confirm Password</label>
-                            </div>
+                            <div class="col-md-6"><label class="form-label">Full Name</label><input type="text" name="name" class="form-control" required></div>
+                            <div class="col-md-6"><label class="form-label">Username</label><input type="text" name="username" class="form-control" required></div>
+                            <div class="col-md-6"><label class="form-label">Mobile Number</label><input type="tel" name="mobile" class="form-control" required></div>
+                            <div class="col-md-6"><label class="form-label">Email (Optional)</label><input type="email" name="email" class="form-control"></div>
+                            <div class="col-12"><label class="form-label">Location</label><input type="text" name="location" class="form-control" required></div>
+                            <div class="col-md-6"><label class="form-label">Password</label><input type="password" name="password" class="form-control" required></div>
+                            <div class="col-md-6"><label class="form-label">Confirm Password</label><input type="password" name="confirm_password" class="form-control" required></div>
                         </div>
                         <div class="d-grid mt-4">
                             <button type="submit" class="btn btn-primary">Register as Patient</button>
                         </div>
                     </form>
-                </div>
-
-                <!-- Doctor Registration Form -->
-                <div id="doctor-form" class="role-form" style="display: none;">
-                    <h4 class="mb-3">Doctor Registration</h4>
+                    </div>
+                    <!-- Doctor Registration Form Pane -->
+                    <div class="tab-pane fade" id="doctor-form-pane" role="tabpanel" aria-labelledby="doctor-tab">
                     <form action="{{ url_for('doctor_register') }}" method="POST">
                         <div class="row g-4">
-                            <div class="col-md-6 form-floating"><input type="text" name="name" class="form-control" placeholder="Full Name" required><label class="ms-2">Full Name</label></div>
-                            <div class="col-md-6 form-floating"><input type="text" name="username" class="form-control" placeholder="Username" required><label class="ms-2">Username</label></div>
-                            <div class="col-md-6 form-floating"><input type="password" name="password" class="form-control" placeholder="Password" required><label class="ms-2">Password</label></div>
-                            <div class="col-md-6 form-floating"><input type="password" name="confirm_password" class="form-control" placeholder="Confirm Password" required><label class="ms-2">Confirm Password</label></div>
-                            <div class="col-md-6 form-floating"><input type="text" name="specialization" class="form-control" placeholder="Specialization" required><label class="ms-2">Specialization</label></div>
-                            <div class="col-md-6 form-floating"><input type="tel" name="mobile" class="form-control" placeholder="Mobile Number" required><label class="ms-2">Mobile Number</label></div>
-                            <div class="col-md-6 form-floating"><input type="email" name="email" class="form-control" placeholder="Email" required><label class="ms-2">Email</label></div>
-                            <div class="col-md-6 form-floating"><input type="text" name="location" class="form-control" placeholder="Primary Location" required><label class="ms-2">Primary Location</label></div>
-                            <div class="col-md-6 form-floating"><input type="text" name="hospital_name" class="form-control" placeholder="Hospital Name" required><label class="ms-2">Hospital Name</label></div>
-                            <div class="col-md-6 form-floating"><input type="number" name="experience" class="form-control" placeholder="Years of Experience" required><label class="ms-2">Years of Experience</label></div>
+                            <div class="col-md-6"><label class="form-label">Full Name</label><input type="text" name="name" class="form-control" required></div>
+                            <div class="col-md-6"><label class="form-label">Username</label><input type="text" name="username" class="form-control" required></div>
+                            <div class="col-md-6"><label class="form-label">Password</label><input type="password" name="password" class="form-control" required></div>
+                            <div class="col-md-6"><label class="form-label">Confirm Password</label><input type="password" name="confirm_password" class="form-control" required></div>
+                            <div class="col-12"><label class="form-label">National Medical Register ID (NMR ID)</label><input type="text" name="NMR_ID" class="form-control" placeholder="e.g., 12345" required></div>
+                            <div class="col-md-6"><label class="form-label">Specialization</label><input type="text" name="specialization" class="form-control" required></div>
+                            <div class="col-md-6"><label class="form-label">Experience (Years)</label><input type="number" name="experience" class="form-control" required></div>
+                            <div class="col-md-6"><label class="form-label">Mobile Number</label><input type="tel" name="mobile" class="form-control" required></div>
+                            <div class="col-md-6"><label class="form-label">Email</label><input type="email" name="email" class="form-control" required></div>
+                            <div class="col-md-6"><label class="form-label">Primary Location</label><input type="text" name="location" class="form-control" required></div>
+                            <div class="col-md-6">
+                                <label class="form-label">Consultation Types Offered</label>
+                                <select class="form-select" name="consultation_types">
+                                    <option value="In-Person" selected>In-Person Only</option>
+                                    <option value="Online">Online Only</option>
+                                    <option value="Both">Both In-Person and Online</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <hr>
+                                <h5 class="mt-3">Hospital Information</h5>
+                            </div>
+                            <div class="col-md-6"><label class="form-label">Hospital Name</label><input type="text" name="hospital_name" class="form-control" required></div>
+                            <div class="col-md-6"><label class="form-label">Hospital Contact</label><input type="text" name="hospital_contact" class="form-control" required></div>
+                            <div class="col-12"><label class="form-label">Hospital Address</label><input type="text" name="hospital_address" class="form-control" required></div>
                         </div>
                         <div class="d-grid mt-4">
                             <button type="submit" class="btn btn-primary">Register as Doctor</button>
                         </div>
                     </form>
-                </div>
-
-                <!-- Hospital Registration Form (Placeholder) -->
-                <div id="hospital-form" class="role-form" style="display: none;">
-                    <div class="alert alert-info text-center">
-                        <i class="bi bi-tools fs-3"></i>
-                        <h4 class="alert-heading mt-2">Coming Soon!</h4>
-                        <p>Hospital registration functionality is currently under development. Please check back later.</p>
                     </div>
                 </div>
             </div>
             <div class="card-footer text-center py-3">
                 <div class="small">Already have an account? 
-                    <a href="{{ url_for('login') }}">Login as Patient</a> or 
-                    <a href="{{ url_for('doctor_login') }}">Login as Doctor</a>
+                    <a href="{{ url_for('login') }}">Login here</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-    document.getElementById('role').addEventListener('change', function() {
-        const selectedRole = this.value;
-        const forms = document.querySelectorAll('.role-form');
-
-        // Hide all forms
-        forms.forEach(form => {
-            form.style.display = 'none';
-        });
-
-        // Show the selected form
-        if (selectedRole) {
-            const selectedForm = document.getElementById(selectedRole + '-form');
-            if (selectedForm) {
-                selectedForm.style.display = 'block';
-            }
-        }
-    });
-</script>
 {% endblock %}
 ```
 

@@ -20,6 +20,11 @@
         </div>
 
         <div class="mb-3">
+            <label for="confirm_password" class="form-label">Confirm Password</label>
+            <input type="password" name="confirm_password" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
             <label for="specialization" class="form-label">Specialization</label>
             <input type="text" name="specialization" class="form-control" required>
         </div>
@@ -42,6 +47,15 @@
         <div class="mb-3">
             <label for="location" class="form-label">Location</label>
             <input type="text" name="location" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="consultation_types" class="form-label">Consultation Types Offered</label>
+            <select class="form-select" id="consultation_types" name="consultation_types">
+                <option value="In-Person" selected>In-Person Only</option>
+                <option value="Online">Online Only</option>
+                <option value="Both">Both In-Person and Online</option>
+            </select>
         </div>
 
         <h4 class="mt-4">Hospital Information</h4>

@@ -10,6 +10,8 @@ from sqlalchemy import func, case, and_
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 from flask_mail import Message as MailMessage  # Alias to avoid name conflict with model
 from firebase_admin import auth
+from twilio.rest import Client
+from twilio.base import exceptions
 import smtplib
 from markupsafe import Markup
 
@@ -219,7 +221,6 @@ def setup_routes(app):
     @login_required
     def patient_home():
         patient = Patient.query.get(session['patient_id'])
-        # Fetch top-rated doctors to display on the patient's homepage
         top_doctors = Doctor.query.order_by(Doctor.rating.desc()).limit(3).all()
         _filter_doctor_slots(top_doctors)
         return render_template("patient_home.html", patient=patient, top_doctors=top_doctors)
@@ -231,27 +232,18 @@ def setup_routes(app):
         This page is now public and does not require login.
         """
         page = request.args.get('page', 1, type=int)
-
-        # Subquery to get the review count for each doctor, which we'll use for sorting.
         review_count_subq = db.session.query(
             Review.doctor_id,
             func.count(Review.id).label('review_count')
         ).group_by(Review.doctor_id).subquery()
-
-        # Create a CASE statement to prioritize doctors with available slots.
-        # This is a simple check: if the `available_slots` field is not NULL and not an empty JSON object '{}'.
-        # Doctors with slots get priority 0, others get 1.
         has_slots_case = case(
             (and_(Doctor.available_slots != None, Doctor.available_slots != {}), 0),
             else_=1
         )
-
-        # Query to fetch doctors, joining with review counts.
-        # We sort by availability first, then by review count and rating.
         all_doctors_query = Doctor.query.outerjoin(
             review_count_subq, Doctor.id == review_count_subq.c.doctor_id
         ).order_by(
-            has_slots_case.asc(), # Doctors with slots (priority 0) come first.
+            has_slots_case.asc(), 
             func.coalesce(review_count_subq.c.review_count, 0).desc(),
             Doctor.rating.desc()
         )
@@ -1007,3 +999,85 @@ def setup_routes(app):
             return redirect(url_for('find_doctor'))
 
         return render_template('book_appointment.html', doctor=doctor, preselected_date=preselected_date, preselected_time=preselected_time, preselected_type=preselected_type)
+
+    @app.route('/send_patient_mobile_verification')
+    @login_required
+    def send_patient_mobile_verification():
+        # Check if Twilio is configured
+        required_vars = ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_PHONE_NUMBER']
+        if not all(current_app.config.get(var) for var in required_vars):
+            flash("The SMS service is not configured. Please contact support.", "danger")
+            return redirect(url_for('user_profile'))
+
+        patient = Patient.query.get(session['patient_id'])
+        if not patient.mobile:
+            flash('Please add a mobile number to your profile first.', 'warning')
+            return redirect(url_for('user_profile'))
+
+        if getattr(patient, 'mobile_verified', False):
+            flash('Your mobile number is already verified.', 'info')
+            return redirect(url_for('user_profile'))
+
+        # Generate and store OTP
+        otp = str(random.randint(100000, 999999))
+        session['patient_mobile_verification_otp'] = otp
+        session['patient_mobile_to_verify'] = patient.mobile
+
+        # Send SMS with OTP via Twilio
+        try:
+            current_app.logger.info(f"Attempting to send OTP to patient number: {patient.mobile}")
+            client = Client(current_app.config['TWILIO_ACCOUNT_SID'], current_app.config['TWILIO_AUTH_TOKEN'])
+            message = client.messages.create(
+                body=f"Your CareConnect account mobile verification OTP is: {otp}",
+                from_=current_app.config['TWILIO_PHONE_NUMBER'],
+                to=patient.mobile
+            )
+            flash(f'An OTP has been sent to {patient.mobile}.', 'info')
+        except exceptions.TwilioRestException as e:
+            # Log the specific error from Twilio for debugging
+            current_app.logger.error(f"Twilio API error for patient verification: {e.msg} (Code: {e.code})")
+            flash("Failed to send OTP. Please check your mobile number or try again later.", "danger")
+            if current_app.debug:
+                # In debug mode, show the specific Twilio error to the developer
+                flash(Markup(f"<b>DEV MODE DEBUG:</b> Twilio Error Code {e.code} - {e.msg}. <a href='https://www.twilio.com/docs/api/errors/{e.code}' target='_blank' class='alert-link'>More info here.</a>"), "warning")
+        except Exception as e:
+            current_app.logger.error(f"Twilio failed to send SMS for patient verification: {e}")
+            flash("Failed to send OTP. Please check your mobile number or try again later.", "danger")
+            if current_app.debug:
+                flash(Markup(f"DEV MODE: SMS sending failed. You can <a href='{url_for('dev_bypass_patient_mobile_verification')}' class='alert-link'>click here to bypass verification</a>."), 'info')
+            return redirect(url_for('user_profile'))
+
+        return redirect(url_for('verify_patient_mobile'))
+
+    @app.route('/verify_patient_mobile', methods=['GET', 'POST'])
+    @login_required
+    def verify_patient_mobile():
+        if 'patient_mobile_verification_otp' not in session:
+            flash('Verification process has expired. Please try again.', 'warning')
+            return redirect(url_for('user_profile'))
+
+        mobile_number = session.get('patient_mobile_to_verify', '')
+        hidden_mobile_number = ''
+        # Create a masked version of the number, e.g., '*******3210'
+        if len(mobile_number) > 4:
+            hidden_mobile_number = '*' * (len(mobile_number) - 4) + mobile_number[-4:]
+
+
+        if request.method == 'POST':
+            submitted_otp = request.form.get('otp')
+            if submitted_otp == session.get('patient_mobile_verification_otp'):
+                patient = Patient.query.get(session['patient_id'])
+                if patient.mobile == session.get('patient_mobile_to_verify'):
+                    patient.mobile_verified = True
+                    db.session.commit()
+                    flash('Your mobile number has been successfully verified!', 'success')
+                    session.pop('patient_mobile_verification_otp', None)
+                    session.pop('patient_mobile_to_verify', None)
+                    return redirect(url_for('user_profile'))
+                else:
+                    flash('Mobile number has changed. Please restart verification.', 'danger')
+                    return redirect(url_for('user_profile'))
+            else:
+                flash('Invalid OTP. Please try again.', 'danger')
+        
+        return render_template('patient_verify_mobile.html', hidden_mobile_number=hidden_mobile_number)

@@ -64,14 +64,14 @@
                                 <div class="input-group">
                                     <input type="text" class="form-control" id="mobile" name="mobile" value="{{ patient.mobile }}" required {% if patient.mobile_verified %}readonly{% endif %}>
                                     {% if patient.mobile_verified %}
-                                        <span class="btn btn-success disabled" title="Your mobile number is verified."><i class="bi bi-check-circle-fill me-1"></i>Verified</span>
-                                    {% elif not config.FIREBASE_API_KEY %}
+                                        <span class="btn btn-success disabled" title="Your mobile number is verified."><i class="bi bi-check-circle-fill me-1"></i> Verified</span>
+                                    {% elif not config.TWILIO_ACCOUNT_SID %}
                                         <button type="button" class="btn btn-outline-secondary" disabled title="The SMS service is not configured by the administrator.">Verify</button>
                                         {% if config.DEBUG and not patient.mobile_verified %}
                                             <a href="{{ url_for('dev_bypass_patient_mobile_verification') }}" class="btn btn-warning" title="DEV ONLY: Bypass Firebase OTP">Bypass</a>
                                         {% endif %}
                                     {% else %}
-                                        <button type="button" id="verify-mobile-btn" class="btn btn-outline-secondary">Verify</button>
+                                        <a href="{{ url_for('send_patient_mobile_verification') }}" class="btn btn-outline-secondary">Verify</a>
                                     {% endif %}
                                 </div>
                                 <small class="form-text text-muted">Verify your mobile number for OTP and SMS notifications. Once verified, it cannot be changed.</small>
@@ -129,10 +129,6 @@
 {% endblock %}
 
 {% block scripts %}
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
-
 <!-- Profile picture preview script -->
 <script>
 document.getElementById('image').addEventListener('change', function(event) {
@@ -151,127 +147,5 @@ document.getElementById('image').addEventListener('change', function(event) {
 });
 </script>
 
-<!-- Firebase Phone Verification Script -->
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Your web app's Firebase configuration from Flask config
-    const firebaseConfig = {
-        apiKey: "{{ config.FIREBASE_API_KEY }}",
-        authDomain: "{{ config.FIREBASE_AUTH_DOMAIN }}",
-        projectId: "{{ config.FIREBASE_PROJECT_ID }}",
-        storageBucket: "{{ config.FIREBASE_STORAGE_BUCKET }}",
-        messagingSenderId: "{{ config.FIREBASE_MESSAGING_SENDER_ID }}",
-        appId: "{{ config.FIREBASE_APP_ID }}"
-    };
-
-    // --- BEGIN BUG FIX ---
-    // More detailed check for Firebase configuration to provide better error messages.
-    const missingFirebaseKeys = Object.entries(firebaseConfig)
-        .filter(([key, value]) => !value)
-        .map(([key, value]) => {
-            // Convert JS camelCase to ENV_VAR_SNAKE_CASE. e.g., apiKey -> FIREBASE_API_KEY
-            const envVar = key.replace(/([A-Z])/g, '_$1').toUpperCase();
-            return `FIREBASE_${envVar}`;
-        });
-
-    if (missingFirebaseKeys.length > 0) {
-        const errorMsg = `The SMS service (Firebase) is not configured. Please set the following in your .env file: ${missingFirebaseKeys.join(', ')}.`;
-        console.error(errorMsg);
-        const verifyBtn = document.getElementById('verify-mobile-btn');
-        if(verifyBtn) {
-            verifyBtn.addEventListener('click', () => alert(errorMsg));
-        }
-        return;
-    }
-    // --- END BUG FIX ---
-
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-
-    const verifyBtn = document.getElementById('verify-mobile-btn');
-    const confirmOtpBtn = document.getElementById('confirm-otp-btn');
-    const otpModal = new bootstrap.Modal(document.getElementById('otpModal'));
-    const otpError = document.getElementById('otp-error');
-
-    // This will be set by signInWithPhoneNumber
-    window.confirmationResult = null;
-
-    // 1. Setup reCAPTCHA
-    window.recaptchaVerifier = new auth.RecaptchaVerifier('recaptcha-container', {
-        'size': 'invisible',
-        'callback': (response) => {
-            // reCAPTCHA solved, allow signInWithPhoneNumber.
-        }
-    });
-
-    // 2. Handle "Verify" button click
-    verifyBtn.addEventListener('click', () => {
-        const phoneNumber = document.getElementById('mobile').value;
-        if (!phoneNumber) {
-            alert('Please enter a mobile number first.');
-            return;
-        }
-
-        // Show the modal first
-        otpModal.show();
-        
-        // Then send OTP
-        const appVerifier = window.recaptchaVerifier;
-        auth.signInWithPhoneNumber(phoneNumber, appVerifier)
-            .then((confirmationResult) => {
-                // SMS sent. Save confirmation result to use later.
-                window.confirmationResult = confirmationResult;
-                console.log("OTP sent successfully!");
-            }).catch((error) => {
-                console.error("Error during signInWithPhoneNumber", error);
-                otpError.textContent = `Error: ${error.message}. Please check the number and try again.`;
-                otpError.classList.remove('d-none');
-                // Hide the modal if sending fails
-                otpModal.hide();
-                alert(`Failed to send OTP. Please ensure your number is in E.164 format (e.g., +14155552671) and try again.`);
-                // Reset reCAPTCHA
-                window.recaptchaVerifier.render().then(widgetId => grecaptcha.reset(widgetId));
-            });
-    });
-
-    // 3. Handle "Confirm OTP" button click
-    confirmOtpBtn.addEventListener('click', () => {
-        const code = document.getElementById('otp-input').value;
-        if (!code || !window.confirmationResult) {
-            otpError.textContent = 'Please enter the OTP.';
-            otpError.classList.remove('d-none');
-            return;
-        }
-
-        window.confirmationResult.confirm(code).then((result) => {
-            // User signed in successfully.
-            const user = result.user;
-            console.log("User verified:", user);
-            
-            // 4. Get ID token and send to backend
-            user.getIdToken().then((idToken) => {
-                fetch("{{ url_for('verify_phone_token') }}", {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token: idToken })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.reload(); // Reload to show "Verified" status
-                    } else {
-                        alert('Verification failed: ' + data.error);
-                        otpModal.hide();
-                    }
-                });
-            });
-        }).catch((error) => {
-            console.error("Error confirming OTP", error);
-            otpError.textContent = `Invalid OTP. Please try again. (${error.code})`;
-            otpError.classList.remove('d-none');
-        });
-    });
-});
-</script>
+<!-- No special scripts needed for backend-driven OTP flow -->
 {% endblock %}

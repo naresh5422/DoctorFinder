@@ -47,14 +47,28 @@
                             <p class="mt-2">Select a date from the calendar to add or remove time slots.</p>
                         </div>
                         <div id="editor-content" style="display: none;">
+                            <!-- This dropdown will be shown if doctor offers both types -->
+                            {% if doctor.consultation_types == 'Both' %}
+                            <div class="mb-3">
+                                <label for="consultation-type-select" class="form-label">Select Consultation Type to Edit</label>
+                                <select class="form-select" id="consultation-type-select">
+                                    <option value="in-person">In-Person</option>
+                                    <option value="online">Online</option>
+                                </select>
+                            </div>
+                            {% endif %}
+
+                            <!-- This container will hold the dynamic slot editor -->
+                            <div id="slot-editor-panel">
                             <div class="mb-4">
                                 <label class="form-label">Quick Add Slots (30-min intervals)</label>
                                 <div id="quick-add-slots" class="d-flex flex-wrap gap-2"></div>
                             </div>
                             <hr>
-                            <h6>Existing Slots:</h6>
+                            <h6>Existing Slots for this type:</h6>
                             <div id="existing-slots-list" class="d-flex flex-wrap gap-2">
                                 <!-- Existing slots will be populated by JS -->
+                            </div>
                             </div>
                         </div>
                     </div>
@@ -69,7 +83,9 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // State
-    let current_slots = {{ doctor.available_slots|tojson if doctor.available_slots else '{}' }};
+    let raw_slots = {{ doctor.available_slots|tojson|safe if doctor.available_slots else '{}' }};
+    const doctor_consult_types = "{{ doctor.consultation_types }}";
+    let current_slots = {}; // This will be the normalized, nested structure.
     let currentDate = new Date();
     let selectedDate = null;
 
@@ -81,13 +97,32 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectedDateDisplay = document.getElementById('selected-date-display');
     const noDateSelectedView = document.getElementById('no-date-selected');
     const editorContentView = document.getElementById('editor-content');
-    const existingSlotsList = document.getElementById('existing-slots-list');
     const slotsForm = document.getElementById('slots-form');
     const slotsDataInput = document.getElementById('slots-data-input');
+    const consultTypeSelect = document.getElementById('consultation-type-select');
     const quickAddSlotsContainer = document.getElementById('quick-add-slots');
+    const existingSlotsList = document.getElementById('existing-slots-list');
 
+    // --- Helper Functions ---
+
+    function normalizeSlots(slots) {
+        if (!slots || typeof slots !== 'object') return { 'in-person': {}, 'online': {} };
+        // If it's already in the new format, just ensure both keys exist.
+        if ('online' in slots || 'in-person' in slots) {
+            return {
+                'in-person': slots['in-person'] || {},
+                'online': slots['online'] || {}
+            };
+        }
+        // Handle old, flat structure for backward compatibility.
+        const defaultType = (doctor_consult_types === 'Online') ? 'online' : 'in-person';
+        const normalized = { 'in-person': {}, 'online': {} };
+        normalized[defaultType] = slots;
+        return normalized;
+    }
+    
     function formatTime(timeStr) {
-        // Basic validation and formatting
+        // Converts 12-hr format (e.g., "8:30 AM") to 24-hr format ("08:30") for storage.
         let time = timeStr.trim().toUpperCase();
         let [hour, minute] = time.replace(/ /g, '').replace('AM', '').replace('PM', '').split(':');
         
@@ -104,6 +139,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
     }
+
+    // --- Rendering Functions ---
 
     function renderCalendar() {
         calendarDaysEl.innerHTML = '';
@@ -127,7 +164,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             dayEl.dataset.date = dateStr;
 
-            if (current_slots[dateStr] && current_slots[dateStr].length > 0) {
+            const hasInPersonSlots = current_slots['in-person'] && current_slots['in-person'][dateStr] && current_slots['in-person'][dateStr].length > 0;
+            const hasOnlineSlots = current_slots['online'] && current_slots['online'][dateStr] && current_slots['online'][dateStr].length > 0;
+
+            if (hasInPersonSlots || hasOnlineSlots) {
                 dayEl.classList.add('has-slots');
             }
             if (dateStr === selectedDate) {
@@ -156,27 +196,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const predefinedSlots = generateTimeSlots(8, 21, 30); // 8:00 AM to 8:30 PM
 
-    function renderQuickAddSlots() {
-        quickAddSlotsContainer.innerHTML = '';
-        const existingSlotsForDate = current_slots[selectedDate] || [];
-
-        predefinedSlots.forEach(timeStr => {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.classList.add('btn', 'btn-sm', 'btn-outline-primary');
-            button.textContent = timeStr;
-            
-            const formattedTime = formatTime(timeStr);
-            if (existingSlotsForDate.includes(formattedTime)) {
-                button.disabled = true;
-                button.classList.replace('btn-outline-primary', 'btn-primary');
-            }
-
-            button.addEventListener('click', () => handleAddSlot(formattedTime));
-            quickAddSlotsContainer.appendChild(button);
-        });
-    }
-
     function renderSlotEditor() {
         if (!selectedDate) {
             noDateSelectedView.style.display = 'block';
@@ -187,52 +206,82 @@ document.addEventListener('DOMContentLoaded', function() {
         noDateSelectedView.style.display = 'none';
         editorContentView.style.display = 'block';
         selectedDateDisplay.textContent = new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        
-        existingSlotsList.innerHTML = '';
-        const slotsForDate = current_slots[selectedDate] || [];
-        
-        // Sort slots before rendering
-        slotsForDate.sort((a, b) => {
-            const timeA = new Date(`1970-01-01T${a}`);
-            const timeB = new Date(`1970-01-01T${b}`);
-            return timeA - timeB;
-        });
 
-        slotsForDate.forEach(slot => {
-            const slotPill = document.createElement('div');
-            slotPill.classList.add('slot-pill');
-            
-            // Format 24hr time to 12hr AM/PM for display
-            const [h, m] = slot.split(':');
-            const displayTime = new Date(1970, 0, 1, h, m).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-            
-            slotPill.innerHTML = `
-                <span>${displayTime}</span>
-                <button type="button" class="btn-close btn-close-sm" data-slot="${slot}"></button>
-            `;
-            slotPill.querySelector('.btn-close').addEventListener('click', (e) => {
-                const slotToRemove = e.target.dataset.slot;
-                current_slots[selectedDate] = current_slots[selectedDate].filter(s => s !== slotToRemove);
-                if (current_slots[selectedDate].length === 0) {
-                    delete current_slots[selectedDate];
-                }
-                renderSlotEditor();
-                renderCalendar(); // Update calendar day style
-            });
-            existingSlotsList.appendChild(slotPill);
-        });
-
-        renderQuickAddSlots();
+        renderPanel();
     }
 
-    function handleAddSlot(formattedTime) {
-        if (!current_slots[selectedDate]) {
-            current_slots[selectedDate] = [];
+    function renderPanel() {
+        const selectedType = (doctor_consult_types === 'Both') ? consultTypeSelect.value : doctor_consult_types.toLowerCase();
+        const otherType = selectedType === 'in-person' ? 'online' : 'in-person';
+
+        const slotsForOtherType = (current_slots[otherType] && current_slots[otherType][selectedDate]) ? current_slots[otherType][selectedDate] : [];
+        const slotsForCurrentType = (current_slots[selectedType] && current_slots[selectedType][selectedDate]) ? current_slots[selectedType][selectedDate] : [];
+
+        // Render Quick Add buttons
+        quickAddSlotsContainer.innerHTML = '';
+        predefinedSlots.forEach(timeStr => {
+            const formattedTime = formatTime(timeStr);
+
+            // Don't show a quick-add button if it's already taken by the other consultation type
+            if (slotsForOtherType.includes(formattedTime)) {
+                return; // Skip this iteration
+            }
+
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.classList.add('btn', 'btn-sm', 'btn-outline-primary');
+            button.textContent = timeStr;
+
+            // Disable it if it's already added for the current type
+            if (slotsForCurrentType.includes(formattedTime)) {
+                button.disabled = true;
+                button.classList.replace('btn-outline-primary', 'btn-primary');
+            }
+
+            button.addEventListener('click', () => handleAddSlot(formattedTime, selectedType));
+            quickAddSlotsContainer.appendChild(button);
+        });
+
+        // Render Existing Slots pills
+        existingSlotsList.innerHTML = '';
+        const sortedSlotsForCurrentType = [...slotsForCurrentType].sort((a, b) => new Date(`1970-01-01T${a}`) - new Date(`1970-01-01T${b}`));
+
+        sortedSlotsForCurrentType.forEach(slot => {
+            const slotPill = document.createElement('div');
+            slotPill.classList.add('slot-pill');
+
+            const [h, m] = slot.split(':');
+            const displayTime = new Date(1970, 0, 1, h, m).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+            slotPill.innerHTML = `<span>${displayTime}</span><button type="button" class="btn-close btn-close-sm"></button>`;
+            
+            const removeBtn = slotPill.querySelector('.btn-close');
+            removeBtn.addEventListener('click', () => {
+                current_slots[selectedType][selectedDate] = current_slots[selectedType][selectedDate].filter(s => s !== slot);
+                if (current_slots[selectedType][selectedDate].length === 0) {
+                    delete current_slots[selectedType][selectedDate];
+                }
+                renderPanel();
+                renderCalendar();
+            });
+
+            existingSlotsList.appendChild(slotPill);
+        });
+    }
+
+    // --- Event Handlers & Initialization ---
+
+    function handleAddSlot(formattedTime, consultType) {
+        if (!current_slots[consultType]) {
+            current_slots[consultType] = {};
         }
-        if (!current_slots[selectedDate].includes(formattedTime)) {
-            current_slots[selectedDate].push(formattedTime);
+        if (!current_slots[consultType][selectedDate]) {
+            current_slots[consultType][selectedDate] = [];
         }
-        renderSlotEditor();
+        if (!current_slots[consultType][selectedDate].includes(formattedTime)) {
+            current_slots[consultType][selectedDate].push(formattedTime);
+        }
+        renderPanel();
         renderCalendar();
     }
 
@@ -250,7 +299,12 @@ document.addEventListener('DOMContentLoaded', function() {
         slotsDataInput.value = JSON.stringify(current_slots);
     });
 
+    if (consultTypeSelect) {
+        consultTypeSelect.addEventListener('change', renderPanel);
+    }
+
     // Initial render
+    current_slots = normalizeSlots(raw_slots);
     renderCalendar();
     renderSlotEditor();
 });
