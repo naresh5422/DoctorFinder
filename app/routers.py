@@ -31,8 +31,11 @@ def _filter_doctor_slots(doctors_list):
     doctor_ids = [doc.id for doc in doctors_list]
     all_slot_dates = set()
     for doc in doctors_list:
+        # Correctly iterate through the new nested structure to get all dates
         if isinstance(doc.available_slots, dict):
-            all_slot_dates.update(doc.available_slots.keys())
+            for consult_type in ['online', 'in-person']:
+                if isinstance(doc.available_slots.get(consult_type), dict):
+                    all_slot_dates.update(doc.available_slots[consult_type].keys())
 
     # If no doctors have any slots defined, we can just clear them and return.
     if not all_slot_dates:
@@ -44,7 +47,7 @@ def _filter_doctor_slots(doctors_list):
     # Fetch all relevant appointments for all doctors in the list in a single query.
     all_appointments = Appointment.query.filter(
         Appointment.doctor_id.in_(doctor_ids),
-        Appointment.appointment_date.cast(db.Date).in_(all_slot_dates),
+        Appointment.appointment_date.cast(db.Date).in_(list(all_slot_dates)),
         Appointment.status.in_(['Pending', 'Confirmed'])
     ).all()
 
@@ -968,6 +971,7 @@ def setup_routes(app):
             consultation_for = request.form.get('consultation_for', 'Self')
             patient_id = session.get('patient_id')
             consultation_type = request.form.get('consultation_type', 'In-Person')
+            payment_option = request.form.get('payment_option')
             appointment_date = None
 
             # Check if booking is based on pre-defined slots
@@ -985,18 +989,36 @@ def setup_routes(app):
                     return redirect(url_for('view_doctor_profile', doctor_id=doctor_id))
                 appointment_date = datetime.strptime(appointment_date_str, '%Y-%m-%dT%H:%M')
 
+            # Determine payment method and status based on user's choice
+            payment_method = 'Cash'
+            payment_status = 'Pending'
+            if payment_option == 'online_prepay':
+                payment_method = 'Online'
+                # In a real scenario, you would redirect to a payment gateway here.
+                # For now, we'll mark it as 'Pending' and assume payment will be handled.
+                payment_status = 'Pending' # This would become 'Completed' after a successful payment webhook.
+
             new_appointment = Appointment(
                 user_id=patient_id,
                 doctor_id=doctor_id,
                 appointment_date=appointment_date,
                 consultation_for=consultation_for,
                 consultation_type=consultation_type,
-                reason=reason
+                reason=reason,
+                payment_method=payment_method,
+                payment_status=payment_status
             )
             db.session.add(new_appointment)
             db.session.commit()
+
             flash(f'Appointment requested with {doctor.doctor_name}. You will be notified upon confirmation.', 'success')
-            return redirect(url_for('find_doctor'))
+            
+            # --- Refactor: Redirect back to the last search results ---
+            last_search = session.get('last_search_query', {})
+            if last_search.get('disease') or last_search.get('location'):
+                return redirect(url_for('find_doctor', disease=last_search.get('disease', ''), location=last_search.get('location', '')))
+            # Fallback to browse_doctors if no search is in session
+            return redirect(url_for('browse_doctors'))
 
         return render_template('book_appointment.html', doctor=doctor, preselected_date=preselected_date, preselected_time=preselected_time, preselected_type=preselected_type)
 

@@ -141,6 +141,8 @@ class Appointment(db.Model):
     consultation_type = db.Column(db.String(20), nullable=False, default='In-Person') # 'In-Person' or 'Online'
     reason = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(20), nullable=False, default='Pending') # e.g., Pending, Confirmed, Completed, Canceled
+    payment_method = db.Column(db.String(50), nullable=True) # e.g., 'Online', 'Cash'
+    payment_status = db.Column(db.String(50), default='Pending', nullable=False) # e.g., 'Pending', 'Completed'
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     patient = db.relationship('Patient', backref='appointments')

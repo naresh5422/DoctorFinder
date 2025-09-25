@@ -73,8 +73,17 @@
                         <label for="reason" class="form-label">Reason for Visit (Optional)</label>
                         <textarea class="form-control" id="reason" name="reason" rows="3" placeholder="Briefly describe your symptoms or reason for visit..."></textarea>
                     </div>
+
+                    <!-- Payment Options Section -->
+                    <div id="payment-section" class="mt-4 pt-3 border-top" style="display: none;">
+                        <h5 class="mb-3">Payment Options</h5>
+                        <div id="payment-options-container">
+                            <!-- Content will be populated by JavaScript -->
+                        </div>
+                    </div>
+
                     <div class="d-grid mt-4 mb-0">
-                        <button type="submit" class="btn btn-primary btn-block">Request Appointment</button>
+                        <button type="submit" id="submit-button" class="btn btn-primary btn-block" disabled>Request Appointment</button>
                     </div>
                 </form>
             </div>
@@ -90,6 +99,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const timeSlotsPills = document.getElementById('time-slots-pills');
     const consultTypeSelect = document.getElementById('consultation-type-select');
     const preselectedDiv = document.getElementById('preselected-data');
+    const paymentSection = document.getElementById('payment-section');
+    const paymentOptionsContainer = document.getElementById('payment-options-container');
+    const submitButton = document.getElementById('submit-button');
 
     function getSelectedConsultationType() {
         if (consultTypeSelect) {
@@ -98,6 +110,36 @@ document.addEventListener('DOMContentLoaded', function() {
         // Fallback for doctors who only offer one type
         const hiddenInput = document.querySelector('input[name="consultation_type"]');
         return hiddenInput ? hiddenInput.value : 'in-person';
+    }
+
+    function updatePaymentOptions() {
+        const consultType = getSelectedConsultationType();
+        paymentSection.style.display = 'block';
+        submitButton.disabled = false;
+
+        if (consultType === 'online') {
+            paymentOptionsContainer.innerHTML = `
+                <p class="text-muted">Online consultations require pre-payment.</p>
+                <input type="hidden" name="payment_option" value="online_prepay" checked>
+            `;
+            submitButton.textContent = 'Proceed to Payment & Book';
+        } else { // in-person
+            paymentOptionsContainer.innerHTML = `
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="payment_option" id="pay-cash" value="cash" checked>
+                    <label class="form-check-label" for="pay-cash">
+                        Pay with Cash at Clinic
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="payment_option" id="pay-online" value="online_prepay">
+                    <label class="form-check-label" for="pay-online">
+                        Pay Online Now
+                    </label>
+                </div>
+            `;
+            submitButton.textContent = 'Request Appointment';
+        }
     }
 
     function populateDates() {
@@ -114,6 +156,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Clear time slots when dates change
         timeSlotsPills.innerHTML = '';
         timeSlotsContainer.style.display = 'none';
+        paymentSection.style.display = 'none';
+        submitButton.disabled = true;
     }
 
     function populateTimes(selectedDate) {
@@ -131,14 +175,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
             });
             timeSlotsContainer.style.display = 'block';
+
+            // Add event listener to radio buttons to show payment options
+            document.querySelectorAll('input[name="appointment_time"]').forEach(radio => {
+                radio.addEventListener('change', updatePaymentOptions);
+            });
+
         } else {
             timeSlotsContainer.style.display = 'none';
+            paymentSection.style.display = 'none';
+            submitButton.disabled = true;
         }
     }
 
     // Event Listeners
     dateSelect.addEventListener('change', function() {
         populateTimes(this.value);
+        paymentSection.style.display = 'none'; // Hide payment options until a time is selected
+        submitButton.disabled = true;
     });
 
     if (consultTypeSelect) {
@@ -164,7 +218,10 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Select the time
             const timeRadioToSelect = document.querySelector(`input[name="appointment_time"][value="${preselectedTime}"]`);
-            if (timeRadioToSelect) timeRadioToSelect.checked = true;
+            if (timeRadioToSelect) {
+                timeRadioToSelect.checked = true;
+                updatePaymentOptions(); // Show payment options for pre-selected slot
+            }
         }
     }
 });
