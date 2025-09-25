@@ -114,13 +114,21 @@
                 <div class="card-body">
                     {% if weekly_slots %}
                         {% for date, times in weekly_slots.items()|sort %}
-                            <div class="mb-3">
+                            <div class="mb-3 pb-2 border-bottom">
                                 <strong>{{ datetime.strptime(date, '%Y-%m-%d').strftime('%A, %b %d') }}</strong>
-                                <div class="d-flex flex-wrap gap-2 mt-1">
-                                {% for time_str in times %}
-                                    <span class="badge bg-light text-dark border">{{ datetime.strptime(time_str, '%H:%M').strftime('%I:%M %p') }}</span>
+                                {% for type, time_list in times.items()|sort %}
+                                    <div class="mt-2">
+                                        <span class="badge bg-primary-subtle text-primary-emphasis me-2" style="width: 75px;">
+                                            <i class="bi bi-{{ 'camera-video' if type == 'online' else 'hospital' }} me-1"></i>
+                                            {{ type|capitalize }}
+                                        </span>
+                                        <div class="d-inline-flex flex-wrap gap-2 align-items-center">
+                                            {% for time_str in time_list %}
+                                                <span class="badge bg-light text-dark border">{{ datetime.strptime(time_str, '%H:%M').strftime('%I:%M %p') }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
                                 {% endfor %}
-                                </div>
                             </div>
                         {% endfor %}
                     {% else %}

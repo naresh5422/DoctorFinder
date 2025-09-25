@@ -411,38 +411,46 @@ def setup_doctor_routes(app):
             except json.JSONDecodeError:
                 current_slots = {}
 
-        # --- REFACTORED SLOT FILTERING LOGIC ---
-        # This logic now correctly removes slots that are already booked (Pending or Confirmed).
+        # --- REFACTORED SLOT FILTERING LOGIC for new structure ---
+        # This logic now correctly handles the new {'online': {...}, 'in-person': {...}} structure,
+        # removes past slots, and filters out slots that are already booked.
         if current_slots:
             seven_days_from_now = today + timedelta(days=7)
             
-            relevant_dates = []
-            for date_str in current_slots.keys():
-                try:
-                    if today <= datetime.strptime(date_str, '%Y-%m-%d').date() < seven_days_from_now:
-                        relevant_dates.append(date_str)
-                except ValueError:
-                    # Gracefully skip keys that are not in 'YYYY-MM-DD' format, like the erroneous 'slots' key.
-                    continue
+            # Collect all relevant dates from both 'online' and 'in-person' slots
+            all_relevant_dates = set()
+            for consult_type in ['online', 'in-person']:
+                if isinstance(current_slots.get(consult_type), dict):
+                    for date_str in current_slots[consult_type].keys():
+                        try:
+                            slot_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                            if today <= slot_date < seven_days_from_now:
+                                all_relevant_dates.add(date_str)
+                        except ValueError:
+                            continue
 
-            if relevant_dates:
+            if all_relevant_dates:
+                # Fetch all booked appointments for the relevant dates in one query
                 booked_appointments = Appointment.query.filter(
                     Appointment.doctor_id == doctor_id,
-                    Appointment.appointment_date.cast(db.Date).in_(relevant_dates),
+                    Appointment.appointment_date.cast(db.Date).in_(list(all_relevant_dates)),
                     Appointment.status.in_(['Pending', 'Confirmed'])
                 ).all()
-                booked_slot_keys = {f"{appt.appointment_date.strftime('%Y-%m-%d')}_{appt.appointment_date.strftime('%H:%M')}" for appt in booked_appointments}
+                # Create a lookup set for booked slots: {'consultType_YYYY-MM-DD_HH:MM'}
+                booked_slot_keys = {f"{appt.consultation_type.lower()}_{appt.appointment_date.strftime('%Y-%m-%d')}_{appt.appointment_date.strftime('%H:%M')}" for appt in booked_appointments}
 
-                for date_str in sorted(relevant_dates):
-                    try:
-                        available_times = [
-                            time_str for time_str in current_slots.get(date_str, [])
-                            if datetime.strptime(f"{date_str} {time_str}", '%Y-%m-%d %H:%M') > now and f"{date_str}_{time_str}" not in booked_slot_keys
-                        ]
-                        if available_times:
-                            weekly_slots[date_str] = available_times
-                    except (ValueError, TypeError):
-                        continue
+                # Process and filter slots for each consultation type
+                for consult_type in ['online', 'in-person']:
+                    if consult_type in current_slots and isinstance(current_slots[consult_type], dict):
+                        for date_str in sorted(all_relevant_dates):
+                            if date_str in current_slots[consult_type]:
+                                available_times = [
+                                    time_str for time_str in current_slots[consult_type][date_str]
+                                    if datetime.strptime(f"{date_str} {time_str}", '%Y-%m-%d %H:%M') > now and f"{consult_type}_{date_str}_{time_str}" not in booked_slot_keys
+                                ]
+                                if available_times:
+                                    weekly_slots.setdefault(date_str, {})[consult_type] = available_times
+
         # --- END REFACTOR ---
 
         return render_template("doctor_dashboard.html", doctor=doctor,
@@ -541,7 +549,7 @@ def setup_doctor_routes(app):
         return redirect(url_for('doctor_dashboard'))
 
     @app.route('/doctor/manage_slots', methods=['GET', 'POST'])
-    @doctor_verified_required
+    @doctor_login_required
     def manage_slots():
         if "doctor_id" not in session:
             return redirect(url_for('doctor_login'))
