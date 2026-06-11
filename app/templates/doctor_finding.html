@@ -6,7 +6,7 @@
 <div class="container py-5">
     <!-- Search Bar -->
     <div class="card p-4 mb-5 search-results-bar">
-        <form id="unified-search-form" action="{{ url_for('find_doctor') }}" method="POST">
+        <form id="unified-search-form" action="{{ url_for('find_doctor') }}" method="GET">
             <div class="input-group input-group-lg">
                 {# Reconstruct the search query for a unified experience. #}
                 {% set search_value = disease_query %}

@@ -240,7 +240,7 @@ def setup_doctor_routes(app):
                     try:
                         client = Client(app.config['TWILIO_ACCOUNT_SID'], app.config['TWILIO_AUTH_TOKEN'])
                         message = client.messages.create(
-                            body=f"Your password reset OTP for CareConnect is: {otp}",
+                            body=f"Your password reset OTP for CareSlotly is: {otp}",
                             from_=app.config['TWILIO_PHONE_NUMBER'],
                             to=doctor.mobile_no # Ensure this includes the country code, e.g., +1234567890
                         )
@@ -667,10 +667,10 @@ def setup_doctor_routes(app):
         session['doctor_email_to_verify'] = doctor.email_id
 
         # Send email with OTP
-        msg = MailMessage('Verify Your Email for CareConnect',
+        msg = MailMessage('Verify Your Email for CareSlotly',
                           sender=app.config['MAIL_USERNAME'],
                           recipients=[doctor.email_id])
-        msg.body = f'Your CareConnect Doctor account email verification OTP is: {otp}'
+        msg.body = f'Your CareSlotly Doctor account email verification OTP is: {otp}'
         try:
             mail.send(msg)
             flash(f'An OTP has been sent to {doctor.email_id}.', 'info')
@@ -871,7 +871,7 @@ def setup_doctor_routes(app):
             current_app.logger.info(f"Attempting to send OTP to doctor number: {doctor.mobile_no}")
             client = Client(current_app.config['TWILIO_ACCOUNT_SID'], current_app.config['TWILIO_AUTH_TOKEN'])
             message = client.messages.create(
-                body=f"Your CareConnect Doctor account mobile verification OTP is: {otp}",
+                body=f"Your CareSlotly Doctor account mobile verification OTP is: {otp}",
                 from_=current_app.config['TWILIO_PHONE_NUMBER'],
                 to=doctor.mobile_no
             )
@@ -923,3 +923,18 @@ def setup_doctor_routes(app):
                 flash('Invalid OTP. Please try again.', 'danger')
         
         return render_template('doctor_verify_mobile.html', hidden_mobile_number=hidden_mobile_number)
+
+    @app.route('/doctor_finding', methods=['GET'])
+    def doctor_finding():
+        query = request.args.get('search_query', '').strip()
+        doctors = []
+        if query:
+            search_term = f"%{query}%"
+            doctors = Doctor.query.filter(
+                db.or_(
+                    Doctor.doctor_name.ilike(search_term),
+                    Doctor.specialization.ilike(search_term),
+                    Doctor.location.ilike(search_term)
+                )
+            ).all()
+        return render_template('doctor_finding.html', doctors=doctors, query=query)

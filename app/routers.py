@@ -2,6 +2,7 @@ from flask import render_template, request, session, redirect, url_for, flash, j
 from app.services.doctor_service import find_doctors, get_nearby_locations, map_disease_to_specialist, find_hospitals, get_featured_hospitals, extract_entities_from_query, get_autocomplete_suggestions, get_location_suggestions
 import os
 import random
+import re
 from werkzeug.utils import secure_filename
 from app.extension import db, mail, login_required, check_gmail_app_password
 from app.models import SearchHistory, Patient, Doctor, Appointment, Review, Message
@@ -14,6 +15,187 @@ from twilio.rest import Client
 from twilio.base import exceptions
 import smtplib
 from markupsafe import Markup
+
+
+CHATBOT_FAQS = {
+    "how do i book an appointment": {
+        "reply": "Search by symptom, specialty, or location. Open a doctor profile, choose an available online or in-person slot, and submit the booking request. If you are not logged in, CareSlotly will ask you to login before booking.",
+        "actions": [
+            ("Find doctors", "browse_doctors", "primary"),
+            ("Login", "login", "secondary"),
+        ],
+    },
+    "can i consult online": {
+        "reply": "Yes. Doctors who support online consultations show an Online badge and online slots. Choose an online slot while booking if it is available.",
+        "actions": [
+            ("Browse doctors", "browse_doctors", "primary"),
+        ],
+    },
+    "how do i find the right specialist": {
+        "reply": "Tell me your symptom or condition, such as 'chest pain', 'skin rash', or 'tooth pain'. I will map it to a suitable specialty and help you open matching doctors.",
+        "actions": [
+            ("Browse doctors", "browse_doctors", "primary"),
+        ],
+    },
+    "how do i message my doctor": {
+        "reply": "Patient-doctor messaging is available after you book an appointment. It may also remain open during the follow-up period after a completed appointment.",
+        "actions": [
+            ("My messages", "list_conversations", "primary"),
+            ("My appointments", "my_appointments", "secondary"),
+        ],
+    },
+}
+
+CHATBOT_HEALTH_ADVICE = {
+    "back pain": {
+        "reply": (
+            "For back pain, try gentle stretching, maintain good posture, use a warm compress, and keep moving with short walks. "
+            "If pain is severe, lasts more than a few days, or causes numbness or weakness, consult an orthopedic or physiotherapy specialist."
+        ),
+    },
+    "headache": {
+        "reply": (
+            "For a headache, rest in a quiet, dark room, stay hydrated, and avoid bright screens. "
+            "If it is sudden, very severe, or accompanied by vision changes or weakness, seek medical help."
+        ),
+    },
+    "migraine": {
+        "reply": (
+            "For migraine, rest in a quiet, dark room, stay hydrated, and avoid strong smells or loud noise. "
+            "If the pain is severe or accompanied by visual changes, seek medical help."
+        ),
+    },
+    "fever": {
+        "reply": (
+            "For fever, drink plenty of fluids, rest, and use a cool compress or paracetamol if needed. "
+            "If the fever stays high for more than two days or you have other worrying symptoms, see a doctor."
+        ),
+    },
+    "cold": {
+        "reply": (
+            "For a common cold, rest, drink warm fluids, use saline nasal drops, and keep your environment humidified. "
+            "If symptoms last longer than a week or worsen, consult a doctor."
+        ),
+    },
+    "cough": {
+        "reply": (
+            "For a cough, stay hydrated, inhale steam, and avoid smoke or dusty air. "
+            "If it is persistent, produces blood, or comes with high fever, book a doctor consultation."
+        ),
+    },
+    "sore throat": {
+        "reply": (
+            "For a sore throat, drink warm fluids, gargle with salt water, and rest your voice. "
+            "If it is severe, lasts more than a few days, or comes with fever, see a doctor."
+        ),
+    },
+    "stomach pain": {
+        "reply": (
+            "For mild stomach pain, rest, eat light, bland foods, and avoid spicy or greasy meals. "
+            "If pain is severe, persistent, or accompanied by vomiting or blood, seek medical attention."
+        ),
+    },
+    "diarrhea": {
+        "reply": (
+            "For diarrhea, drink plenty of fluids, use oral rehydration solutions, and eat light, easy-to-digest foods. "
+            "If diarrhea continues for more than a day, contains blood, or causes dehydration, see a doctor."
+        ),
+    },
+    "vomiting": {
+        "reply": (
+            "For vomiting, sip clear fluids slowly, avoid solid foods until it subsides, and rest. "
+            "If vomiting is severe, persistent, or you cannot keep fluids down, get medical care."
+        ),
+    },
+    "joint pain": {
+        "reply": (
+            "For joint pain, apply ice or heat, rest the joint, and avoid heavy lifting. "
+            "If the pain is sudden, swelling appears, or it limits movement, consult an orthopedist or rheumatologist."
+        ),
+    },
+    "allergy": {
+        "reply": (
+            "For mild allergy symptoms, avoid the trigger, rinse your nose with saline, and take an antihistamine if needed. "
+            "If you have breathing difficulty, swelling, or a rash spreading fast, seek urgent medical help."
+        ),
+    },
+    "acidity": {
+        "reply": (
+            "For acidity, avoid spicy and fatty foods, eat smaller meals, and limit caffeine. "
+            "If heartburn is frequent or severe, speak with a doctor for further evaluation."
+        ),
+    },
+    "acne": {
+        "reply": (
+            "For acne, keep your skin clean, use a gentle cleanser, and avoid squeezing pimples. "
+            "If acne is persistent or painful, see a dermatologist for the right treatment."
+        ),
+    },
+    "stress": {
+        "reply": (
+            "For stress, practice deep breathing, take short breaks, get enough sleep, and stay active. "
+            "If stress is overwhelming or affecting your daily life, talk to a doctor or counselor."
+        ),
+    },
+    "fatigue": {
+        "reply": (
+            "For fatigue, get enough rest, stay hydrated, eat balanced meals, and take short activity breaks. "
+            "If fatigue continues despite rest, discuss it with a healthcare provider."
+        ),
+    },
+    "insomnia": {
+        "reply": (
+            "For insomnia, keep a regular sleep schedule, avoid screens before bed, and create a calm sleep environment. "
+            "If poor sleep continues, consult a healthcare provider to rule out underlying causes."
+        ),
+    },
+    "eye irritation": {
+        "reply": (
+            "For eye irritation, rinse your eyes with clean water, avoid rubbing them, and rest from screens. "
+            "If irritation persists, causes pain, or affects vision, see an eye specialist."
+        ),
+    },
+}
+
+def _normalize_chatbot_text(message):
+    normalized = re.sub(r"[^a-z0-9\s]", "", message.lower()).strip()
+    return re.sub(r"\s+", " ", normalized)
+
+
+def _chatbot_health_advice_response(message):
+    normalized = _normalize_chatbot_text(message)
+    triggers = [
+        "remedy", "remedies", "solution", "treatment", "treat", "how to", "what is", "how do i", "how can i", "help for", "help with", "support", "advice for", "what can i do for", "manage", "best way",
+    ]
+    if not any(trigger in normalized for trigger in triggers) and not any(condition in normalized for condition in CHATBOT_HEALTH_ADVICE):
+        return None
+
+    for condition, advice in CHATBOT_HEALTH_ADVICE.items():
+        if condition in normalized:
+            actions = [
+                _chatbot_action("Browse doctors", url_for("browse_doctors"), "primary"),
+                _chatbot_action("Contact support", url_for("contactus"), "secondary"),
+            ]
+            if "patient_id" in session:
+                actions.insert(1, _chatbot_action("My appointments", url_for("my_appointments")))
+            return {"reply": advice["reply"], "actions": actions}
+
+    if any(trigger in normalized for trigger in ["remedy", "remedies", "solution", "treatment", "treat", "how to", "what is", "how do i", "how can i", "help for", "help with", "support", "advice for", "what can i do for", "manage", "best way"]):
+        actions = [
+            _chatbot_action("Browse doctors", url_for("browse_doctors"), "primary"),
+            _chatbot_action("Contact support", url_for("contactus"), "secondary"),
+        ]
+        if "patient_id" in session:
+            actions.insert(1, _chatbot_action("My appointments", url_for("my_appointments")))
+        return {
+            "reply": (
+                "I’m not sure about that exact symptom, but you can try rest, hydration, and gentle self-care. "
+                "If symptoms persist or worsen, it’s best to consult a doctor so they can provide a proper diagnosis."
+            ),
+            "actions": actions,
+        }
+
+    return None
 
 
 def _filter_doctor_slots(doctors_list):
@@ -102,6 +284,237 @@ def _filter_doctor_slots(doctors_list):
 
         doctor.available_slots = valid_slots
     return doctors_list
+
+
+def _chatbot_action(label, url, style="primary"):
+    return {"label": label, "url": url, "style": style}
+
+
+def _chatbot_logged_in_actions():
+    return [
+        _chatbot_action("Dashboard", url_for("dashboard")),
+        _chatbot_action("My appointments", url_for("my_appointments")),
+        _chatbot_action("My profile", url_for("user_profile"), "secondary"),
+    ]
+
+
+def _chatbot_faq_response(message):
+    normalized = re.sub(r"[^a-z0-9\s]", "", message.lower()).strip()
+    normalized = re.sub(r"\s+", " ", normalized)
+    faq = CHATBOT_FAQS.get(normalized)
+    if not faq:
+        return None
+
+    actions = []
+    for label, endpoint, style in faq["actions"]:
+        if endpoint in {"login", "register"} and "patient_id" in session:
+            if not any(action["label"] == "Dashboard" for action in actions):
+                actions.append(_chatbot_action("Dashboard", url_for("dashboard"), style))
+            continue
+
+        if endpoint in {"list_conversations", "my_appointments"} and "patient_id" not in session:
+            actions.append(_chatbot_action(label, url_for("login"), style))
+        else:
+            actions.append(_chatbot_action(label, url_for(endpoint), style))
+    return {"reply": faq["reply"], "actions": actions}
+
+
+def _format_doctor_summary(doctor):
+    consultation = doctor.consultation_types or "Not specified"
+    next_slot = None
+    next_type = None
+
+    if isinstance(doctor.available_slots, dict):
+        for consult_type, date_slots in doctor.available_slots.items():
+            if not isinstance(date_slots, dict):
+                continue
+            for date_str, times in date_slots.items():
+                if not isinstance(times, list):
+                    continue
+                for time_str in times:
+                    try:
+                        slot_dt = datetime.strptime(f"{date_str} {time_str}", '%Y-%m-%d %H:%M')
+                    except ValueError:
+                        continue
+                    if not next_slot or slot_dt < next_slot:
+                        next_slot = slot_dt
+                        next_type = consult_type
+
+    slot_text = "No upcoming slots available"
+    if next_slot:
+        slot_text = f"Next slot: {next_slot.strftime('%b %d %I:%M %p')} ({next_type.title()})"
+
+    return (
+        f"Dr. {doctor.doctor_name} — {doctor.specialization} — {doctor.hospital_name}, {doctor.location} — "
+        f"★{doctor.rating:.1f} — {consultation} — {slot_text}"
+    )
+
+
+def _chatbot_search_response(message):
+    entities = extract_entities_from_query(message)
+    symptom = (entities.get("symptom") or message).strip()
+    locations = entities.get("locations") or []
+
+    if not locations:
+        location_match = re.search(r"\b(?:in|near|at)\s+([a-zA-Z\s]+)$", message, re.IGNORECASE)
+        if location_match:
+            matched_location = location_match.group(1).strip()
+            locations = [] if matched_location.lower() == "me" else [matched_location]
+            symptom = message[:location_match.start()].strip()
+
+    symptom = re.sub(r"\b(find|search|show|need|want|a|an|doctor|doctors|dr|specialist|for|near|me)\b", " ", symptom, flags=re.IGNORECASE)
+    symptom = re.sub(r"\s+", " ", symptom).strip()
+
+    query = Doctor.query
+    specialist = None
+    search_term = symptom
+
+    if not search_term:
+        # Generic doctor requests like "show doctors" should return top doctors.
+        search_term = ""
+
+    if search_term:
+        mapping_result = map_disease_to_specialist(search_term)
+        specialist = mapping_result.get("specialist")
+        if specialist:
+            query = query.filter(Doctor.specialization == specialist)
+        else:
+            fuzzy_term = f"%{search_term}%"
+            query = query.filter(db.or_(
+                Doctor.doctor_name.ilike(fuzzy_term),
+                Doctor.specialization.ilike(fuzzy_term),
+                Doctor.location.ilike(fuzzy_term),
+            ))
+
+    if locations:
+        all_nearby_locations = set()
+        for location in locations:
+            all_nearby_locations.update(get_nearby_locations(location))
+        if all_nearby_locations:
+            query = query.filter(Doctor.location.in_(list(all_nearby_locations)))
+
+    doctors = query.order_by(Doctor.rating.desc()).limit(5).all()
+    _filter_doctor_slots(doctors)
+
+    search_url = url_for("find_doctor", disease=search_term or "", location=", ".join(locations))
+
+    if doctors:
+        displayed = min(len(doctors), 3)
+        doctor_lines = [
+            _format_doctor_summary(doctor)
+            for doctor in doctors[:displayed]
+        ]
+        specialty_text = f" for {specialist}" if specialist else ""
+        location_text = f" near {', '.join(locations)}" if locations else ""
+        response_prefix = (
+            f"I found {len(doctors)} doctor option(s){specialty_text}{location_text}. "
+            f"Here are the top {displayed}:\n"
+        )
+        action_buttons = [
+            _chatbot_action("View matching doctors", search_url),
+            _chatbot_action(f"View top match", url_for("view_doctor_profile", doctor_id=doctors[0].id)),
+        ]
+
+        return {
+            "reply": response_prefix + "\n".join(doctor_lines),
+            "actions": action_buttons,
+        }
+
+    return {
+        "reply": "I could not find a strong doctor match for that yet. Try a symptom, specialty, or city, like 'skin doctor in Hyderabad'.",
+        "actions": [
+            _chatbot_action("Browse all doctors", url_for("browse_doctors")),
+            _chatbot_action("Search again", url_for("find_doctor", disease=search_term or "")),
+        ],
+    }
+
+
+def _build_chatbot_reply(message):
+    cleaned = message.strip()
+    lowered = cleaned.lower()
+    health_advice_response = _chatbot_health_advice_response(cleaned)
+    if health_advice_response:
+        return health_advice_response
+
+    faq_response = _chatbot_faq_response(cleaned)
+    if faq_response:
+        return faq_response
+
+    if any(word in lowered for word in ["emergency", "ambulance", "urgent", "112", "102"]):
+        return {
+            "reply": "For urgent help, call 112 for national emergency support or 102 for ambulance services. You can also open the emergency services page for more helplines.",
+            "actions": [_chatbot_action("Emergency services", url_for("emergency_services"), "danger")],
+        }
+
+    if any(word in lowered for word in ["book", "appointment", "slot", "consult"]):
+        return {
+            "reply": "To book an appointment, find a doctor first, choose an available online or in-person slot, then submit the booking request. Login is required when you book.",
+            "actions": [
+                _chatbot_action("Find a doctor", url_for("browse_doctors")),
+                _chatbot_action("My appointments", url_for("my_appointments") if "patient_id" in session else url_for("login")),
+            ],
+        }
+
+    if any(word in lowered for word in ["login", "sign in", "register", "signup", "create account"]):
+        if "patient_id" in session:
+            return {
+                "reply": "You are already logged in. You can access your dashboard, appointments, and profile from here.",
+                "actions": _chatbot_logged_in_actions(),
+            }
+        return {
+            "reply": "Patients can login or create an account from the main portal. After login, you can manage appointments, searches, profile details, and messages.",
+            "actions": [
+                _chatbot_action("Patient login", url_for("login")),
+                _chatbot_action("Register", url_for("register")),
+            ],
+        }
+
+    if any(word in lowered for word in ["hospital", "clinic"]):
+        return {
+            "reply": "You can search hospitals by location and review available hospital details from the hospital finder.",
+            "actions": [_chatbot_action("Find hospitals", url_for("hospital_finder"))],
+        }
+
+    if any(word in lowered for word in ["profile", "dashboard", "my account"]):
+        if "patient_id" in session:
+            return {
+                "reply": "You can manage your profile, appointments, searches, and doctor conversations from your patient dashboard.",
+                "actions": [
+                    _chatbot_action("Dashboard", url_for("dashboard")),
+                    _chatbot_action("My profile", url_for("user_profile"), "secondary"),
+                ],
+            }
+        return {
+            "reply": "Please login first to view your dashboard and profile.",
+            "actions": [_chatbot_action("Login", url_for("login"))],
+        }
+
+    if any(word in lowered for word in ["message", "chat with doctor", "conversation"]):
+        return {
+            "reply": "Patient-doctor messaging is available after an appointment is booked, and may stay open during the follow-up period.",
+            "actions": [_chatbot_action("Messages", url_for("list_conversations") if "patient_id" in session else url_for("login"))],
+        }
+
+    if any(word in lowered for word in ["contact", "support", "help"]):
+        return {
+            "reply": "You can reach CareSlotly from the contact page. For medical emergencies, use the emergency services page instead.",
+            "actions": [
+                _chatbot_action("Contact us", url_for("contactus")),
+                _chatbot_action("Emergency services", url_for("emergency_services"), "danger"),
+            ],
+        }
+
+    if any(word in lowered for word in ["doctor", "specialist", "symptom", "pain", "fever", "skin", "heart", "cardio", "dent", "eye", "ortho", "neuro", "find", "search"]):
+        return _chatbot_search_response(cleaned)
+
+    return {
+        "reply": "I can help you find doctors, book appointments, locate hospital services, open your dashboard, or get emergency numbers. What would you like to do?",
+        "actions": [
+            _chatbot_action("Browse doctors", url_for("browse_doctors")),
+            _chatbot_action("Emergency services", url_for("emergency_services"), "danger"),
+            _chatbot_action("Contact support", url_for("contactus"), "secondary"),
+        ],
+    }
 
 def setup_routes(app):
     @app.context_processor
@@ -559,11 +972,19 @@ def setup_routes(app):
         
         elif request.method == "GET" and 'disease' in request.args:
             # This handles clicks on specialty cards, e.g., /find_doctor?disease=Cardiologist
-            final_symptom = request.args.get('disease')
-            disease_query = final_symptom
-            # Location is not provided by default when browsing by specialty.
+            disease_input = request.args.get('disease', '').strip()
+            location_input = request.args.get('location', '').strip()
+            entities = extract_entities_from_query(disease_input)
+            final_symptom = entities['symptom'] or disease_input
+            extracted_locations = entities['locations']
             final_locations = []
-            location_query = ""
+            if location_input:
+                final_locations.extend([loc.strip() for loc in location_input.split(',')])
+            if extracted_locations:
+                final_locations.extend(extracted_locations)
+            final_locations = list(dict.fromkeys(filter(None, final_locations)))
+            disease_query = disease_input
+            location_query = location_input
             # The flash message is removed as we now support specialty-only searches.
 
         # --- Flexible Search Logic ---
@@ -645,6 +1066,31 @@ def setup_routes(app):
             return jsonify([])
         suggestions = get_location_suggestions(query)
         return jsonify(suggestions)
+
+    @app.route('/chatbot/message', methods=['POST'])
+    def chatbot_message():
+        payload = request.get_json(silent=True) or {}
+        message = (payload.get('message') or '').strip()
+
+        if not message:
+            return jsonify({
+                "reply": "Please type a question so I can help.",
+            }), 400
+
+        try:
+            response = _build_chatbot_reply(message)
+        except Exception as exc:
+            current_app.logger.exception("Chatbot response failed: %s", exc)
+            response = {
+                "reply": "I had trouble processing that. You can still browse doctors or contact support from here.",
+                "actions": [
+                    _chatbot_action("Browse doctors", url_for("browse_doctors")),
+                    _chatbot_action("Contact support", url_for("contactus"), "secondary"),
+                ],
+            }
+
+        response.setdefault("actions", [])
+        return jsonify(response)
 
     @app.route("/about")
     def about():
@@ -826,10 +1272,10 @@ def setup_routes(app):
         session['email_to_verify'] = patient.email
 
         # Send email with OTP
-        msg = MailMessage('Verify Your Email for CareConnect',
+        msg = MailMessage('Verify Your Email for CareSlotly',
                           sender=app.config['MAIL_USERNAME'],
                           recipients=[patient.email])
-        msg.body = f'Your CareConnect email verification OTP is: {otp}'
+        msg.body = f'Your CareSlotly email verification OTP is: {otp}'
         try:
             mail.send(msg)
             flash(f'An OTP has been sent to {patient.email}. Please check your inbox.', 'info')
@@ -1050,7 +1496,7 @@ def setup_routes(app):
             current_app.logger.info(f"Attempting to send OTP to patient number: {patient.mobile}")
             client = Client(current_app.config['TWILIO_ACCOUNT_SID'], current_app.config['TWILIO_AUTH_TOKEN'])
             message = client.messages.create(
-                body=f"Your CareConnect account mobile verification OTP is: {otp}",
+                body=f"Your CareSlotly account mobile verification OTP is: {otp}",
                 from_=current_app.config['TWILIO_PHONE_NUMBER'],
                 to=patient.mobile
             )

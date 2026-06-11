@@ -1,0 +1,48 @@
+<div class="care-chatbot" data-chatbot-endpoint="{{ url_for('chatbot_message') }}">
+    <section class="care-chatbot-panel" aria-live="polite" aria-label="CareSlotly assistant" hidden>
+        <header class="care-chatbot-header">
+            <div class="care-chatbot-title">
+                <span class="care-chatbot-avatar"><i class="bi bi-heart-pulse-fill"></i></span>
+                <div>
+                    <span class="care-chatbot-kicker">Patient Assistant</span>
+                    <h2>CareSlotly Help</h2>
+                </div>
+            </div>
+            <button type="button" class="care-chatbot-close" aria-label="Close assistant">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </header>
+        <div class="care-chatbot-body">
+            <div class="care-chatbot-messages" role="log">
+                <div class="care-chatbot-message bot">
+                    <div class="care-chatbot-bubble">
+                        Hi, I can help you find doctors, book appointments, check emergency numbers, or answer common patient questions.
+                    </div>
+                </div>
+            </div>
+            <div class="care-chatbot-faqs" aria-label="Frequently asked questions">
+            <button type="button" data-message="How do I book an appointment?"><i class="bi bi-calendar2-check"></i><span>Book appointment</span></button>
+            <button type="button" data-message="Can I consult online?"><i class="bi bi-camera-video"></i><span>Online consult</span></button>
+            <button type="button" data-message="How do I find the right specialist?"><i class="bi bi-search-heart"></i><span>Find specialist</span></button>
+            <button type="button" data-message="Show doctors list"><i class="bi bi-list-ul"></i><span>Show doctors</span></button>
+            <button type="button" data-message="How do I message my doctor?"><i class="bi bi-chat-square-text"></i><span>Doctor messages</span></button>
+            {% if 'patient_id' not in session %}
+                <button type="button" data-message="How do I login?"><i class="bi bi-box-arrow-in-right"></i><span>Login</span></button>
+                <button type="button" data-message="How do I register?"><i class="bi bi-pencil-square"></i><span>Register</span></button>
+            {% endif %}
+            </div>
+            <form class="care-chatbot-form">
+                <input type="text" name="message" autocomplete="off" maxlength="300" placeholder="Ask about doctors, appointments..." aria-label="Ask CareSlotly assistant">
+                <button type="button" class="care-chatbot-voice" aria-label="Start voice input" title="Voice input">
+                    <i class="bi bi-mic-fill"></i>
+                </button>
+                <button type="submit" aria-label="Send message">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </form>
+        </div>
+    </section>
+    <button type="button" class="care-chatbot-toggle" aria-label="Open CareSlotly assistant" aria-expanded="false">
+        <i class="bi bi-chat-dots-fill"></i>
+    </button>
+</div>

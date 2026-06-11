@@ -1,7 +1,7 @@
 import os
 
 class Settings:
-    PROJECT_NAME: str = "CareConnect"
+    PROJECT_NAME: str = "CareSlotly"
     SQLALCHEMY_DATABASE_URI: str = os.getenv("DATABASE_URL", "mysql+mysqlconnector://root:Sulochana%40522@localhost:3306/DoctorFinder_DB")
     SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
     SECRET_KEY: str = os.getenv("SECRET_KEY", "dev-secret-key-that-is-not-secure-and-should-be-changed")

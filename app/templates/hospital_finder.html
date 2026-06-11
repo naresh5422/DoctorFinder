@@ -19,8 +19,11 @@
                 <div class="list-group">
                     {% for hospital in hospitals %}
                     <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 shadow-sm">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">{{ hospital.name }}</h5>
+                        <div class="d-flex w-100 justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <span class="hospital-list-icon bg-info bg-gradient text-white me-3"><i class="bi bi-hospital-fill"></i></span>
+                                <h5 class="mb-1">{{ hospital.name }}</h5>
+                            </div>
                             <small class="text-muted">{{ hospital.location }}</small>
                         </div>
                         <p class="mb-1"><i class="bi bi-geo-alt-fill me-2"></i>{{ hospital.address }}</p>

@@ -1,86 +1,46 @@
 {% extends "base.html" %}
 
-{% block title %}Contact Us{% endblock %}
-
-{% block head_extra %}
-<style>
-    .contact-info-card {
-        background-color: #F2F2F2; /* Light background for info section */
-    }
-    .contact-info-item {
-        display: flex;
-        align-items: center;
-        margin-bottom: 1.5rem;
-    }
-    .contact-info-item .icon {
-        font-size: 1.5rem;
-        color: #008080; /* Primary theme color */
-        width: 50px;
-        flex-shrink: 0;
-    }
-</style>
-{% endblock %}
+{% block title %}Contact Us - CareSlotly{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <!-- Header -->
-    <div class="text-center mb-5">
-        <h1 class="display-4 fw-bold">Get in Touch</h1>
-        <p class="lead text-muted col-lg-8 mx-auto">We'd love to hear from you! Whether you have a question about our services, need assistance, or just want to share feedback, please reach out.</p>
-    </div>
-
-    <div class="card shadow-lg border-0">
-        <div class="row g-0">
-            <!-- Left side: Contact Form -->
-            <div class="col-lg-7 p-4 p-md-5">
-                <h3 class="fw-bold mb-4">Send us a Message</h3>
-                <form>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="form-floating mb-3">
-                                <input type="text" class="form-control" id="name" placeholder="Your Name" required>
-                                <label for="name">Your Name</label>
-                            </div>
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="row g-0">
+                        <div class="col-lg-6 d-none d-lg-flex align-items-center justify-content-center bg-light">
+                            <img src="{{ url_for('static', filename='images/contact-us-illustration.svg') }}"
+                                alt="Contact Us" class="img-fluid p-5">
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-floating mb-3">
-                                <input type="email" class="form-control" id="email" placeholder="name@example.com" required>
-                                <label for="email">Email address</label>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="form-floating mb-3">
-                                <input type="text" class="form-control" id="subject" placeholder="Subject" required>
-                                <label for="subject">Subject</label>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="form-floating mb-3">
-                                <textarea class="form-control" placeholder="Leave a message here" id="message" style="height: 150px" required></textarea>
-                                <label for="message">Message</label>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <button type="submit" class="btn btn-primary btn-lg">Send Message</button>
-                        </div>
+                        <div class="col-lg-6 p-4 p-md-5">
+                            <h2 class="text-center mb-4">Contact Us</h2>
+                            <p class="text-center text-muted mb-4">We'd love to hear from you! Please fill out the form below and we will get in
+                                touch with you shortly.</p>
+                            
+                            <form>
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Your Name</label>
+                                    <input type="text" class="form-control" id="name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="subject" class="form-label">Subject</label>
+                                    <input type="text" class="form-control" id="subject">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="message" class="form-label">Message</label>
+                                    <textarea class="form-control" id="message" rows="5" required></textarea>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">Send Message</button>
+                                </div>
+                                </form>
+                                </div>
                     </div>
-                </form>
-            </div>
-
-            <!-- Right side: Contact Info -->
-            <div class="col-lg-5 bg-light p-4 p-md-5">
-                <h3 class="fw-bold mb-4">Contact Information</h3>
-                <div class="contact-info-item">
-                    <div class="icon"><i class="bi bi-geo-alt-fill"></i></div>
-                    <div><h5 class="mb-0">Address</h5><p class="text-muted mb-0">123 Health St, Wellness City, 12345</p></div>
-                </div>
-                <div class="contact-info-item">
-                    <div class="icon"><i class="bi bi-telephone-fill"></i></div>
-                    <div><h5 class="mb-0">Phone</h5><p class="text-muted mb-0">8179027681</p></div>
-                </div>
-                <div class="contact-info-item">
-                    <div class="icon"><i class="bi bi-envelope-fill"></i></div>
-                    <div><h5 class="mb-0">Email</h5><p class="text-muted mb-0">t.naresh5422@gmail.com</p></div>
                 </div>
             </div>
         </div>
