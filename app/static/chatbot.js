@@ -9,7 +9,7 @@
     const form = widget.querySelector('.care-chatbot-form');
     const input = form.querySelector('input[name="message"]');
     const voiceButton = widget.querySelector('.care-chatbot-voice');
-    const faqs = widget.querySelector('.care-chatbot-faqs');
+    const faqs = widget.querySelector('.care-chatbot-toolbar');
     const endpoint = widget.dataset.chatbotEndpoint;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition = null;
@@ -52,6 +52,20 @@
         return row;
     }
 
+    function addTypingIndicator() {
+        const row = document.createElement('div');
+        row.className = 'care-chatbot-message bot typing';
+
+        const bubble = document.createElement('div');
+        bubble.className = 'care-chatbot-bubble care-chatbot-typing';
+        bubble.innerHTML = '<span></span><span></span><span></span>';
+        row.appendChild(bubble);
+
+        messages.appendChild(row);
+        scrollToLatest();
+        return row;
+    }
+
     function setVoiceState(isListening) {
         voiceButton.classList.toggle('listening', isListening);
         voiceButton.setAttribute('aria-label', isListening ? 'Listening for voice input' : 'Start voice input');
@@ -65,7 +79,7 @@
         input.value = '';
         input.disabled = true;
 
-        const typing = addMessage('Typing...', 'bot');
+        const typing = addTypingIndicator();
 
         try {
             const response = await fetch(endpoint, {

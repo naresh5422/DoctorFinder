@@ -682,15 +682,54 @@ body.d-flex {
     background: linear-gradient(180deg, #f4fbfb 0%, #f8fafb 100%);
     scroll-behavior: smooth;
 }
-.care-chatbot-faqs {
-    padding: 0.85rem;
+.care-chatbot-toolbar {
+    padding: 0.35rem 0.35rem 0.35rem;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.55rem;
-    background: #fff;
-    border-top: 1px solid #e6eeee;
-    overflow-y: auto;
-    max-height: 200px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.2rem;
+        align-items: stretch;
+        background: #f8fcfc;
+        border-bottom: 1px solid #e6eeee;
+        flex-shrink: 0;
+    }
+    
+    .care-chatbot-toolbar button {
+        min-height: 62px;
+        border: 1px solid #dcecec;
+        border-radius: 14px;
+        background: #ffffff;
+        color: #008080;
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.1rem;
+        padding: 0.25rem 0;
+        font-size: 0.78rem;
+        transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    }
+    
+    .care-chatbot-toolbar button:hover {
+        border-color: #008080;
+        background: #eefafa;
+        transform: translateY(-2px);
+    }
+    
+    .care-chatbot-toolbar i {
+        color: #055353;
+        font-size: 1.25rem;
+    }
+    
+    .care-chatbot-toolbar span {
+        font-size: 0.72rem;
+        line-height: 1.1;
+        margin-top: -1px;
+        font-weight: 600;
+        color: #0f5050;
+    }
+    
+    .care-chatbot-toolbar::-webkit-scrollbar-track {
+        background: transparent;
 }
 .care-chatbot-form {
     flex-shrink: 0;
@@ -772,20 +811,26 @@ body.d-flex {
 }
 
 .care-chatbot-message.user {
-    justify-content: flex-end;
+    align-items: flex-end;
 }
 
 .care-chatbot-bubble {
     max-width: 88%;
     white-space: pre-line;
-    padding: 0.75rem 0.9rem;
-    border-radius: 8px;
+    padding: 0.85rem 1rem;
+        border-radius: 18px;
     background: #fff;
     color: #343a40;
     border: 1px solid #e6eeee;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-    font-size: 0.92rem;
-    line-height: 1.45;
+    box-shadow: 0 10px 25px rgba(9, 95, 94, 0.04);
+        font-size: 0.95rem;
+        line-height: 1.5;
+        position: relative;
+    }
+    
+    .care-chatbot-message.bot .care-chatbot-bubble {
+        background: linear-gradient(135deg, #f6ffff, #e8fbfb);
+        border-color: #cde9e8;
 }
 
 .care-chatbot-message.user .care-chatbot-bubble {
@@ -794,6 +839,50 @@ body.d-flex {
     border-color: #007575;
 }
 
+.care-chatbot-message.bot.typing .care-chatbot-bubble {
+    background: #e5f7f7;
+    padding: 0.8rem 1rem;
+    min-width: 90px;
+}
+
+.care-chatbot-typing {
+    display: inline-flex;
+    gap: 0.35rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.care-chatbot-typing span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #008080;
+    opacity: 0.4;
+    animation: careTyping 1.2s infinite ease-in-out;
+}
+
+.care-chatbot-typing span:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.care-chatbot-typing span:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+@keyframes careTyping {
+
+    0%,
+    80%,
+    100% {
+        transform: translateY(0);
+        opacity: 0.4;
+    }
+
+    40% {
+        transform: translateY(-4px);
+        opacity: 1;
+    }
+}
 .care-chatbot-actions {
     display: flex;
     flex-wrap: wrap;
@@ -829,41 +918,6 @@ body.d-flex {
 .care-chatbot-action.secondary {
     border-color: #6c757d;
     color: #495057;
-}
-
-.care-chatbot-faqs {
-    padding: 0.8rem;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.55rem;
-    background: #fff;
-    border-top: 1px solid #e6eeee;
-}
-
-.care-chatbot-faqs button {
-    min-height: 58px;
-    border: 1px solid #dcecec;
-    border-radius: 8px;
-    background: #f8fcfc;
-    color: #345;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.55rem;
-    text-align: left;
-    font-size: 0.78rem;
-    font-weight: 500;
-}
-
-.care-chatbot-faqs i {
-    color: #008080;
-    font-size: 1rem;
-    flex: 0 0 auto;
-}
-
-.care-chatbot-faqs button:hover {
-    border-color: #008080;
-    background: #eefafa;
 }
 
 .care-chatbot-form {

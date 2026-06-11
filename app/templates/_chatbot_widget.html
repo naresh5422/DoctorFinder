@@ -12,24 +12,44 @@
                 <i class="bi bi-x-lg"></i>
             </button>
         </header>
+        <div class="care-chatbot-toolbar" aria-label="Quick actions">
+            <button type="button" data-message="How do I book an appointment?" title="Book appointment"
+                aria-label="Book appointment">
+                <i class="bi bi-calendar2-check"></i>
+                <span>Book</span>
+            </button>
+            <button type="button" data-message="Can I consult online?" title="Online consult" aria-label="Online consult">
+                <i class="bi bi-camera-video"></i>
+                <span>Online</span>
+            </button>
+            <button type="button" data-message="How do I find the right specialist?" title="Find specialist"
+                aria-label="Find specialist">
+                <i class="bi bi-search-heart"></i>
+                <span>Specialist</span>
+            </button>
+            <button type="button" data-message="Show doctors list" title="Show doctors" aria-label="Show doctors">
+                <i class="bi bi-list-ul"></i>
+                <span>Doctors</span>
+            </button>
+            {% if 'patient_id' not in session %}
+            <button type="button" data-message="How do I login?" title="Login" aria-label="Login">
+                <i class="bi bi-box-arrow-in-right"></i>
+                <span>Login</span>
+            </button>
+            <button type="button" data-message="How do I register?" title="Register" aria-label="Register">
+                <i class="bi bi-pencil-square"></i>
+                <span>Register</span>
+            </button>
+            {% endif %}
+        </div>
         <div class="care-chatbot-body">
             <div class="care-chatbot-messages" role="log">
                 <div class="care-chatbot-message bot">
                     <div class="care-chatbot-bubble">
-                        Hi, I can help you find doctors, book appointments, check emergency numbers, or answer common patient questions.
+                        Hi, I can help you find doctors, book appointments, check emergency numbers, or answer common patient
+                        questions.
                     </div>
                 </div>
-            </div>
-            <div class="care-chatbot-faqs" aria-label="Frequently asked questions">
-            <button type="button" data-message="How do I book an appointment?"><i class="bi bi-calendar2-check"></i><span>Book appointment</span></button>
-            <button type="button" data-message="Can I consult online?"><i class="bi bi-camera-video"></i><span>Online consult</span></button>
-            <button type="button" data-message="How do I find the right specialist?"><i class="bi bi-search-heart"></i><span>Find specialist</span></button>
-            <button type="button" data-message="Show doctors list"><i class="bi bi-list-ul"></i><span>Show doctors</span></button>
-            <button type="button" data-message="How do I message my doctor?"><i class="bi bi-chat-square-text"></i><span>Doctor messages</span></button>
-            {% if 'patient_id' not in session %}
-                <button type="button" data-message="How do I login?"><i class="bi bi-box-arrow-in-right"></i><span>Login</span></button>
-                <button type="button" data-message="How do I register?"><i class="bi bi-pencil-square"></i><span>Register</span></button>
-            {% endif %}
             </div>
             <form class="care-chatbot-form">
                 <input type="text" name="message" autocomplete="off" maxlength="300" placeholder="Ask about doctors, appointments..." aria-label="Ask CareSlotly assistant">
