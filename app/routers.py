@@ -1,5 +1,7 @@
 from flask import render_template, request, session, redirect, url_for, flash, jsonify, current_app
 from app.services.doctor_service import find_doctors, get_nearby_locations, map_disease_to_specialist, find_hospitals, get_featured_hospitals, extract_entities_from_query, get_autocomplete_suggestions, get_location_suggestions
+from app.services.pinecone_rag import generate_rag_answer
+from app.services.rag_pipeline.answering import format_user_rag_response
 import os
 import random
 import re
@@ -165,7 +167,12 @@ def _normalize_chatbot_text(message):
 def _chatbot_health_advice_response(message):
     normalized = _normalize_chatbot_text(message)
     triggers = [
-        "remedy", "remedies", "solution", "treatment", "treat", "how to", "what is", "how do i", "how can i", "help for", "help with", "support", "advice for", "what can i do for", "manage", "best way",
+        "remedy", "remedies", "solution", "treatment", "treat", "help for", "help with", "advice for", "what can i do for", "manage", "best way",
+    ]
+    health_terms = [
+        "symptom", "symptoms", "pain", "fever", "cold", "cough", "rash", "headache", "migraine", "acidity",
+        "diarrhea", "vomiting", "allergy", "acne", "stress", "fatigue", "insomnia", "irritation", "throat",
+        "stomach", "joint", "back", "eye",
     ]
     if not any(trigger in normalized for trigger in triggers) and not any(condition in normalized for condition in CHATBOT_HEALTH_ADVICE):
         return None
@@ -173,20 +180,22 @@ def _chatbot_health_advice_response(message):
     for condition, advice in CHATBOT_HEALTH_ADVICE.items():
         if condition in normalized:
             actions = [
-                _chatbot_action("Browse doctors", url_for("browse_doctors"), "primary"),
-                _chatbot_action("Contact support", url_for("contactus"), "secondary"),
+                _chatbot_action("Show doctors", style="primary", message="show doctors list"),
+                _chatbot_action("Contact support", style="secondary", message="contact support"),
             ]
             if "patient_id" in session:
-                actions.insert(1, _chatbot_action("My appointments", url_for("my_appointments")))
+                actions.insert(1, _chatbot_action("My appointments", message="show my appointments"))
             return {"reply": advice["reply"], "actions": actions}
 
-    if any(trigger in normalized for trigger in ["remedy", "remedies", "solution", "treatment", "treat", "how to", "what is", "how do i", "how can i", "help for", "help with", "support", "advice for", "what can i do for", "manage", "best way"]):
+    has_health_intent = any(term in normalized for term in health_terms)
+    has_health_trigger = any(trigger in normalized for trigger in triggers)
+    if has_health_trigger and has_health_intent:
         actions = [
-            _chatbot_action("Browse doctors", url_for("browse_doctors"), "primary"),
-            _chatbot_action("Contact support", url_for("contactus"), "secondary"),
+            _chatbot_action("Show doctors", style="primary", message="show doctors list"),
+            _chatbot_action("Contact support", style="secondary", message="contact support"),
         ]
         if "patient_id" in session:
-            actions.insert(1, _chatbot_action("My appointments", url_for("my_appointments")))
+            actions.insert(1, _chatbot_action("My appointments", message="show my appointments"))
         return {
             "reply": (
                 "I’m not sure about that exact symptom, but you can try rest, hydration, and gentle self-care. "
@@ -286,15 +295,20 @@ def _filter_doctor_slots(doctors_list):
     return doctors_list
 
 
-def _chatbot_action(label, url, style="primary"):
-    return {"label": label, "url": url, "style": style}
+def _chatbot_action(label, url=None, style="primary", message=None):
+    action = {"label": label, "style": style}
+    if url:
+        action["url"] = url
+    if message:
+        action["message"] = message
+    return action
 
 
 def _chatbot_logged_in_actions():
     return [
-        _chatbot_action("Dashboard", url_for("dashboard")),
-        _chatbot_action("My appointments", url_for("my_appointments")),
-        _chatbot_action("My profile", url_for("user_profile"), "secondary"),
+        _chatbot_action("Dashboard", message="show dashboard"),
+        _chatbot_action("My appointments", message="show my appointments"),
+        _chatbot_action("My profile", style="secondary", message="show my profile"),
     ]
 
 
@@ -309,13 +323,13 @@ def _chatbot_faq_response(message):
     for label, endpoint, style in faq["actions"]:
         if endpoint in {"login", "register"} and "patient_id" in session:
             if not any(action["label"] == "Dashboard" for action in actions):
-                actions.append(_chatbot_action("Dashboard", url_for("dashboard"), style))
+                actions.append(_chatbot_action("Dashboard", style=style, message="show dashboard"))
             continue
 
         if endpoint in {"list_conversations", "my_appointments"} and "patient_id" not in session:
-            actions.append(_chatbot_action(label, url_for("login"), style))
+            actions.append(_chatbot_action("Login", style=style, message="how do i login"))
         else:
-            actions.append(_chatbot_action(label, url_for(endpoint), style))
+            actions.append(_chatbot_action(label, style=style, message=label))
     return {"reply": faq["reply"], "actions": actions}
 
 
@@ -362,8 +376,12 @@ def _chatbot_search_response(message):
             locations = [] if matched_location.lower() == "me" else [matched_location]
             symptom = message[:location_match.start()].strip()
 
-    symptom = re.sub(r"\b(find|search|show|need|want|a|an|doctor|doctors|dr|specialist|for|near|me)\b", " ", symptom, flags=re.IGNORECASE)
+    symptom = re.sub(r"\b(find|search|show|need|want|a|an|all|list|doctor|doctors|dr|specialist|for|near|me)\b", " ", symptom, flags=re.IGNORECASE)
     symptom = re.sub(r"\s+", " ", symptom).strip()
+
+    normalized_message = _normalize_chatbot_text(message)
+    if normalized_message in {"doctor", "doctors", "show doctors", "show doctors list", "doctors list", "list doctors", "all doctors"}:
+        symptom = ""
 
     query = Doctor.query
     specialist = None
@@ -396,8 +414,6 @@ def _chatbot_search_response(message):
     doctors = query.order_by(Doctor.rating.desc()).limit(5).all()
     _filter_doctor_slots(doctors)
 
-    search_url = url_for("find_doctor", disease=search_term or "", location=", ".join(locations))
-
     if doctors:
         displayed = min(len(doctors), 3)
         doctor_lines = [
@@ -411,8 +427,8 @@ def _chatbot_search_response(message):
             f"Here are the top {displayed}:\n"
         )
         action_buttons = [
-            _chatbot_action("View matching doctors", search_url),
-            _chatbot_action(f"View top match", url_for("view_doctor_profile", doctor_id=doctors[0].id)),
+            _chatbot_action("Search again", message="find doctor"),
+            _chatbot_action("Book appointment help", message="how do i book an appointment"),
         ]
 
         return {
@@ -423,96 +439,319 @@ def _chatbot_search_response(message):
     return {
         "reply": "I could not find a strong doctor match for that yet. Try a symptom, specialty, or city, like 'skin doctor in Hyderabad'.",
         "actions": [
-            _chatbot_action("Browse all doctors", url_for("browse_doctors")),
-            _chatbot_action("Search again", url_for("find_doctor", disease=search_term or "")),
+            _chatbot_action("Show doctors", message="show doctors list"),
+            _chatbot_action("Search again", message="find doctor"),
         ],
     }
 
 
+def _clean_chatbot_rag_answer(answer, question=""):
+    return format_user_rag_response(answer, question=question)
+
+
+def _chatbot_rag_response(message, actions=None):
+    if not message or not message.strip():
+        return None
+
+    try:
+        rag_result = generate_rag_answer(message, top_k=3)
+    except Exception:
+        return None
+
+    answer = _clean_chatbot_rag_answer(rag_result.get("answer"), message)
+    if not answer:
+        return None
+
+    return {"reply": answer, "actions": actions or []}
+
+
+def _chatbot_activity_response(message):
+    normalized = _normalize_chatbot_text(message)
+
+    if any(term in normalized for term in ["login", "sign in"]):
+        if "patient_id" in session:
+            return {"reply": "You are already logged in.", "actions": _chatbot_logged_in_actions()}
+        return {
+            "reply": "Login needs username and password. Use the Login menu when you want to sign in.",
+            "actions": [],
+        }
+
+    if any(term in normalized for term in ["register", "signup", "create account"]):
+        if "patient_id" in session:
+            return {"reply": "You are already registered and logged in.", "actions": _chatbot_logged_in_actions()}
+        return {
+            "reply": "Register with name, username, mobile, location, password, then verify your account.",
+            "actions": [],
+        }
+
+    if any(term in normalized for term in ["dashboard", "analytics", "stats"]):
+        if "patient_id" not in session:
+            return {"reply": "Login is required to view dashboard details.", "actions": [_chatbot_action("Login help", message="how do i login")]}
+
+        appointment_count = Appointment.query.filter_by(user_id=session["patient_id"]).count()
+        unread_count = Message.query.filter_by(
+            patient_id=session["patient_id"],
+            sender_type="doctor",
+            is_read=False,
+        ).count()
+        return {
+            "reply": f"Dashboard: {appointment_count} appointments, {unread_count} unread messages.",
+            "actions": [_chatbot_action("Appointments", message="show my appointments"), _chatbot_action("Profile", message="show my profile")],
+        }
+
+    if any(term in normalized for term in ["my profile", "profile", "my account"]):
+        if "patient_id" not in session:
+            return {"reply": "Login is required to view your profile.", "actions": [_chatbot_action("Login help", message="how do i login")]}
+
+        patient = Patient.query.get(session["patient_id"])
+        profile_text = f"Profile: {patient.name}, {patient.mobile}, {patient.location}."
+        return {"reply": profile_text, "actions": []}
+
+    if any(term in normalized for term in ["my appointments", "show my appointments", "view appointments", "appointment history"]):
+        if "patient_id" not in session:
+            return {"reply": "Login is required to view your appointments.", "actions": [_chatbot_action("Login help", message="how do i login")]}
+
+        appointments = Appointment.query.filter_by(user_id=session["patient_id"]).order_by(
+            Appointment.appointment_date.desc()
+        ).limit(3).all()
+        if not appointments:
+            return {
+                "reply": "No appointments found.",
+                "actions": [_chatbot_action("Find doctors", message="show doctors list")],
+            }
+        lines = [
+            f"- Dr. {appointment.doctor.doctor_name if appointment.doctor else 'Doctor'}: {appointment.status}"
+            for appointment in appointments
+        ]
+        return {"reply": "Recent appointments:\n" + "\n".join(lines), "actions": []}
+
+    if any(term in normalized for term in ["message", "messages", "conversation", "chat with doctor"]):
+        if "patient_id" not in session:
+            return {"reply": "Login is required to view doctor messages.", "actions": [_chatbot_action("Login help", message="how do i login")]}
+        return {"reply": "Messages are available after booking or during follow-up.", "actions": [_chatbot_action("Appointments", message="show my appointments")]}
+
+    if any(term in normalized for term in ["hospital", "hospitals", "clinic", "clinics"]):
+        return {
+            "reply": "Please tell me your area/location to find hospitals.",
+            "actions": [],
+        }
+
+    if any(term in normalized for term in ["emergency", "ambulance", "urgent", "112", "102", "108"]):
+        return {
+            "reply": "Emergency: call 112. Ambulance: call 108 or 102.",
+            "actions": [],
+        }
+
+    if any(term in normalized for term in ["contact support", "contact us", "support"]):
+        return {
+            "reply": "Support: call 8179027681 or email t.naresh5422@gmail.com.",
+            "actions": [],
+        }
+
+    return None
+
+
+def _chatbot_clarification_response(message):
+    normalized = _normalize_chatbot_text(message)
+    words = normalized.split()
+    if not normalized:
+        return {
+            "reply": "Please tell me what you need help with.",
+            "actions": [],
+        }
+
+    complete_platform_terms = [
+        "service", "services", "login", "register", "signup", "dashboard", "profile",
+        "emergency", "ambulance", "contact", "support", "helpline",
+    ]
+    if any(term in normalized for term in complete_platform_terms):
+        return None
+
+    search_terms = ["doctor", "doctors", "specialist", "appointment", "book", "near me", "nearby"]
+    health_terms = [
+        "pain", "fever", "cough", "cold", "vomit", "vomiting", "headache", "skin",
+        "heart", "eye", "ear", "tooth", "stomach", "pregnancy", "dog", "cat", "pet", "bird",
+    ]
+
+    if any(term in normalized for term in search_terms):
+        entities = extract_entities_from_query(message)
+        symptom = re.sub(
+            r"\b(find|search|show|need|want|a|an|doctor|doctors|dr|specialist|appointment|book|for|near|me|nearby|in|at)\b",
+            " ",
+            (entities.get("symptom") or message),
+            flags=re.IGNORECASE,
+        )
+        symptom = re.sub(r"\s+", " ", symptom).strip()
+        locations = entities.get("locations") or []
+        missing = []
+        if not symptom:
+            missing.append("disease/symptom or specialist")
+        if not locations and any(term in normalized for term in ["near me", "nearby", "near", "area", "location"]):
+            missing.append("area/location")
+
+        if missing:
+            session["chatbot_pending"] = {"intent": "doctor_search", "message": message, "missing": missing}
+            if len(missing) == 2:
+                question = "Which disease/symptom or specialist, and which area/location?"
+            elif "area/location" in missing:
+                question = "Which area/location should I search in?"
+            else:
+                question = "Which disease/symptom or specialist do you need?"
+            return {"reply": question, "actions": []}
+
+    vague_health = (
+        len(words) <= 2
+        and any(term in normalized for term in health_terms)
+        and not any(term in normalized for term in ["what", "why", "how", "remedy", "cause", "treatment", "consult"])
+    )
+    if vague_health:
+        session["chatbot_pending"] = {"intent": "health_advice", "message": message}
+        return {
+            "reply": "Please share the body part/disease, age group, and severity. Do you want remedies or doctor consultation?",
+            "actions": [],
+        }
+
+    too_short = len(words) <= 2 and not any(term in normalized for term in health_terms)
+    if too_short:
+        session["chatbot_pending"] = {"intent": "general", "message": message}
+        return {
+            "reply": "Please clarify what you need: doctor, disease/remedy, services, appointment, or location?",
+            "actions": [],
+        }
+
+    return None
+
+
+def _merge_chatbot_pending(message):
+    pending = session.pop("chatbot_pending", None)
+    if not pending:
+        return message
+
+    normalized = _normalize_chatbot_text(message)
+    if normalized in {"cancel", "stop", "no", "leave it"}:
+        return message
+
+    previous = pending.get("message") or ""
+    intent = pending.get("intent")
+    missing = pending.get("missing") or []
+    if intent == "doctor_search" and not re.search(r"\b(find|search|show|doctor|doctors|specialist|appointment|book)\b", message, re.IGNORECASE):
+        health_or_specialty_terms = [
+            "pain", "fever", "cough", "cold", "skin", "heart", "cardio", "dent", "eye", "ortho",
+            "neuro", "pregnancy", "child", "general", "physician", "dermatologist", "dentist",
+            "pediatrician", "gynecologist", "veterinary", "vet",
+        ]
+        location_only = (
+            "disease/symptom or specialist" in missing
+            and len(normalized.split()) <= 3
+            and not any(term in normalized for term in health_or_specialty_terms)
+        )
+        if location_only:
+            session["chatbot_pending"] = {
+                "intent": "doctor_search",
+                "message": f"{previous} in {message}".strip(),
+                "missing": ["disease/symptom or specialist"],
+            }
+            return previous
+        return f"{previous} {message}".strip()
+    if intent in {"health_advice", "general"}:
+        return f"{previous} {message}".strip()
+    return message
+
+
+def _chatbot_intent_actions(message):
+    normalized = _normalize_chatbot_text(message)
+
+    if any(term in normalized for term in ["book", "appointment", "slot", "online consult", "consult online"]):
+        return [
+            _chatbot_action("Show doctors", message="show doctors list"),
+            _chatbot_action("My appointments", message="show my appointments"),
+        ]
+
+    if any(term in normalized for term in ["login", "sign in", "register", "signup", "create account"]):
+        if "patient_id" in session:
+            return _chatbot_logged_in_actions()
+        return [
+            _chatbot_action("Patient login", message="how do i login"),
+            _chatbot_action("Register", message="how do i register"),
+        ]
+
+    if any(term in normalized for term in ["dashboard", "profile", "my account"]):
+        if "patient_id" in session:
+            return [
+                _chatbot_action("Dashboard", message="show dashboard"),
+                _chatbot_action("My profile", style="secondary", message="show my profile"),
+            ]
+        return [_chatbot_action("Login", message="how do i login")]
+
+    if any(term in normalized for term in ["hospital", "clinic"]):
+        return [_chatbot_action("Find hospitals", message="show hospitals")]
+
+    if any(term in normalized for term in ["message", "chat with doctor", "conversation"]):
+        return [_chatbot_action("Messages", message="show messages")]
+
+    if any(term in normalized for term in ["emergency", "ambulance", "urgent", "112", "102", "108"]):
+        return [_chatbot_action("Emergency numbers", style="danger", message="emergency helpline number")]
+
+    if any(term in normalized for term in ["contact", "support"]):
+        return [_chatbot_action("Contact us", message="contact support")]
+
+    return []
+
+
+def _is_rag_assistant_question(message):
+    normalized = _normalize_chatbot_text(message)
+    assistant_patterns = [
+        "how to", "how do i", "how can i", "what is", "what are", "tell me", "explain", "can i",
+        "connect", "contact doctor", "chat with doctor", "message doctor", "portal", "feature", "workflow",
+        "cause", "causes", "caused by", "remedy", "remedies", "treatment", "treat", "prevention",
+        "helpline", "emergency number", "first aid", "consult", "who should i consult",
+        "dog", "cat", "pet", "bird", "animal", "veterinary", "vet",
+        "service", "services", "book", "appointment", "login", "register", "dashboard", "profile",
+        "hospital", "clinic", "contact", "support", "emergency", "ambulance",
+    ]
+    search_patterns = [
+        "find doctor", "find doctors", "search doctor", "search doctors", "show doctor", "show doctors",
+        "doctor near", "doctors near", "specialist near", "near me",
+    ]
+    if any(pattern in normalized for pattern in search_patterns):
+        return False
+    return any(pattern in normalized for pattern in assistant_patterns)
+
+
 def _build_chatbot_reply(message):
-    cleaned = message.strip()
+    cleaned = _merge_chatbot_pending(message.strip())
     lowered = cleaned.lower()
-    health_advice_response = _chatbot_health_advice_response(cleaned)
-    if health_advice_response:
-        return health_advice_response
 
-    faq_response = _chatbot_faq_response(cleaned)
-    if faq_response:
-        return faq_response
+    activity_response = _chatbot_activity_response(cleaned)
+    if activity_response:
+        return activity_response
 
-    if any(word in lowered for word in ["emergency", "ambulance", "urgent", "112", "102"]):
-        return {
-            "reply": "For urgent help, call 112 for national emergency support or 102 for ambulance services. You can also open the emergency services page for more helplines.",
-            "actions": [_chatbot_action("Emergency services", url_for("emergency_services"), "danger")],
-        }
+    clarification = _chatbot_clarification_response(cleaned)
+    if clarification:
+        return clarification
 
-    if any(word in lowered for word in ["book", "appointment", "slot", "consult"]):
-        return {
-            "reply": "To book an appointment, find a doctor first, choose an available online or in-person slot, then submit the booking request. Login is required when you book.",
-            "actions": [
-                _chatbot_action("Find a doctor", url_for("browse_doctors")),
-                _chatbot_action("My appointments", url_for("my_appointments") if "patient_id" in session else url_for("login")),
-            ],
-        }
+    if _is_rag_assistant_question(cleaned):
+        rag_response = _chatbot_rag_response(cleaned, _chatbot_intent_actions(cleaned))
+        if rag_response:
+            return rag_response
 
-    if any(word in lowered for word in ["login", "sign in", "register", "signup", "create account"]):
-        if "patient_id" in session:
-            return {
-                "reply": "You are already logged in. You can access your dashboard, appointments, and profile from here.",
-                "actions": _chatbot_logged_in_actions(),
-            }
-        return {
-            "reply": "Patients can login or create an account from the main portal. After login, you can manage appointments, searches, profile details, and messages.",
-            "actions": [
-                _chatbot_action("Patient login", url_for("login")),
-                _chatbot_action("Register", url_for("register")),
-            ],
-        }
-
-    if any(word in lowered for word in ["hospital", "clinic"]):
-        return {
-            "reply": "You can search hospitals by location and review available hospital details from the hospital finder.",
-            "actions": [_chatbot_action("Find hospitals", url_for("hospital_finder"))],
-        }
-
-    if any(word in lowered for word in ["profile", "dashboard", "my account"]):
-        if "patient_id" in session:
-            return {
-                "reply": "You can manage your profile, appointments, searches, and doctor conversations from your patient dashboard.",
-                "actions": [
-                    _chatbot_action("Dashboard", url_for("dashboard")),
-                    _chatbot_action("My profile", url_for("user_profile"), "secondary"),
-                ],
-            }
-        return {
-            "reply": "Please login first to view your dashboard and profile.",
-            "actions": [_chatbot_action("Login", url_for("login"))],
-        }
-
-    if any(word in lowered for word in ["message", "chat with doctor", "conversation"]):
-        return {
-            "reply": "Patient-doctor messaging is available after an appointment is booked, and may stay open during the follow-up period.",
-            "actions": [_chatbot_action("Messages", url_for("list_conversations") if "patient_id" in session else url_for("login"))],
-        }
-
-    if any(word in lowered for word in ["contact", "support", "help"]):
-        return {
-            "reply": "You can reach CareSlotly from the contact page. For medical emergencies, use the emergency services page instead.",
-            "actions": [
-                _chatbot_action("Contact us", url_for("contactus")),
-                _chatbot_action("Emergency services", url_for("emergency_services"), "danger"),
-            ],
-        }
-
-    if any(word in lowered for word in ["doctor", "specialist", "symptom", "pain", "fever", "skin", "heart", "cardio", "dent", "eye", "ortho", "neuro", "find", "search"]):
+    if any(phrase in lowered for phrase in ["find doctor", "find doctors", "search doctor", "search doctors", "show doctor", "show doctors", "doctor near", "doctors near"]):
         return _chatbot_search_response(cleaned)
 
+    if any(word in lowered for word in ["doctor", "specialist", "symptom", "pain", "fever", "skin", "heart", "cardio", "dent", "eye", "ortho", "neuro"]):
+        rag_response = _chatbot_rag_response(cleaned, _chatbot_intent_actions(cleaned))
+        if rag_response:
+            return rag_response
+        return _chatbot_search_response(cleaned)
+
+    rag_response = _chatbot_rag_response(cleaned, _chatbot_intent_actions(cleaned))
+    if rag_response:
+        return rag_response
+
     return {
-        "reply": "I can help you find doctors, book appointments, locate hospital services, open your dashboard, or get emergency numbers. What would you like to do?",
+        "reply": "Please ask about doctors, appointments, hospitals, services, symptoms, or emergency help.",
         "actions": [
-            _chatbot_action("Browse doctors", url_for("browse_doctors")),
-            _chatbot_action("Emergency services", url_for("emergency_services"), "danger"),
-            _chatbot_action("Contact support", url_for("contactus"), "secondary"),
+            _chatbot_action("Show doctors", message="show doctors list"),
         ],
     }
 
@@ -1082,14 +1321,36 @@ def setup_routes(app):
         except Exception as exc:
             current_app.logger.exception("Chatbot response failed: %s", exc)
             response = {
-                "reply": "I had trouble processing that. You can still browse doctors or contact support from here.",
+                "reply": "I had trouble processing that. Try asking again in a simpler way.",
                 "actions": [
-                    _chatbot_action("Browse doctors", url_for("browse_doctors")),
-                    _chatbot_action("Contact support", url_for("contactus"), "secondary"),
+                    _chatbot_action("Show doctors", message="show doctors list"),
+                    _chatbot_action("Services", style="secondary", message="what are the services"),
                 ],
             }
 
         response.setdefault("actions", [])
+        return jsonify(response)
+
+    @app.route('/rag/query', methods=['POST'])
+    def rag_query():
+        payload = request.get_json(silent=True) or {}
+        question = (payload.get('question') or '').strip()
+
+        if not question:
+            return jsonify({"error": "Question is required."}), 400
+
+        try:
+            result = generate_rag_answer(question, top_k=4)
+        except Exception as exc:
+            current_app.logger.exception("RAG query failed: %s", exc)
+            return jsonify({"error": "RAG query failed."}), 500
+
+        response = {
+            "question": question,
+            "answer": _clean_chatbot_rag_answer(result.get("answer"), question),
+        }
+        if payload.get("include_matches") is True:
+            response["matches"] = result.get("matches", [])
         return jsonify(response)
 
     @app.route("/about")

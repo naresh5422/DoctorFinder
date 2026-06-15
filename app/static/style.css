@@ -1,14 +1,82 @@
 html, body {
     height: 100%;
+    margin: 0;
 }
 
 body {
     font-family: 'Poppins', sans-serif;
     margin: 0;
-    background: linear-gradient(180deg, #e8f7f5 0%, #ffffff 60%);
+    min-height: 100vh;
+        background: linear-gradient(135deg, #e8f7f5 0%, #d4f1f0 50%, #ffffff 100%);
     color: #495057;
-    position: relative; /* Establish stacking context for watermark */
+    position: relative;
     z-index: 0;
+    background-attachment: fixed;
+    }
+    
+    /* ========== BACKGROUND THEME OPTIONS ========== */
+    body.bg-theme-teal {
+        background: linear-gradient(135deg, #e8f7f5 0%, #d4f1f0 50%, #ffffff 100%);
+    }
+    
+    body.bg-theme-blue {
+        background: linear-gradient(135deg, #e3f2fd 0%, #b3e5fc 50%, #ffffff 100%);
+    }
+    
+    body.bg-theme-green {
+        background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 50%, #ffffff 100%);
+    }
+    
+    body.bg-theme-orange {
+        background: linear-gradient(135deg, #ffe8d6 0%, #ffd4a3 50%, #ffffff 100%);
+    }
+    
+    body.bg-theme-purple {
+        background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 50%, #ffffff 100%);
+    }
+    
+    body.bg-theme-gray {
+        background: linear-gradient(180deg, #f5f5f5 0%, #e8e8e8 50%, #ffffff 100%);
+    }
+    
+    body.bg-theme-healthcare {
+        background: linear-gradient(135deg, #e0f7fa 0%, #80deea 50%, #ffffff 100%);
+    }
+    
+    body.bg-theme-white {
+        background: #ffffff;
+    }
+    
+    body::before {
+        content: "";
+        background-image: url("careslotly-logo.svg");
+        background-repeat: no-repeat;
+        background-position: center center;
+        background-size: 30rem;
+        position: fixed;
+        top: 12%;
+        right: 6%;
+        width: 20rem;
+        height: 20rem;
+        opacity: 0.06;
+        transform: translateY(0) scale(1);
+        animation: floatBackgroundLogo 14s ease-in-out infinite;
+        pointer-events: none;
+        z-index: -1;
+    }
+    
+    @keyframes floatBackgroundLogo {
+    
+        0%,
+        100% {
+            transform: translateY(0) scale(1);
+            opacity: 0.06;
+        }
+    
+        50% {
+            transform: translateY(-12px) scale(1.02);
+            opacity: 0.08;
+        }
 }
 
 body::after {
@@ -17,25 +85,125 @@ body::after {
     background-repeat: no-repeat;
     background-position: center center;
     background-size: 55vw;
-        /* Adjust size as needed */
     position: fixed;
     top: 50%;
     left: 50%;
     width: 100vw;
     height: 100vh;
     transform: translate(-50%, -50%) rotate(-45deg);
-    opacity: 0.05; /* Make it very subtle */
+    opacity: 0.02;
     pointer-events: none;
-    z-index: -1; /* Place it behind all content */
+    z-index: -1;
 }
 
 body.d-flex {
     display: flex;
     flex-direction: column;
+    min-height: 100vh;
 }
 
-.main-content {
+main.main-content {
     flex: 1;
+    padding: 2.5rem 0;
+        width: 100%;
+    }
+    
+    .container,
+    .container-fluid {
+        max-width: 1140px;
+        margin-left: auto;
+        margin-right: auto;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    .navbar {
+        padding: 0.9rem 0;
+        background:
+            linear-gradient(135deg, #005252 0%, #008080 58%, #38b7a6 100%) !important;
+        box-shadow: 0 10px 28px rgba(0, 82, 82, 0.22) !important;
+    }
+    
+    .navbar .container {
+        align-items: center;
+    }
+    
+    .navbar-brand {
+        font-weight: 700;
+        letter-spacing: 0.35px;
+        color: #ffffff !important;
+    }
+    
+    .navbar-brand img.animated-logo {
+        animation: logoEntrance 1.2s cubic-bezier(0.25, 0.8, 0.25, 1), logoGlow 3.8s ease-in-out infinite 0.6s;
+        transform-origin: center center;
+        opacity: 0;
+    }
+    
+    .navbar .navbar-nav {
+        gap: 0.4rem;
+    }
+    
+    .navbar-nav .nav-link {
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .navbar-nav .nav-link:hover,
+    .navbar-nav .nav-link:focus {
+        color: #ffffff;
+    }
+    
+    .navbar-toggler {
+        border: 1px solid rgba(255, 255, 255, 0.35);
+    }
+    
+    .navbar-light .navbar-toggler-icon {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='rgba(255,255,255,0.92)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/ %3E%3C/svg%3E");
+    }
+    
+    @keyframes logoEntrance {
+        0% {
+            transform: translateX(-40px) scale(0.75) rotate(-12deg);
+            opacity: 0;
+        }
+    
+        60% {
+            transform: translateX(10px) scale(1.05) rotate(4deg);
+            opacity: 1;
+        }
+    
+        80% {
+            transform: translateX(-6px) scale(0.98) rotate(-2deg);
+        }
+    
+        100% {
+            transform: translateX(0) scale(1) rotate(0deg);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes logoGlow {
+    
+        0%,
+        100% {
+            filter: drop-shadow(0 0 0 rgba(0, 128, 128, 0.16));
+        }
+    
+        50% {
+            filter: drop-shadow(0 0 16px rgba(0, 128, 128, 0.32));
+        }
+    }
+    
+    .navbar-nav .nav-link {
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+    }
+    
+    .navbar-nav .nav-link:hover,
+    .navbar-nav .nav-link:focus {
+        color: #ffffff;
 }
 
 .top-search-bar {
@@ -50,9 +218,28 @@ body.d-flex {
     font-weight: bold;
 }
 
+.navbar {
+    padding: 0.9rem 0;
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08) !important;
+}
+
+.navbar-brand {
+    color: #111827 !important;
+}
+
+.navbar-nav .nav-link {
+    color: #495057;
+}
+
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link:focus {
+    color: #008080;
+}
 /* --- New Homepage Theme --- */
 .homepage-body {
-    background-color: #FFFFFF; /* A crisp white background for the homepage */
+    background: linear-gradient(135deg, #e8f7f5 0%, #d4f1f0 50%, #ffffff 100%);
+        background-attachment: fixed;
 }
 
 @keyframes gradientAnimation {
@@ -143,6 +330,7 @@ body.d-flex {
 .how-it-works-section {
     position: relative;
     overflow: hidden; /* Hide parts of the circles that go off-screen */
+    background: rgba(247, 255, 253, 0.9);
 }
 
 /* Decorative background circles for the "How It Works" section */
@@ -162,30 +350,26 @@ body.d-flex {
     position: relative;
 }
 
+.how-it-works-section .section-title {
+    color: #123f45;
+}
+
+.how-it-works-step h5 {
+    color: #123f45;
+    font-weight: 700;
+}
+
+.how-it-works-step p,
+.how-it-works-step .text-muted {
+    color: #244d52 !important;
+}
 /* Dashed lines connecting the steps */
 .how-it-works-step:not(:first-child)::before {
     content: none; /* Removed dashed line for a cleaner look */
 }
 
 .how-it-works-step .step-number {
-    background-color: #e0f2f1; /* Light teal */
-    color: #008080;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 1rem;
-    transition: all 0.3s ease;
-}
-
-.how-it-works-step:hover .step-number {
-    transform: scale(1.1);
-    background-color: #008080;
-    color: #fff;
+    display: none !important;
 }
 .testimonial-card {
     background-color: #ffffff;
@@ -229,6 +413,16 @@ body.d-flex {
 
 /* --- Featured Doctors Section --- */
 .featured-doctors-section {
+    background: rgba(247, 255, 253, 0.92);
+    }
+    
+    .featured-doctors-section .section-title {
+        color: #123f45;
+    }
+    
+    .featured-doctors-section .lead,
+    .featured-doctors-section .text-muted {
+        color: #244d52 !important;
 }
 
 .doctor-card {
@@ -239,6 +433,19 @@ body.d-flex {
     transition: all 0.3s ease;
     background-color: #fff;
     box-shadow: none;
+    color: #263f44;
+    }
+    
+    .doctor-card .card-title,
+    .doctor-card h5,
+    .doctor-card h6 {
+        color: #123f45;
+    }
+    
+    .doctor-card p,
+    .doctor-card .text-muted,
+    .doctor-card small {
+        color: #34575d !important;
 }
 
 .doctor-card:hover {
@@ -536,9 +743,12 @@ body.d-flex {
 /* --- End Chat Interface --- */
 
 .navbar .btn-primary {
-    --bs-btn-bg: #008080;
-    --bs-btn-border-color: #008080;
-    --bs-btn-hover-bg: #006666;
+    --bs-btn-bg: #ffffff;
+        --bs-btn-border-color: #ffffff;
+        --bs-btn-color: #006666;
+        --bs-btn-hover-bg: #e8f7f5;
+        --bs-btn-hover-border-color: #e8f7f5;
+        --bs-btn-hover-color: #005252;
 }
 
 /* Star Rating Styles */
@@ -903,6 +1113,7 @@ body.d-flex {
     border: 1px solid #008080;
     color: #008080;
     background: #fff;
+    cursor: pointer;
 }
 
 .care-chatbot-action:hover {
@@ -919,7 +1130,6 @@ body.d-flex {
     border-color: #6c757d;
     color: #495057;
 }
-
 .care-chatbot-form {
     height: 64px;
     display: flex;
@@ -1004,6 +1214,126 @@ body.d-flex {
 }
 
 /* --- End CareSlotly Chatbot Widget --- */
+/* --- Template Layout Fixes --- */
+.site-footer {
+    position: relative;
+    z-index: 1;
+}
+
+.care-chatbot {
+    position: fixed;
+    right: 25px;
+    bottom: 98px;
+    z-index: 1060;
+    font-family: 'Poppins', sans-serif;
+}
+
+.care-chatbot-panel[hidden] {
+    display: none !important;
+}
+
+.care-chatbot-panel {
+    position: fixed;
+    right: 20px;
+    bottom: 100px;
+    width: min(420px, calc(100vw - 32px));
+    height: min(700px, calc(100vh - 130px));
+    background: #fff;
+    border: 1px solid rgba(0, 128, 128, 0.16);
+    border-radius: 18px;
+    box-shadow: 0 26px 60px rgba(31, 45, 61, 0.24);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.care-chatbot-toolbar {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.2rem;
+    padding: 0.35rem;
+    background: #f8fcfc;
+    border-bottom: 1px solid #e6eeee;
+    flex-shrink: 0;
+}
+
+.care-chatbot-toolbar button {
+    min-height: 62px;
+    border: 1px solid #dcecec;
+    border-radius: 14px;
+    background: #fff;
+    color: #008080;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1rem;
+    padding: 0.25rem 0;
+    font-size: 0.78rem;
+}
+
+.care-chatbot-toolbar i {
+    color: #055353;
+    font-size: 1.25rem;
+}
+
+.care-chatbot-toolbar span {
+    font-size: 0.72rem;
+    line-height: 1.1;
+    font-weight: 600;
+    color: #0f5050;
+}
+
+.care-chatbot-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.care-chatbot-messages {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    padding: 1rem;
+    overflow-y: auto;
+    background: linear-gradient(180deg, #f4fbfb 0%, #f8fafb 100%);
+}
+
+.care-chatbot-bubble {
+    border-radius: 18px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    position: relative;
+}
+
+.care-chatbot-message.bot .care-chatbot-bubble {
+    background: linear-gradient(135deg, #f6ffff, #e8fbfb);
+    border-color: #cde9e8;
+}
+
+.care-chatbot-form {
+    flex-shrink: 0;
+    height: 64px;
+    display: flex;
+    gap: 0.45rem;
+    padding: 0.7rem;
+    background: #fff;
+    border-top: 1px solid #e6eeee;
+}
+
+@media (max-width: 575.98px) {
+    .care-chatbot {
+        right: 16px;
+        bottom: 88px;
+    }
+
+    .care-chatbot-panel {
+        right: 12px;
+        bottom: 86px;
+        height: min(620px, calc(100vh - 120px));
+    }
+}
 .feature-icon {
     display: inline-flex;
     align-items: center;
@@ -1112,5 +1442,4 @@ body.d-flex {
 
 #quick-add-slots .btn {
     width: 120px; /* Consistent button width */
-}
 }

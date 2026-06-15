@@ -11,9 +11,9 @@ from firebase_admin import credentials
 def create_app():
     app = Flask(__name__)
     app.config.from_object(settings)
-    print("🚀 Using Database URL:", os.getenv("DATABASE_URL"))
+    print("🚀 Using Database URL:", app.config.get("SQLALCHEMY_DATABASE_URI"))
     is_development = app.config.get('FLASK_ENV', 'production').lower() == 'development'
-    db_uri = app.config.get('DATABASE_URL', '')
+    db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
     if is_development and ('postgresql' in db_uri):
         error_message = (
             "FATAL CONFIGURATION ERROR: You are running in a development environment, but your "
@@ -57,10 +57,13 @@ def create_app():
     mail.init_app(app)
 
     # --- Load service data and AI models ---
+    # RAG embeddings are pre-loaded to Pinecone via build_rag_pipeline.py
     # This is done after db.init_app to ensure the app context and DB are available.
     with app.app_context():
         from app.services.doctor_service import load_service_data
+
         load_service_data()
+
 
     Migrate(app, db)
     from app.routers import setup_routes

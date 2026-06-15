@@ -1,6 +1,10 @@
 import os
 import json
 import random
+
+os.environ.setdefault("TRANSFORMERS_NO_TF", "1")
+os.environ.setdefault("USE_TF", "0")
+
 from sentence_transformers import SentenceTransformer, util
 import spacy
 from sqlalchemy import func

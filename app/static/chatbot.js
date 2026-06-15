@@ -38,11 +38,12 @@
             const actionWrap = document.createElement('div');
             actionWrap.className = 'care-chatbot-actions';
             actions.forEach((action) => {
-                const link = document.createElement('a');
-                link.href = action.url;
-                link.className = `care-chatbot-action ${action.style || 'primary'}`;
-                link.textContent = action.label;
-                actionWrap.appendChild(link);
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = `care-chatbot-action ${action.style || 'primary'}`;
+                button.textContent = action.label;
+                button.dataset.message = action.message || action.label;
+                actionWrap.appendChild(button);
             });
             bubble.appendChild(actionWrap);
         }
@@ -84,8 +85,8 @@
         try {
             const response = await fetch(endpoint, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({message: cleanMessage})
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: cleanMessage })
             });
             const data = await response.json();
             typing.remove();
@@ -108,6 +109,13 @@
     faqs.addEventListener('click', (event) => {
         const button = event.target.closest('button[data-message]');
         if (button) sendMessage(button.dataset.message);
+    });
+    messages.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-message]');
+        if (button) {
+            sendMessage(button.dataset.message);
+            return;
+        }
     });
 
     if (SpeechRecognition) {

@@ -1,0 +1,538 @@
+CareSlotly RAG Reference
+========================
+
+Project Overview
+----------------
+CareSlotly is a doctor-finding and healthcare booking web application built with Flask, SQLAlchemy, Bootstrap, and AI-enabled search. It connects patients with doctors and hospitals, supports patient and doctor portals, and enables appointment booking, consultation scheduling, messaging, and follow-up.
+
+Core Features
+-------------
+- AI-Powered Doctor Search:
+  - Semantic search for symptoms, specialties, and locations.
+  - Natural language input support (symptom-based queries like "chest pain" or "skin rash").
+  - Autocomplete suggestions for symptoms, specialties, and locations.
+  - Location normalization and alias handling for better search coverage.
+
+- Dual User Portals:
+  - Patient portal: registration, login, profile, dashboard, appointments, conversations.
+  - Doctor portal: registration, login, profile, manage appointments, write prescriptions, messaging.
+
+- Appointment Booking System:
+  - Real-time doctor availability and appointment slot filtering.
+  - Online and in-person consultation support.
+  - Appointment status management: Pending, Confirmed, Completed.
+  - View upcoming appointments and history.
+
+- Doctor Profiles and Reviews:
+  - Detailed doctor listings with specialization, experience, rating, reviews, hospital affiliation.
+  - Patients can submit reviews after consultation.
+
+- Hospital Finder:
+  - Search hospitals by location.
+  - View hospital services, address, contact, and map link.
+
+- Verification and Security:
+  - Email verification using Flask-Mail.
+  - Mobile verification via Firebase/Twilio OTP.
+  - Password reset with OTP support.
+
+- Chatbot and Health Advice:
+  - Chatbot FAQ responses for booking, consultation, and site navigation.
+  - Health advice for common conditions and first-response home remedies.
+  - Suggested actions through the chatbot: browse doctors, view appointments, contact support.
+
+- Additional Utilities:
+  - Search history tracking.
+  - Patient dashboard and doctor dashboard metrics.
+  - Prescription management by doctors.
+  - Profile editing and verification workflows.
+
+Services Quick Answer
+---------------------
+- CareSlotly helps users find doctors by symptom, specialty, or location.
+- Users can book online or in-person appointments.
+- Patients can manage appointments, messages, prescriptions, profile, and history.
+- Users can find hospitals and emergency guidance.
+
+Website Services Provided
+-------------------------
+CareSlotly provides the following services:
+- Doctor search service: users can search doctors by symptom, disease, specialty, doctor name, hospital, or location.
+- AI symptom-to-specialist matching: the system maps symptoms like chest pain, skin rash, tooth pain, headache, fever, back pain, and eye irritation to suitable specialists.
+- Browse doctors service: users can view doctors with specialization, hospital, location, ratings, experience, consultation type, and available slots.
+- Appointment booking service: patients can book online or in-person appointments by selecting a doctor, consultation type, date, and available time slot.
+- Online consultation support: doctors who offer online consultations show online availability, and patients can select online slots when booking.
+- In-person consultation support: patients can choose physical visits when the doctor supports in-person appointments.
+- Patient portal service: patients can register, login, verify email/mobile, manage profile, view dashboard, see appointments, and track consultation history.
+- Doctor portal service: doctors can register, login, manage profile, set availability, view appointment requests, update appointment status, and manage patient communication.
+- Messaging service: patient-doctor conversations are available after appointment booking and may remain available during follow-up.
+- Prescription service: doctors can write prescriptions for confirmed or completed appointments, and patients can access follow-up information.
+- Hospital finder service: users can search hospitals by location and view hospital services, address, contact details, and map links.
+- Reviews and ratings service: patients can review doctors after consultation, helping other users compare doctor options.
+- Emergency services information: the site provides emergency guidance and quick access to emergency service information.
+- AI chatbot assistant: the chatbot helps users find doctors, book appointments, choose specialists, understand website services, get general health guidance, and access emergency guidance.
+- RAG/LLM health information service: the assistant can answer general questions about symptoms, causes, remedies, red flags, what doctor to consult, consultation steps, pet and animal care, and helpline guidance.
+- Search history and personalization: the system stores recent searches for logged-in patients to make repeat searches and follow-up easier.
+- Account verification and security: email verification, mobile OTP support when configured, password reset, and secure login workflows are supported.
+
+How Users Access These Services
+-------------------------------
+- To find care: search by symptom, disease, specialty, or location, then open matching doctor profiles.
+- To book care: choose a doctor, select online or in-person consultation, pick a slot, and submit the appointment request.
+- To manage care: login to the patient dashboard to view appointments, profile, messages, history, and follow-ups.
+- To use doctor services: doctors login to the doctor portal to manage slots, appointments, patient messages, and prescriptions.
+- To find hospitals: open the hospital finder and search by location or service need.
+- To get quick help: use the chatbot to ask about services, booking, specialists, symptoms, emergency numbers, or consultation steps.
+
+Chatbot Intent Knowledge
+------------------------
+Use this section when the user asks the CareSlotly chatbot about website actions, navigation, or services. Keep chatbot answers short, simple, and meaningful.
+
+- Services summary: CareSlotly helps users find doctors, book online or in-person appointments, manage appointments/messages/prescriptions/profile, find hospitals, and access emergency guidance.
+
+- Booking appointments: Search for a doctor, open the doctor profile, choose online or in-person consultation, select an available slot, and submit the booking request. Login is required for booking.
+
+- Online consultation: Online consultation is available only for doctors who support online slots. Choose an online slot during booking.
+
+- Find the right specialist: Type the symptom, disease, specialty, or location. CareSlotly maps symptoms to suitable specialists and shows matching doctors.
+
+- Connect with doctors: Search by symptom, specialty, or location, open a doctor profile, check available slots, and book an online or in-person consultation.
+
+- Message doctor: Patient-doctor messaging is available after an appointment is booked and may remain available during follow-up.
+
+- Patient login and registration: Patients can login or create an account from the patient portal. After login, they can manage appointments, searches, profile, and messages.
+
+- Patient dashboard: The dashboard helps patients view appointments, profile details, search history, conversations, and follow-up information.
+
+- Doctor portal: Doctors can register, login, update profile, manage slots, handle appointments, communicate with patients, and write prescriptions.
+
+- Hospital finder: Users can search hospitals by location and view hospital services, address, contact details, and map links.
+
+- Contact support: Use the contact page for website support. For urgent medical danger, use emergency services instead.
+
+- Emergency guidance: For urgent help in India, call 112. Ambulance numbers such as 108 or 102 may work depending on local availability.
+
+- Account verification: CareSlotly supports email verification, mobile OTP verification when configured, and password reset workflows.
+
+- Prescription access: Doctors can write prescriptions for confirmed or completed appointments. Patients can review follow-up information from their account.
+
+Chatbot Response Style
+----------------------
+- Answer from retrieved CareSlotly knowledge whenever possible.
+- Keep the answer brief: one short sentence or up to four bullets.
+- Do not mention the brand name in normal answers; say "the website" only when needed.
+- Do not show metadata, source names, scores, chunk IDs, provider names, or retrieval details.
+- Do not repeat button labels such as Browse doctors or Contact support inside the answer text.
+- Use action buttons only as interface shortcuts, not as part of the written answer.
+
+Key Content and Features Provided
+---------------------------------
+1. Patient workflows:
+   - Search for a doctor by symptom, specialty, or location.
+   - View doctor details, reviews, and available slots.
+   - Book appointments and manage existing bookings.
+   - Access a patient dashboard and conversation history.
+   - Verify email and mobile number.
+
+2. Doctor workflows:
+   - Register as a doctor and manage profile.
+   - Set consultation type (In-Person, Online, or Both).
+   - Access scheduled appointments and patient history.
+   - Update appointment status and write prescriptions.
+   - Review patient messages and follow-up.
+
+3. Health advice content:
+   - Practical remedies, solutions, and treatment guidance for common conditions.
+   - Recommendation to consult a doctor if symptoms persist or worsen.
+   - Guidance for both urgent and non-urgent care.
+
+4. System features:
+   - Search autosuggestions and location suggestions.
+   - Support for semantic mapping from disease to specialist.
+   - Real-time appointment slot filtering to remove past and booked slots.
+   - Chatbot that responds to help queries about booking, online consultation, and finding specialists.
+
+Common Conditions and Advice
+----------------------------
+The CareSlotly chatbot contains advice and remedies for the following conditions:
+
+- Back Pain
+  - Gentle stretching, posture correction, warm compress.
+  - Keep moving with short walks.
+  - Consult orthopedics or physiotherapy if severe, persistent, or with numbness.
+
+- Headache
+  - Rest in a quiet, dark room.
+  - Stay hydrated and avoid bright screens.
+  - Seek medical help if sudden, severe, or with vision changes or weakness.
+
+- Migraine
+  - Rest in a quiet, dark room.
+  - Stay hydrated and avoid strong smells and loud noise.
+  - Consult a doctor if pain is severe or accompanied by visual changes.
+
+- Fever
+  - Drink fluids, rest, and use a cool compress or paracetamol.
+  - See a doctor if fever persists more than two days or has worrying symptoms.
+
+- Cold
+  - Rest, drink warm fluids, use saline nasal drops, and humidify the air.
+  - Consult a doctor if symptoms last longer than a week or worsen.
+
+- Cough
+  - Hydrate, inhale steam, and avoid smoke or dust.
+  - Book a doctor if persistent, bloody, or with high fever.
+
+- Sore Throat
+  - Drink warm fluids, gargle with salt water, and rest your voice.
+  - See a doctor if severe, lasting, or accompanied by fever.
+
+- Stomach Pain
+  - Rest, eat light bland foods, avoid spicy or greasy meals.
+  - Seek medical attention if severe, persistent, or with vomiting or blood.
+
+- Diarrhea
+  - Drink plenty of fluids, use oral rehydration, eat light foods.
+  - See a doctor if it continues, contains blood, or causes dehydration.
+
+- Vomiting
+  - Sip clear fluids slowly, avoid solid food until it settles.
+  - Get care if vomiting is severe, persistent, or fluids cannot be retained.
+
+- Joint Pain
+  - Apply ice or heat, rest, and avoid heavy lifting.
+  - Consult orthopedist or rheumatologist if sudden swelling or limited movement.
+
+- Allergy
+  - Avoid triggers, rinse nose with saline, take antihistamine if needed.
+  - Seek urgent help for breathing difficulty, swelling, or spreading rash.
+
+- Acidity
+  - Avoid spicy/fatty foods, eat smaller meals, limit caffeine.
+  - Seek doctor evaluation if heartburn is frequent or severe.
+
+- Acne
+  - Keep skin clean with a gentle cleanser.
+  - Avoid squeezing pimples.
+  - See a dermatologist if acne persists or is painful.
+
+- Stress
+  - Practice deep breathing, take breaks, sleep enough, stay active.
+  - Consult a doctor or counselor if stress is overwhelming.
+
+- Fatigue
+  - Rest, hydrate, eat balanced meals, and take activity breaks.
+  - See a healthcare provider if fatigue continues despite rest.
+
+- Insomnia
+  - Keep a regular sleep schedule, avoid screens before bed.
+  - Create a calm sleep environment.
+  - Consult a provider if poor sleep continues.
+
+- Eye Irritation
+  - Rinse eyes with clean water, avoid rubbing, rest from screens.
+  - See an eye specialist if irritation persists, causes pain, or affects vision.
+
+Consultation & Booking Workflow
+-------------------------------
+1. Search:
+   - The user enters symptoms, conditions, or locations in the search bar.
+   - The system maps symptoms to specialists and nearby locations.
+   - Autocomplete assists with symptoms, specialties, and locations.
+
+2. Browse Doctors:
+   - Search results list doctors with key details and ratings.
+   - Doctors display hospital affiliation, contact, and availability.
+   - Filters and suggested specialists help narrow down options.
+
+3. Open Doctor Profile:
+   - View detailed profile, reviews, specialties, experience.
+   - See available online or in-person slots.
+   - Confirm consultation type and patient details.
+
+4. Book Appointment:
+   - Select a date/time slot.
+   - Choose consultation type: Online or In-Person.
+   - Submit booking request.
+   - If not logged in, the system prompts for sign-in or registration.
+
+5. Appointment Management:
+   - Patients can view upcoming and past appointments.
+   - Doctors can confirm, complete, or cancel appointments.
+   - Messages can be exchanged between patient and doctor after booking.
+
+6. Follow-Up:
+   - Doctors can write prescriptions for completed or confirmed appointments.
+   - Patients can review doctors after consultation.
+   - Patient dashboard stores search history and appointment records.
+
+How to Consult with Doctors
+---------------------------
+- Use symptom search or type conditions directly.
+- Choose a suitable specialist from search results.
+- Prefer online consultation when remote support is available.
+- Check doctor availability and book a time slot.
+- Complete profile verification to unlock full features.
+- Use the chatbot for quick questions about booking, online consultations, and selecting specialists.
+
+RAG Pipeline Use Cases
+----------------------
+- Use this file as source content for retrieval-augmented generation.
+- Answer questions about CareSlotly features, booking workflows, and available disease advice.
+- Provide help content for users asking how to book, consult, verify accounts, or manage appointments.
+- Offer symptom-based guidance with a strong recommendation to seek medical attention when needed.
+
+Important Notes
+---------------
+- This document is built from the CareSlotly codebase and README content.
+- Health advice here is general guidance, not medical diagnosis.
+- For urgent or severe symptoms, users should consult a licensed medical professional immediately.
+
+Technical RAG Extraction Hints
+------------------------------
+- Source files for feature extraction:
+  - `README.md`
+  - `app/routers.py`
+  - `app/services/doctor_service.py`
+  - `app/models.py`
+  - `app/extension.py`
+  - `app/templates/*.html`
+  - `app/static/style.css`
+- Use route names and template names for question answering about site navigation.
+- Map disease/symptom queries to doctor specialties and booking pages.
+- Extract chatbot FAQ and health advice blocks for conversational responses.
+
+Expanded Medical and Veterinary Knowledge Base
+==============================================
+
+Safety Scope for RAG/LLM Responses
+----------------------------------
+- The assistant must provide general education, first-aid orientation, and doctor-selection guidance only.
+- The assistant must not claim to diagnose a patient, prescribe medicines, replace a licensed doctor or veterinarian, or delay urgent care.
+- For severe, sudden, worsening, unusual, or persistent symptoms, advise urgent evaluation by a qualified clinician.
+- For humans in India, call 112 for police, fire, health, rescue, women safety, child protection, threat-to-life, and other emergencies through the Emergency Response Support System. 108 or 102 may also be used for ambulance services where active locally.
+- For the United States, call 911 for emergencies and 988 for suicide or mental-health crisis support.
+- For poisoning, overdose, snakebite, severe allergic reaction, breathing difficulty, chest pain, stroke signs, major injury, seizures, severe bleeding, unconsciousness, severe dehydration, or suicidal thoughts, seek emergency help immediately.
+- For pets, birds, livestock, and wild animals, contact a local veterinarian, veterinary emergency hospital, government animal husbandry department, animal ambulance, or recognized animal rescue service. In some Indian states, 1962 is used for animal ambulance or mobile veterinary support; availability is state-dependent.
+
+General Consultation Steps
+--------------------------
+1. Identify the main problem: body part, symptom, duration, severity, triggers, injuries, fever, vomiting, bleeding, breathing issues, pain score, and existing diseases.
+2. Check for red flags: severe pain, chest pain, shortness of breath, fainting, confusion, weakness on one side, persistent high fever, blood in vomit/stool/urine, severe dehydration, poisoning, bites, burns, pregnancy complications, infant illness, or rapid worsening.
+3. Choose the right care level: emergency helpline for danger signs, urgent care for same-day moderate symptoms, routine appointment for stable non-urgent symptoms, teleconsult for mild follow-up questions.
+4. Choose the right specialist: use the symptom-to-specialist mapping below and book through CareSlotly by searching symptom, specialty, or location.
+5. Prepare for the visit: carry medicines list, allergies, reports, photos of rashes/injuries, vaccination records, pregnancy status, previous diagnoses, and questions.
+6. Follow up: complete tests, take medicines exactly as prescribed, return if symptoms worsen, and use CareSlotly appointments or messages for follow-up when available.
+
+Human Body Parts, Common Problems, Causes, Remedies, and Specialists
+--------------------------------------------------------------------
+
+Head, Brain, and Nerves
+- Common issues: headache, migraine, concussion, dizziness, seizure, stroke symptoms, facial weakness, memory changes, numbness, tingling.
+- Possible causes: dehydration, poor sleep, stress, eye strain, sinus infection, migraine disorder, high blood pressure, infection, head injury, nerve compression, stroke, brain inflammation.
+- Self-care for mild symptoms: rest in a quiet room, hydrate, avoid alcohol, reduce screen strain, use a cold or warm compress, track triggers, and avoid driving if dizzy.
+- Red flags: sudden worst headache, weakness on one side, facial droop, speech trouble, seizure, confusion, fainting, head injury with vomiting, fever with stiff neck.
+- Consult: neurologist for seizures, migraine, stroke-like symptoms, numbness, weakness, tremor, memory issues; emergency physician for sudden severe symptoms; general physician for mild recurrent headache.
+
+Eyes
+- Common issues: eye irritation, redness, itching, dry eyes, blurred vision, eye pain, injury, discharge, light sensitivity.
+- Possible causes: allergy, infection, dry eye, foreign body, screen strain, corneal injury, glaucoma, diabetes-related eye disease.
+- Self-care for mild symptoms: rinse with clean water, avoid rubbing, rest from screens, use clean compresses, avoid sharing towels or cosmetics.
+- Red flags: eye injury, chemical splash, severe pain, sudden vision loss, halos, unequal pupils, high fever with swelling around eye.
+- Consult: ophthalmologist or eye specialist; emergency care for injury, chemical exposure, or sudden vision changes.
+
+Ears, Nose, Throat, and Sinuses
+- Common issues: ear pain, hearing loss, ringing, blocked nose, sinus pain, sore throat, tonsillitis, hoarseness, nosebleed.
+- Possible causes: viral infection, allergy, ear wax, middle ear infection, sinusitis, acid reflux, voice strain, injury.
+- Self-care for mild symptoms: fluids, saline nasal spray, steam or humidified air, salt-water gargle, voice rest, avoid smoke and dust.
+- Red flags: breathing difficulty, drooling, severe throat swelling, high fever, stiff neck, blood after injury, sudden hearing loss.
+- Consult: ENT specialist; pediatrician for children; emergency care for airway trouble.
+
+Mouth, Teeth, and Jaw
+- Common issues: toothache, gum bleeding, mouth ulcers, bad breath, jaw pain, facial swelling.
+- Possible causes: cavities, gum disease, dental abscess, injury, wisdom tooth, vitamin deficiency, oral infection, temporomandibular joint strain.
+- Self-care for mild symptoms: gentle brushing, flossing, warm salt-water rinse, avoid very hot/cold/sugary foods, do not place aspirin on gums.
+- Red flags: facial swelling, fever, difficulty swallowing, spreading infection, trauma, uncontrolled bleeding.
+- Consult: dentist, oral surgeon for complex extraction or jaw problems, ENT or physician for persistent mouth ulcers.
+
+Chest, Lungs, and Breathing
+- Common issues: cough, wheezing, asthma, bronchitis, pneumonia, chest tightness, shortness of breath.
+- Possible causes: viral infection, allergy, asthma, smoking, pollution, pneumonia, tuberculosis, heart disease, pulmonary embolism.
+- Self-care for mild symptoms: fluids, rest, avoid smoke/dust, use prescribed inhalers correctly, humidified air.
+- Red flags: severe breathing difficulty, blue lips, chest pain, coughing blood, oxygen drop, high fever, confusion, worsening asthma.
+- Consult: pulmonologist for asthma, chronic cough, COPD, tuberculosis, breathlessness; emergency physician for acute breathing trouble.
+
+Heart and Blood Vessels
+- Common issues: chest pain, palpitations, high blood pressure, swelling in legs, fainting, breathlessness on exertion.
+- Possible causes: heart attack, angina, arrhythmia, hypertension, heart failure, anemia, thyroid disease, anxiety, dehydration.
+- Self-care for stable known problems: follow prescribed medicines, reduce salt, stop tobacco, exercise as advised, monitor blood pressure, keep follow-up appointments.
+- Red flags: chest pressure, pain spreading to arm/jaw/back, sweating, breathlessness, fainting, sudden severe weakness.
+- Consult: cardiologist; emergency services for suspected heart attack or dangerous rhythm symptoms.
+
+Stomach, Intestines, and Digestion
+- Common issues: acidity, nausea, vomiting, diarrhea, constipation, stomach pain, bloating, food poisoning, piles.
+- Possible causes: indigestion, infection, contaminated food, gastritis, ulcers, gallbladder disease, appendicitis, irritable bowel syndrome, inflammatory bowel disease.
+- Self-care for mild symptoms: oral rehydration solution, small bland meals, avoid alcohol/spicy/fatty food, rest, hand hygiene.
+- Red flags: severe abdominal pain, persistent vomiting, blood in stool/vomit, black stools, dehydration, rigid belly, pregnancy with abdominal pain.
+- Consult: gastroenterologist for recurrent acidity, chronic diarrhea/constipation, liver/gallbladder/pancreas concerns; general physician for mild acute illness; emergency care for red flags.
+
+Liver, Gallbladder, and Pancreas
+- Common issues: jaundice, right upper abdominal pain, vomiting, dark urine, pale stool, severe upper abdominal pain.
+- Possible causes: hepatitis, alcohol-related liver disease, fatty liver, gallstones, pancreatitis, medication toxicity.
+- Self-care: avoid alcohol, avoid unnecessary medicines, hydrate, follow medical diet advice, do not self-medicate for jaundice.
+- Red flags: yellow eyes with confusion, severe abdominal pain, persistent vomiting, bleeding, very dark urine, fever with jaundice.
+- Consult: gastroenterologist or hepatologist; emergency physician for severe pain or jaundice with confusion.
+
+Kidneys, Urine, and Bladder
+- Common issues: burning urination, frequent urination, blood in urine, kidney stones, flank pain, swelling, reduced urine.
+- Possible causes: urinary tract infection, dehydration, kidney stone, prostate enlargement, kidney disease, diabetes, high blood pressure.
+- Self-care for mild urinary irritation: drink water, do not hold urine, avoid irritants like excess caffeine, seek testing if symptoms persist.
+- Red flags: fever with flank pain, pregnancy with UTI symptoms, blood in urine, inability to pass urine, severe pain, reduced urine with swelling.
+- Consult: urologist for stones, prostate, urinary obstruction, blood in urine; nephrologist for kidney disease; gynecologist for recurrent UTI in women when appropriate.
+
+Reproductive and Sexual Health
+- Common issues: menstrual pain, irregular periods, heavy bleeding, vaginal discharge, pelvic pain, pregnancy symptoms, erectile dysfunction, testicular pain, sexually transmitted infections.
+- Possible causes: hormonal changes, pregnancy, infection, endometriosis, fibroids, ovarian cysts, prostate or testicular conditions, diabetes, stress, medication effects.
+- Self-care for mild symptoms: track cycles, maintain hygiene, avoid unprotected sex, use barrier protection, avoid douching, hydrate, rest.
+- Red flags: pregnancy bleeding, severe pelvic pain, fainting, heavy bleeding soaking pads rapidly, testicular torsion signs, sexual assault, severe infection signs.
+- Consult: gynecologist or obstetrician for women/pregnancy; urologist or andrologist for male reproductive concerns; dermatologist/venereologist for STI care.
+
+Skin, Hair, and Nails
+- Common issues: rash, acne, allergy, eczema, fungal infection, hair loss, wounds, burns, bites, nail infection.
+- Possible causes: allergy, infection, sweat/friction, autoimmune disease, hormones, stress, medication reaction, parasites, nutritional deficiency.
+- Self-care for mild symptoms: keep area clean and dry, avoid scratching, use gentle soap, avoid triggers, protect wounds, do not pop boils or severe acne.
+- Red flags: rapidly spreading rash, fever, skin peeling, facial/lip swelling, pus with fever, burns, animal bites, blackening skin, painful rash near eye.
+- Consult: dermatologist; emergency care for severe allergy, major burns, or spreading infection.
+
+Bones, Joints, Muscles, and Back
+- Common issues: joint pain, back pain, neck pain, sprain, fracture, arthritis, swelling, muscle cramps.
+- Possible causes: strain, posture, injury, overuse, arthritis, gout, infection, vitamin deficiency, nerve compression.
+- Self-care for mild symptoms: rest, gentle movement, ice for new injury, heat for muscle tightness, posture correction, avoid heavy lifting.
+- Red flags: deformity, inability to bear weight, numbness/weakness, loss of bladder/bowel control, fever with joint swelling, major trauma.
+- Consult: orthopedist for fractures, joint pain, back/neck pain; rheumatologist for autoimmune arthritis; physiotherapist for rehabilitation after medical evaluation.
+
+Hormones, Diabetes, and Metabolism
+- Common issues: diabetes, thyroid symptoms, weight change, excessive thirst, frequent urination, fatigue, heat/cold intolerance.
+- Possible causes: insulin resistance, autoimmune disease, thyroid disease, adrenal problems, diet/activity imbalance, medication effects.
+- Self-care: balanced meals, regular activity, medication adherence, blood sugar monitoring if advised, foot care in diabetes.
+- Red flags: confusion, very high or low blood sugar symptoms, vomiting with diabetes, severe dehydration, chest pain, pregnancy with diabetes symptoms.
+- Consult: endocrinologist or diabetologist; general physician for screening and initial management.
+
+Blood, Immunity, and Infections
+- Common issues: anemia, repeated infections, fever, swollen lymph nodes, unexplained bruising, allergies.
+- Possible causes: nutritional deficiency, chronic disease, viral/bacterial infection, autoimmune disease, blood disorders, medication effects.
+- Self-care: rest, hydration, nutrition, vaccination as advised, hand hygiene, avoid self-starting antibiotics.
+- Red flags: fever with rash/neck stiffness, severe weakness, bleeding, breathlessness, persistent high fever, immunocompromised patient with fever.
+- Consult: general physician, infectious disease specialist, hematologist, immunologist/allergist depending on symptoms.
+
+Mental Health, Sleep, and Substance Use
+- Common issues: anxiety, depression, stress, panic attacks, insomnia, addiction, suicidal thoughts.
+- Possible causes: life stress, trauma, genetics, medical illness, substance use, sleep disruption, medication effects.
+- Self-care for mild symptoms: regular sleep, exercise, supportive conversations, breathing exercises, reduce alcohol/drugs, structured routine.
+- Red flags: suicidal thoughts, self-harm, hallucinations, severe agitation, confusion, inability to care for self, overdose.
+- Consult: psychiatrist, psychologist, counselor, emergency services for crisis; in India, Tele-MANAS mental health support may be available through 14416 or 1800-891-4416, and KIRAN mental health rehabilitation helpline has been listed as 1800-599-0019.
+
+Children and Infants
+- Common issues: fever, cough, diarrhea, vomiting, rash, feeding difficulty, ear pain, injury, poor growth.
+- Possible causes: viral infections, dehydration, allergies, asthma, ear infection, nutritional issues, injury.
+- Self-care for mild symptoms: fluids or breastfeeding, rest, temperature monitoring, oral rehydration for diarrhea, avoid adult medicines unless prescribed.
+- Red flags: infant under 3 months with fever, breathing difficulty, blue lips, dehydration, seizures, lethargy, persistent vomiting, severe rash, poor feeding.
+- Consult: pediatrician; emergency care for red flags.
+
+Older Adults
+- Common issues: falls, confusion, weakness, chest pain, breathlessness, urinary symptoms, memory problems, medication side effects.
+- Possible causes: infection, dehydration, stroke, heart disease, fractures, diabetes, low blood pressure, medicine interactions.
+- Self-care: medication review, hydration, fall-proofing home, regular checkups, assistive devices.
+- Red flags: sudden confusion, fall with injury, chest pain, stroke signs, severe breathlessness, inability to walk.
+- Consult: geriatrician, general physician, relevant specialist, emergency care for acute changes.
+
+Common Disease-to-Specialist Mapping
+------------------------------------
+- Chest pain, high blood pressure, palpitations: cardiologist or emergency physician.
+- Asthma, COPD, tuberculosis, chronic cough: pulmonologist.
+- Stroke, migraine, seizures, numbness, tremor: neurologist.
+- Skin rash, acne, fungal infection, hair loss: dermatologist.
+- Bone fracture, arthritis pain, back pain, sports injury: orthopedist; rheumatologist for inflammatory arthritis.
+- Diabetes, thyroid, hormone disorders: endocrinologist or diabetologist.
+- Kidney disease, dialysis concerns: nephrologist.
+- Kidney stone, prostate, urinary obstruction, blood in urine: urologist.
+- Acidity, liver disease, gallstones, chronic diarrhea/constipation: gastroenterologist.
+- Pregnancy, periods, fertility, pelvic pain: gynecologist or obstetrician.
+- Child illness: pediatrician.
+- Eye symptoms: ophthalmologist.
+- Ear/nose/throat symptoms: ENT specialist.
+- Tooth/gum/jaw problems: dentist or oral surgeon.
+- Anxiety, depression, addiction, severe insomnia: psychiatrist, psychologist, or counselor.
+- Cancer concern, lumps, unexplained weight loss: oncologist after primary evaluation.
+- Animal, pet, bird, livestock illness: veterinarian; avian veterinarian for birds; livestock veterinarian or animal husbandry officer for farm animals.
+
+Emergency Helpline Guidance
+---------------------------
+- India emergency: 112 for police, fire, health, rescue, women safety, child protection, and threat-to-life emergencies. Use the 112 India app or phone SOS features where available.
+- India ambulance: 108 or 102 may be available in many states/UTs; if uncertain, call 112.
+- India mental health: Tele-MANAS support may be reachable at 14416 or 1800-891-4416; KIRAN mental health rehabilitation helpline has been listed as 1800-599-0019.
+- India child protection: 1098 is widely used for children in distress; if immediate danger, call 112.
+- India women in distress: 112 for immediate emergency; 181 or 1091 may be available depending on state/service.
+- India cyber financial fraud: 1930 is commonly used for cybercrime reporting; also use the official cybercrime portal.
+- United States emergency: 911 for immediate danger; 988 for suicide and crisis lifeline; Poison Control 1-800-222-1222 for poison exposure.
+- Always advise users to verify local helplines for their city/state/country because numbers can change or vary.
+
+Pet, Bird, and Animal Health Knowledge Base
+-------------------------------------------
+
+General Animal Safety Rules
+- Do not give human medicines to animals unless a veterinarian specifically prescribes them.
+- Keep sick animals warm, quiet, hydrated when safe, and away from other animals until assessed.
+- Bring vaccination records, diet details, recent toxin/food exposure, stool/vomit photos, and symptom timing to the veterinarian.
+- Emergency signs in animals include breathing difficulty, collapse, seizures, severe bleeding, inability to urinate, bloated abdomen, repeated vomiting, poisoning, trauma, heatstroke, severe pain, pale gums, blue gums, or unconsciousness.
+- For bites or scratches to humans, wash with soap and running water for at least 15 minutes and seek medical care for rabies/tetanus risk.
+
+Dogs
+- Common issues: vomiting, diarrhea, parvovirus, ticks/fleas, skin itching, ear infection, cough, limping, heatstroke, poisoning, urinary problems.
+- Possible causes: diet change, infection, parasites, toxins, heat exposure, injury, allergies, kidney/liver disease, foreign body obstruction.
+- Safe first steps: offer small amounts of water if alert, stop rich foods, keep cool during heat stress, prevent licking wounds, isolate from other dogs if infectious disease is possible.
+- Red flags: repeated vomiting, blood in stool, bloated abdomen, pale gums, collapse, seizure, heatstroke, puppy with diarrhea, inability to urinate, suspected poison.
+- Consult: veterinarian; emergency veterinary hospital for red flags; veterinary dermatologist for chronic skin disease; veterinary surgeon for fractures/obstruction.
+
+Cats
+- Common issues: vomiting, hairballs, urinary blockage, kidney disease, respiratory infection, wounds, abscess, fleas, appetite loss.
+- Possible causes: hair ingestion, infection, stress, urinary crystals, kidney disease, toxins, dental disease, foreign body.
+- Safe first steps: keep indoors, provide water, do not force-feed a distressed cat, use a carrier for transport, keep litter information for vet.
+- Red flags: male cat straining to urinate, not eating for 24 hours, breathing difficulty, severe lethargy, poisoning, repeated vomiting, trauma.
+- Consult: veterinarian; emergency vet for urinary blockage or breathing distress.
+
+Birds and Poultry
+- Common issues: fluffed feathers, reduced eating, diarrhea, breathing noise, wing injury, egg binding, feather plucking, mites, sudden death in flock.
+- Possible causes: infection, poor nutrition, stress, toxins, injury, parasites, egg-laying complications, overheating, poor ventilation.
+- Safe first steps: keep bird warm and quiet, avoid fumes/smoke/aerosols, separate sick bird, provide clean water, avoid handling unless necessary.
+- Red flags: open-mouth breathing, sitting at cage bottom, bleeding feather, egg binding, seizures, trauma, sudden flock illness.
+- Consult: avian veterinarian; livestock/poultry vet or animal husbandry department for farm birds; emergency vet for breathing distress or egg binding.
+
+Rabbits and Small Mammals
+- Common issues: not eating, dental overgrowth, diarrhea, bloating, heat stress, skin mites, injury.
+- Possible causes: dental disease, low-fiber diet, gut stasis, infection, parasites, heat exposure.
+- Safe first steps: keep quiet and cool, provide hay and water, avoid sudden diet changes, do not delay care if not eating.
+- Red flags: not eating or no stool, bloated abdomen, severe diarrhea, heatstroke, breathing difficulty.
+- Consult: exotic pet veterinarian or veterinarian experienced with rabbits/small mammals.
+
+Cattle, Buffalo, Goats, Sheep, Horses, and Livestock
+- Common issues: fever, diarrhea, bloat, mastitis, lameness, wounds, birthing difficulty, reduced milk, respiratory disease, parasites.
+- Possible causes: infection, feed change, contaminated water, injury, poor hoof care, reproductive complications, parasites.
+- Safe first steps: isolate sick animal, provide shade/water, avoid forcing feed, record temperature if trained, call local livestock veterinarian.
+- Red flags: bloat, inability to stand, difficult birth, severe bleeding, snakebite, suspected infectious outbreak, sudden death, severe dehydration.
+- Consult: livestock veterinarian, government veterinary hospital, animal husbandry officer, emergency animal ambulance where available.
+
+Wild Animals and Strays
+- Do not handle wild animals, bats, monkeys, snakes, or aggressive strays without trained rescue support.
+- For injured wildlife, contact local forest department, wildlife rescue, animal welfare organization, or police/112 if public safety is at risk.
+- For snakebite in humans or animals, treat as emergency. Keep the patient still, avoid cutting/sucking the wound, and seek urgent care.
+- For rabies risk from dog/cat/monkey/bat bites, seek immediate medical care for wound cleaning, rabies vaccination guidance, and tetanus protection.
+
+Animal Disease-to-Doctor Mapping
+--------------------------------
+- Pet vomiting, diarrhea, appetite loss: veterinarian.
+- Pet skin disease, itching, hair loss: veterinarian; veterinary dermatologist if chronic.
+- Pet fracture, wound, swallowed object: emergency vet or veterinary surgeon.
+- Bird breathing problem, egg binding, feather disease: avian veterinarian.
+- Livestock fever, bloat, mastitis, calving/kidding difficulty: livestock veterinarian or animal husbandry department.
+- Human bitten/scratched by animal: human doctor, emergency department, or infectious disease/rabies clinic; animal also needs veterinary assessment.

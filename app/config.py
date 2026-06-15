@@ -1,8 +1,19 @@
 import os
 
+
+def _database_url():
+    url = os.getenv(
+        "DATABASE_URL",
+        "mysql+mysqlconnector://root:Sulochana%40522@localhost:3306/DoctorFinder_DB",
+    )
+    if url.startswith("mysql://"):
+        return url.replace("mysql://", "mysql+mysqlconnector://", 1)
+    return url
+
+
 class Settings:
     PROJECT_NAME: str = "CareSlotly"
-    SQLALCHEMY_DATABASE_URI: str = os.getenv("DATABASE_URL", "mysql+mysqlconnector://root:Sulochana%40522@localhost:3306/DoctorFinder_DB")
+    SQLALCHEMY_DATABASE_URI: str = _database_url()
     SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
     SECRET_KEY: str = os.getenv("SECRET_KEY", "dev-secret-key-that-is-not-secure-and-should-be-changed")
 
